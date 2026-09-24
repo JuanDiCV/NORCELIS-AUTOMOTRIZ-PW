@@ -1,0 +1,6 @@
+{
+  "name": "Nor Celis Automotriz",
+  "description": "Concesionario oficial multimarca, venta de vehículos nuevos 2025 y seminuevos certificados, autopartes OEM garantizadas, taller mecánico especializado y visor 360° interactivo.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
