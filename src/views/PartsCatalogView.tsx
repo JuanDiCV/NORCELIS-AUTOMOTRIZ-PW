@@ -590,7 +590,7 @@ export const PartsCatalogView: React.FC = () => {
                       <img
                         src={part.image}
                         alt={part.name}
-                        className="max-h-36 object-contain group-hover:scale-105 transition-transform duration-300"
+                        className="max-h-36 object-contain transition-transform duration-500 ease-out group-hover:scale-110 hover:scale-110"
                         loading="lazy"
                       />
                       {part.badge && (

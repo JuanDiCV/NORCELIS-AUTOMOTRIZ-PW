@@ -424,11 +424,11 @@ export const HomeView: React.FC = () => {
                   className="bg-surface-container-lowest rounded-2xl border border-surface-container hover:border-primary/40 hover:shadow-xl transition-all overflow-hidden flex flex-col group"
                 >
                   {/* Photo & Badges */}
-                  <div className="relative aspect-[16/10] bg-surface-container-low overflow-hidden">
+                  <div className="relative aspect-[16/10] bg-surface-container-low overflow-hidden group">
                     <img
                       src={car.image}
                       alt={car.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110 hover:scale-110 cursor-pointer"
                     />
                     <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
                       <span className="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm">
@@ -588,13 +588,15 @@ export const HomeView: React.FC = () => {
                   setSelectedVehicleId(u.id);
                   setCurrentView('cars');
                 }}
-                className="bg-white p-3 rounded-2xl border border-surface-container hover:shadow-lg transition-all cursor-pointer"
+                className="bg-white p-3 rounded-2xl border border-surface-container hover:shadow-lg transition-all cursor-pointer group"
               >
-                <img
-                  src={u.image}
-                  alt={u.name}
-                  className="w-44 h-28 object-cover rounded-xl mb-2"
-                />
+                <div className="overflow-hidden rounded-xl mb-2">
+                  <img
+                    src={u.image}
+                    alt={u.name}
+                    className="w-44 h-28 object-cover rounded-xl transition-transform duration-500 ease-out group-hover:scale-110 hover:scale-110"
+                  />
+                </div>
                 <div className="text-xs font-bold text-on-surface truncate">{u.name}</div>
                 <div className="text-[11px] text-emerald-700 font-bold mt-0.5">
                   S/ {u.priceSoles.toLocaleString()}
@@ -644,11 +646,11 @@ export const HomeView: React.FC = () => {
           </div>
 
           <div className="lg:col-span-5 z-10">
-            <div className="rounded-2xl overflow-hidden shadow-2xl border border-white/20">
+            <div className="rounded-2xl overflow-hidden shadow-2xl border border-white/20 group">
               <img
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSjI_tIAIGiT6wyiJbp0Fa_bV8tFCUZH1ukGx28Esv2LM-NxulgReRQMUAHbYA3VkYAzuU_0-TlyRO_iD872KGC6R4RM4o1F-WNokWD5Q_a2RnWiF2Kr0VQ3jp5-IsvkySgMGjIrqIx-VJzpYQHiys_1cuFjbPE1s2eI_QMAudhThsULZbqgdVwD8JvlTUle2ialiatbl3Oa5tHE9M5-pE2DpsKz8dB0ufSUmmKw4NtwLKSMUAoJi_"
                 alt="Taller Nor Celis"
-                className="w-full h-64 object-cover"
+                className="w-full h-64 object-cover transition-transform duration-500 ease-out group-hover:scale-110 hover:scale-110 cursor-pointer"
               />
             </div>
           </div>

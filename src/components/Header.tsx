@@ -110,50 +110,51 @@ export const Header: React.FC = () => {
   return (
     <header className="sticky top-0 z-40 bg-surface-container-lowest border-b border-surface-container shadow-sm">
       {/* Top Utility Bar */}
-      <div className="bg-primary text-surface-container-highest font-label-md py-1.5 px-gutter hidden md:block">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-space-lg text-xs">
-            <span className="flex items-center gap-1 font-semibold text-secondary-fixed">
-              <span className="material-symbols-outlined text-[16px]">call</span>
-              Central: (076) 364-520
+      <div className="bg-primary text-surface-container-highest font-label-md py-2 px-4 sm:px-6 lg:px-8 hidden md:block border-b border-white/10">
+        <div className="max-w-7xl mx-auto flex items-center justify-between text-xs tracking-tight">
+          <div className="flex items-center gap-3 lg:gap-4 flex-wrap">
+            <span className="flex items-center gap-1.5 font-semibold text-secondary-fixed">
+              <span className="material-symbols-outlined text-[15px] text-secondary-fixed">call</span>
+              <span>Central: (076) 364-520</span>
             </span>
-            <span className="text-outline-variant opacity-60">|</span>
+            <span className="text-white/20 select-none">|</span>
             <button
               onClick={() => setCurrentView('locations')}
-              className="hover:text-white transition-colors cursor-pointer flex items-center gap-1 font-medium"
+              className="hover:text-white transition-colors cursor-pointer flex items-center gap-1.5 font-medium text-white/90"
+              title="Concesionario y Taller en Cajamarca"
             >
               <span className="material-symbols-outlined text-[15px] text-amber-300">location_on</span>
-              Concesionario y Taller: AV. VIA DE EVITAMIENTO SUR 6003 – CAJAMARCA
+              <span className="truncate max-w-[280px] lg:max-w-none">Concesionario y Taller: AV. VIA DE EVITAMIENTO SUR 6003 – CAJAMARCA</span>
             </button>
-            <span className="text-outline-variant opacity-60">|</span>
+            <span className="text-white/20 select-none">|</span>
             <button
               onClick={() => setCurrentView('trade-in')}
-              className="hover:text-white transition-colors cursor-pointer text-secondary-fixed font-bold flex items-center gap-1"
+              className="hover:text-white transition-colors cursor-pointer text-secondary-fixed font-bold flex items-center gap-1.5 bg-white/10 hover:bg-white/15 px-2 py-0.5 rounded-md"
             >
-              <span className="material-symbols-outlined text-[14px]">local_fire_department</span>
-              Bono Retoma hasta S/ 7,500
+              <span className="material-symbols-outlined text-[14px] text-amber-300">local_fire_department</span>
+              <span>Bono Retoma hasta S/ 7,500</span>
             </button>
           </div>
-          <div className="flex items-center gap-space-lg text-xs">
-            <span className="flex items-center gap-1 text-emerald-400 font-medium">
+          <div className="flex items-center gap-3 lg:gap-4 shrink-0">
+            <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
               <span className="material-symbols-outlined text-[15px]">verified</span>
-              Garantía Nor Celis de 1 a 5 Años
+              <span>Garantía Nor Celis de 1 a 5 Años</span>
             </span>
-            <span className="text-outline-variant opacity-60">|</span>
+            <span className="text-white/20 select-none">|</span>
             <button
               onClick={() => setCurrentView('claims')}
-              className="hover:text-white transition-colors cursor-pointer flex items-center gap-1"
+              className="hover:text-white transition-colors cursor-pointer flex items-center gap-1.5 text-white/80"
             >
               <span className="material-symbols-outlined text-[15px]">menu_book</span>
-              Libro de Reclamaciones
+              <span>Libro de Reclamaciones</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Main Bar */}
-      <div className="px-gutter py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-space-md">
+      <div className="px-4 sm:px-6 lg:px-8 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           {/* Logo & Brand */}
           <div className="flex items-center gap-3">
             <button
@@ -538,7 +539,7 @@ export const Header: React.FC = () => {
 
       {/* Subnav Desktop with Interactive Hover Mega Dropdowns */}
       <div
-        className="border-t border-surface-container bg-surface-container-lowest relative px-gutter hidden md:block"
+        className="border-t border-surface-container bg-surface-container-lowest relative px-4 sm:px-6 lg:px-8 hidden md:block"
         onMouseLeave={handleMouseLeave}
       >
         <nav aria-label="Categorías principales" className="max-w-7xl mx-auto flex items-center gap-1.5 sm:gap-2 py-1.5 text-xs font-semibold">

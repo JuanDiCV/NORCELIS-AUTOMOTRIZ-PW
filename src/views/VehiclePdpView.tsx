@@ -94,7 +94,7 @@ export const VehiclePdpView: React.FC = () => {
             <img
               src={thumbnails[activeThumb].img}
               alt={currentCar.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110 hover:scale-110"
             />
 
             {/* Badges */}

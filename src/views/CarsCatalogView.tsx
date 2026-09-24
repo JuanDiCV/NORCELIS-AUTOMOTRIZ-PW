@@ -1166,11 +1166,17 @@ export const CarsCatalogView: React.FC = () => {
                     className="bg-surface-container-lowest rounded-3xl border border-surface-container hover:border-primary/40 hover:shadow-xl transition-all flex flex-col justify-between overflow-hidden group"
                   >
                     {/* Photo area */}
-                    <div className="relative aspect-[16/10] bg-surface-container-low overflow-hidden">
+                    <div
+                      className="relative aspect-[16/10] bg-surface-container-low overflow-hidden cursor-pointer"
+                      onClick={() => {
+                        setSelectedVehicleId(car.id);
+                        setCurrentView('vehicle-pdp');
+                      }}
+                    >
                       <img
                         src={car.image}
                         alt={car.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110 hover:scale-110"
                       />
 
                       {/* Badges superiores */}
