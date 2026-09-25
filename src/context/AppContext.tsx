@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ViewMode, ActiveGarageVehicle, CartItem, WishlistItem, Vehicle, AutoPart, WorkshopService } from '../types';
 import { INITIAL_ACTIVE_GARAGE, INITIAL_CART_ITEMS, INITIAL_WISHLIST_DATA, VEHICLES_DATA, AUTO_PARTS_DATA, WORKSHOP_SERVICES_DATA } from '../data/mockData';
+import { PdfModalData } from '../components/PdfPreviewModal';
 
 interface AppContextType {
   currentView: ViewMode;
@@ -17,6 +18,9 @@ interface AppContextType {
   setIsViewer360Open: (open: boolean) => void;
   isTestDriveModalOpen: boolean;
   setIsTestDriveModalOpen: (open: boolean) => void;
+  pdfModalData: PdfModalData | null;
+  openPdfModal: (data: PdfModalData) => void;
+  closePdfModal: () => void;
   
   cartItems: CartItem[];
   addToCart: (item: {
@@ -90,6 +94,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isGarageModalOpen, setIsGarageModalOpen] = useState(false);
   const [isViewer360Open, setIsViewer360Open] = useState(false);
   const [isTestDriveModalOpen, setIsTestDriveModalOpen] = useState(false);
+  const [pdfModalData, setPdfModalData] = useState<PdfModalData | null>(null);
+
+  const openPdfModal = (data: PdfModalData) => {
+    setPdfModalData(data);
+  };
+
+  const closePdfModal = () => {
+    setPdfModalData(null);
+  };
 
   const [cartItems, setCartItems] = useState<CartItem[]>(INITIAL_CART_ITEMS);
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>(INITIAL_WISHLIST_DATA);
@@ -300,6 +313,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsViewer360Open,
         isTestDriveModalOpen,
         setIsTestDriveModalOpen,
+        pdfModalData,
+        openPdfModal,
+        closePdfModal,
         cartItems,
         addToCart,
         removeFromCart,

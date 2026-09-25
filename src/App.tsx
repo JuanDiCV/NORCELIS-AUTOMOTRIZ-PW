@@ -5,6 +5,7 @@ import { Footer } from './components/Footer';
 import { GarageModal } from './components/GarageModal';
 import { TestDriveModal } from './components/TestDriveModal';
 import { Viewer360Modal } from './components/Viewer360Modal';
+import { PdfPreviewModal } from './components/PdfPreviewModal';
 import { AdvisorChatbox } from './components/AdvisorChatbox';
 import { HomeView } from './views/HomeView';
 import { CarsCatalogView } from './views/CarsCatalogView';
@@ -23,7 +24,7 @@ import { ClaimsBookView } from './views/ClaimsBookView';
 import { AboutView } from './views/AboutView';
 
 const MainContent: React.FC = () => {
-  const { currentView, toastMessage } = useApp();
+  const { currentView, toastMessage, pdfModalData, closePdfModal, showToast } = useApp();
 
   // Scroll to top whenever current view changes
   useEffect(() => {
@@ -61,6 +62,7 @@ const MainContent: React.FC = () => {
       <GarageModal />
       <TestDriveModal />
       <Viewer360Modal />
+      <PdfPreviewModal data={pdfModalData} onClose={closePdfModal} onShowToast={showToast} />
 
       {/* Floating Automotive Advisor Chatbox & WhatsApp */}
       <AdvisorChatbox />

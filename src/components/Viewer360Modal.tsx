@@ -1,5 +1,13 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
+import { SafeImage } from './SafeImage';
+import { FALLBACK_IMAGES } from '../utils/imageAssets';
+import {
+  SHOWROOM_COLORS,
+  SHOWROOM_ENVIRONMENTS,
+  ANGLE_PRESETS,
+  getAnglePerspectiveLabel,
+} from '../utils/showroomConfig';
 
 interface ShowroomHotspot {
   id: string;
@@ -25,100 +33,65 @@ export const Viewer360Modal: React.FC = () => {
     setSelectedVehicleId,
   } = useApp();
 
-  // Vehículo actual seleccionado para el Showroom
+  // Selected Vehicle in the Showroom
   const currentVehicle = useMemo(() => {
     return vehicles.find((v) => v.id === selectedVehicleId) || vehicles[0];
   }, [vehicles, selectedVehicleId]);
 
-  // Modos y Filtros
+  // Mode and Visual Controls
   const [mode, setMode] = useState<'exterior' | 'interior'>('exterior');
+  const [isHeadlightsOn, setIsHeadlightsOn] = useState<boolean>(true); // Enabled by default for immediate visual feedback
   const [environment, setEnvironment] = useState<'day' | 'night' | 'sunset'>('day');
   const [selectedColor, setSelectedColor] = useState<string>('blanco');
   const [componentFilter, setComponentFilter] = useState<'todos' | 'faros' | 'aros' | 'motor' | 'techo'>('todos');
   const [zoomLevel, setZoomLevel] = useState<number>(1);
   const [isAutoRotating, setIsAutoRotating] = useState<boolean>(false);
 
-  // Ángulo de Rotación 360° (0° a 360°)
+  // 360° Rotation Angle (0° to 360°)
   const [rotationAngle, setRotationAngle] = useState<number>(45);
   const [activeHotspot, setActiveHotspot] = useState<string | null>('faros');
 
-  // Dragging state con pointer tracking seguro
+  // Dragging state with reliable Pointer capture
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const dragStartXRef = useRef<number>(0);
   const startAngleRef = useRef<number>(45);
   const stageRef = useRef<HTMLDivElement>(null);
 
-  // Panorama interior panning
+  // Interior panoramic panning
   const [interiorPanX, setInteriorPanX] = useState<number>(0);
 
-  // Colores disponibles con acabados realistas
-  const colorOptions = useMemo(() => [
-    {
-      id: 'blanco',
-      name: 'Blanco Perlado Premium (070)',
-      hex: '#F4F4F6',
-      badge: 'Acabado Perlado',
-      filterStyle: 'brightness(1.06) contrast(1.02)',
-      overlayTint: 'rgba(255, 255, 255, 0.15)',
-    },
-    {
-      id: 'gris',
-      name: 'Gris Grafito Metálico (1G3)',
-      hex: '#585C63',
-      badge: 'Metálico Brillante',
-      filterStyle: 'contrast(1.1) brightness(0.88) grayscale(0.55)',
-      overlayTint: 'rgba(50, 55, 65, 0.35)',
-    },
-    {
-      id: 'azul',
-      name: 'Azul Cosmos Profundo (8X8)',
-      hex: '#1C2C4A',
-      badge: 'Perla Zafiro',
-      filterStyle: 'hue-rotate(185deg) saturate(1.7) brightness(0.72) contrast(1.15)',
-      overlayTint: 'rgba(28, 44, 74, 0.45)',
-    },
-    {
-      id: 'negro',
-      name: 'Negro Mica Ébano (218)',
-      hex: '#151618',
-      badge: 'Mica Obsidiana',
-      filterStyle: 'brightness(0.48) contrast(1.3) grayscale(0.4)',
-      overlayTint: 'rgba(10, 12, 15, 0.55)',
-    },
-    {
-      id: 'rojo',
-      name: 'Rojo Emoción Vulcano (3T3)',
-      hex: '#8F141B',
-      badge: 'Multicapa Deportivo',
-      filterStyle: 'hue-rotate(330deg) saturate(2.4) brightness(0.82) contrast(1.1)',
-      overlayTint: 'rgba(143, 20, 27, 0.4)',
-    },
-  ], []);
+  // Active color profile
+  const currentColorObj = useMemo(() => {
+    return SHOWROOM_COLORS.find((c) => c.id === selectedColor) || SHOWROOM_COLORS[0];
+  }, [selectedColor]);
 
-  const currentColorObj = colorOptions.find((c) => c.id === selectedColor) || colorOptions[0];
+  // Active environment profile
+  const currentEnvObj = useMemo(() => {
+    return SHOWROOM_ENVIRONMENTS[environment] || SHOWROOM_ENVIRONMENTS.day;
+  }, [environment]);
 
-  // Hotspots específicos según vehículo seleccionado
+  // Hotspots configured for exterior
   const exteriorHotspots = useMemo<ShowroomHotspot[]>(() => [
     {
       id: 'faros',
       category: 'faros',
       label: 'Faros Bi-LED Projector',
-      x: '24%',
-      y: '58%',
+      x: '23%',
+      y: '55%',
       title: 'Ópticas Bi-LED Projector con DRL',
-      desc: 'Luces altas automáticas (AHB), ajuste dinámico de haz y DRL LED aerodinámicas con proyector angular.',
-      code: 'TSS 3.0 / OEM TOY-81110',
-      minAngle: 300,
-      maxAngle: 90, // Visible principalmente en frontal y 3/4 frontal
+      desc: 'Proyector angular Bi-LED, ajuste dinámico de haz con AHB y firma lumínica diurna LED aerodinámica.',
+      code: 'TOY-OPT-81110',
+      minAngle: 280,
+      maxAngle: 90,
     },
     {
       id: 'aros',
       category: 'aros',
       label: 'Aros 18" Dark Graphite',
-      x: '32%',
-      y: '78%',
+      x: '33%',
+      y: '76%',
       title: 'Aros de Aleación 18" Dark Graphite',
-      desc: 'Neumáticos 225/60 R18 diseñados para baja resistencia a la rodadura y frenos de disco ventilados en las 4 ruedas.',
+      desc: 'Neumáticos 225/60 R18 de baja resistencia a la rodadura y frenos de disco ventilados con ABS/EBD.',
       code: 'DIM: 18x7J 5x114.3',
       minAngle: 30,
       maxAngle: 330,
@@ -130,10 +103,8 @@ export const Viewer360Modal: React.FC = () => {
       x: '55%',
       y: '28%',
       title: 'Sunroof Panorámico Eléctrico',
-      desc: 'Apertura de un solo toque con cortinilla deslizable y vidrio laminado con protección UV 99%.',
+      desc: 'Vidrio templado laminado con protección UV al 99% y cortinilla eléctrica de accionamiento con un solo toque.',
       code: 'Confort Sky Pack',
-      minAngle: 0,
-      maxAngle: 360,
     },
     {
       id: 'motor',
@@ -141,8 +112,8 @@ export const Viewer360Modal: React.FC = () => {
       label: 'Motor Dynamic Force Híbrido',
       x: '18%',
       y: '48%',
-      title: `${currentVehicle.specs.engine} • ${currentVehicle.specs.power}`,
-      desc: `Sistema híbrido autorecargable de alta eficiencia. Rendimiento homologado de ${currentVehicle.specs.consumption || '70 km/gal'} y transmisión ${currentVehicle.specs.transmission}.`,
+      title: `${currentVehicle.specs.engine} • ${currentVehicle.specs.power || '219 HP'}`,
+      desc: `Sistema híbrido de alta eficiencia con rendimiento homologado de ${currentVehicle.specs.consumption || '72 km/gal'} y tracción ${currentVehicle.specs.traction}.`,
       code: `TREN: ${currentVehicle.specs.traction}`,
       minAngle: 280,
       maxAngle: 100,
@@ -150,17 +121,18 @@ export const Viewer360Modal: React.FC = () => {
     {
       id: 'posterior',
       category: 'techo',
-      label: 'Portón & Ópticas LED Traseras',
+      label: 'Maletera & Faros LED Traseros',
       x: '78%',
-      y: '56%',
-      title: 'Maletera Eléctrica con Sensor de Pie',
-      desc: 'Capacidad de 580 Litros, apertura manos libres y faros posteriores LED con firma lumínica tridimensional.',
+      y: '55%',
+      title: 'Portón Trasero Eléctrico & Barra LED',
+      desc: 'Capacidad de 580 Litros, sensor de apertura manos libres de pie y faros posteriores LED envolventes.',
       code: 'Smart Cargo 580L',
-      minAngle: 90,
-      maxAngle: 270, // Visible principalmente en la parte trasera
+      minAngle: 100,
+      maxAngle: 260,
     },
   ], [currentVehicle]);
 
+  // Hotspots for interior
   const interiorHotspots = useMemo<ShowroomHotspot[]>(() => [
     {
       id: 'pantalla',
@@ -169,7 +141,7 @@ export const Viewer360Modal: React.FC = () => {
       x: '50%',
       y: '44%',
       title: 'Sistema Multimedia Táctil 10.5" HD',
-      desc: 'Apple CarPlay inalámbrico, Android Auto, navegación GPS satelital nativa y sonido envolvente JBL.',
+      desc: 'Apple CarPlay y Android Auto inalámbricos, navegación satelital nativa y sonido premium JBL.',
       code: 'Toyota Audio Plus HD',
     },
     {
@@ -179,7 +151,7 @@ export const Viewer360Modal: React.FC = () => {
       x: '35%',
       y: '48%',
       title: 'Panel de Instrumentos Digital 12.3"',
-      desc: 'Cuatro modos de visualización (Casual, Smart, Tough, Sport) con flujo de energía híbrida en tiempo real.',
+      desc: 'Cuatro modos de visualización con flujo de energía híbrida y telemetría de consumo en tiempo real.',
       code: 'Multi-Information Display',
     },
     {
@@ -189,12 +161,12 @@ export const Viewer360Modal: React.FC = () => {
       x: '58%',
       y: '65%',
       title: 'Asientos Ergonómicos Cuero SoftTex',
-      desc: 'Ajuste eléctrico de 8 posiciones con memoria para piloto y calefacción/ventilación para piloto y copiloto.',
+      desc: 'Regulación eléctrica de 8 posiciones con soporte lumbar y climatización independiente.',
       code: 'Acolchado Ortopédico',
     },
   ], []);
 
-  // Hotspots filtrados por la categoría seleccionada
+  // Filtered hotspots
   const activeHotspotsList = useMemo(() => {
     const list = mode === 'exterior' ? exteriorHotspots : interiorHotspots;
     if (componentFilter === 'todos') return list;
@@ -209,7 +181,7 @@ export const Viewer360Modal: React.FC = () => {
     );
   }, [activeHotspotsList, activeHotspot]);
 
-  // Auto-rotación 360° en plataforma
+  // Turntable Auto-rotation
   useEffect(() => {
     if (!isAutoRotating || !isViewer360Open || isDragging) return;
     const interval = setInterval(() => {
@@ -218,7 +190,7 @@ export const Viewer360Modal: React.FC = () => {
     return () => clearInterval(interval);
   }, [isAutoRotating, isViewer360Open, isDragging]);
 
-  // Manejo de eventos de Drag globales
+  // Pointer drag handlers for smooth 360 rotation
   const handlePointerDown = (e: React.PointerEvent) => {
     setIsDragging(true);
     dragStartXRef.current = e.clientX;
@@ -230,11 +202,9 @@ export const Viewer360Modal: React.FC = () => {
     if (!isDragging) return;
     const deltaX = e.clientX - dragStartXRef.current;
     if (mode === 'exterior') {
-      // Arrastrar hacia la derecha gira el auto hacia la derecha (rotación continua 0-360)
       const newAngle = Math.round(startAngleRef.current + deltaX * 0.75 + 3600) % 360;
       setRotationAngle(newAngle);
     } else {
-      // Paneo interior panorámico
       setInteriorPanX((prev) => Math.max(-100, Math.min(100, prev + deltaX * 0.05)));
     }
   };
@@ -245,81 +215,77 @@ export const Viewer360Modal: React.FC = () => {
       try {
         (e.target as HTMLElement).releasePointerCapture(e.pointerId);
       } catch {
-        // Ignorar si el pointer ya no está capturado
+        // Safe ignore
       }
     }
   };
 
-  // Cálculo de Transformación 3D según ángulo de visión
-  const { currentAnglePerspective, rotationTransform, carShadowTransform, isMirrored } = useMemo(() => {
-    // Normalizar ángulo en rango 0 a 360
+  // Perspective angle calculation and dynamic vehicle transformation
+  const { perspectiveLabel, rotationTransform, turntableShadowTransform, isMirrored, isFrontFacing, isRearFacing } = useMemo(() => {
+    const { name, isMirrored: mirror } = getAnglePerspectiveLabel(rotationAngle);
     const normalized = ((rotationAngle % 360) + 360) % 360;
 
-    // Determinar sector de visión
-    let perspectiveName = '3/4 Frontal';
-    if (normalized >= 340 || normalized < 20) {
-      perspectiveName = 'Frontal Directo (0°)';
-    } else if (normalized >= 20 && normalized < 70) {
-      perspectiveName = '3/4 Frontal Derecho (45°)';
-    } else if (normalized >= 70 && normalized < 115) {
-      perspectiveName = 'Perfil Lateral Derecho (90°)';
-    } else if (normalized >= 115 && normalized < 160) {
-      perspectiveName = '3/4 Posterior Derecho (135°)';
-    } else if (normalized >= 160 && normalized < 205) {
-      perspectiveName = 'Posterior Directo (180°)';
-    } else if (normalized >= 205 && normalized < 250) {
-      perspectiveName = '3/4 Posterior Izquierdo (225°)';
-    } else if (normalized >= 250 && normalized < 295) {
-      perspectiveName = 'Perfil Lateral Izquierdo (270°)';
-    } else {
-      perspectiveName = '3/4 Frontal Izquierdo (315°)';
-    }
+    // Headlights visible mostly in frontal arc (280° - 80°)
+    const frontFacing = normalized >= 280 || normalized <= 80;
+    // Taillights visible mostly in rear arc (100° - 260°)
+    const rearFacing = normalized >= 100 && normalized <= 260;
 
-    // Efecto espejo horizontal para ángulos izquierdos (180° a 360°)
-    const mirror = normalized > 180;
-
-    // Ángulo de inclinación 3D suave (yaw de -25deg a +25deg para realismo)
+    // Gentle 3D perspective pitch and yaw for realistic turntable movement
     const rad = (normalized * Math.PI) / 180;
-    const yaw = Math.sin(rad) * 22;
-    const pitch = Math.cos(rad) * 3;
+    const yaw = Math.sin(rad) * 20;
+    const pitch = Math.cos(rad) * 2.5;
 
-    // Transformación del vehículo
     const transform = `perspective(1200px) rotateY(${yaw}deg) rotateX(${pitch}deg) scale(${
       (mirror ? -1 : 1) * zoomLevel
     }, ${zoomLevel})`;
 
-    // Sombra dinámica en la plataforma giratoria
     const shadowTransform = `perspective(1000px) rotateX(65deg) rotateZ(${-normalized}deg) scale(${
-      1.1 * zoomLevel
+      1.08 * zoomLevel
     })`;
 
     return {
-      currentAnglePerspective: perspectiveName,
+      perspectiveLabel: name,
       rotationTransform: transform,
-      carShadowTransform: shadowTransform,
+      turntableShadowTransform: shadowTransform,
       isMirrored: mirror,
+      isFrontFacing: frontFacing,
+      isRearFacing: rearFacing,
     };
   }, [rotationAngle, zoomLevel]);
 
-  if (!isViewer360Open) return null;
+  // Exterior Image: Check if active vehicle is the default or if a color variant exists
+  const exteriorImage = useMemo(() => {
+    // If selected vehicle is default RAV4, use high-resolution verified color asset
+    if (currentVehicle.id === 'veh-rav4-2025' && currentColorObj.imageUrl) {
+      return currentColorObj.imageUrl;
+    }
+    return currentVehicle.image;
+  }, [currentVehicle, currentColorObj]);
 
-  // Imagen del vehículo según modo
-  const exteriorImage = currentVehicle.image;
-  const interiorImage =
-    'https://lh3.googleusercontent.com/aida/AEtjO1XEuPkJsQpOvlK2Jy--9q8WzwHcyqD1bpxcM5VcHzeuflBkEc4yoRUaRUC8Ru8dnWEI_72-6IvqWbDALk6LipFJxvVR12_cqvQJ0BErTQ54HZ58LXrp7O0XJzjbxSgUqI865NYZwlQpC9gMYMWxt5p2AcQdHaeTNIjRJ81jYL5xSwW5LNDA8A2OsIH4rtS963XIHXcDnfbGwoWAdVL4ANqjDGB5eXET1TSgG6dZ00VY9k9QY85SXu9xzw';
+  const interiorImage = FALLBACK_IMAGES.interiorCockpit;
 
-  // Mensaje para WhatsApp con la configuración armada en el 360
+  const toggleHeadlights = useCallback(() => {
+    setIsHeadlightsOn((prev) => {
+      const next = !prev;
+      showToast(next ? 'Faros Bi-LED encendidos' : 'Faros apagados');
+      return next;
+    });
+  }, [showToast]);
+
   const whatsappConfigMessage = encodeURIComponent(
     `Hola Carlos Mendoza, configuré en el Showroom Virtual 360° el vehículo: ` +
-    `${currentVehicle.name} (${currentColorObj.name}) con vista ${currentAnglePerspective}. ` +
-    `Deseo agendar una visita presencial para verlo en concesionario.`
+    `${currentVehicle.name} (${currentColorObj.name}) con vista ${perspectiveLabel}. ` +
+    `Deseo agendar una cita presencial para verlo en concesionario.`
   );
+
+  if (!isViewer360Open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-2 sm:p-5 overflow-hidden">
       <div className="relative w-full h-full max-w-7xl max-h-[96vh] bg-[#070b14] rounded-3xl border border-white/10 flex flex-col overflow-hidden shadow-2xl">
-        {/* BARRA SUPERIOR: Selector de Vehículo, Filtros de Iluminación y Modo */}
-        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 flex flex-wrap items-center justify-between gap-3 z-30 bg-[#070b14]/95 backdrop-blur-md">
+        
+        {/* BARRA SUPERIOR: Selector de Vehículo, Faros, Modo y Controles */}
+        <header className="px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 flex flex-wrap items-center justify-between gap-3 z-30 bg-[#070b14]/95 backdrop-blur-md">
           {/* Identidad del Showroom y Selector de Vehículo */}
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-2xl bg-secondary-container/20 border border-secondary-container/40 flex items-center justify-center text-secondary">
@@ -335,15 +301,16 @@ export const Viewer360Modal: React.FC = () => {
                 </span>
               </div>
 
-              {/* Filtro Dropdown de Vehículo en Showroom */}
+              {/* Selector de Vehículo */}
               <div className="relative mt-0.5">
                 <select
                   value={currentVehicle.id}
                   onChange={(e) => {
                     setSelectedVehicleId(e.target.value);
-                    showToast(`Cargando modelo en Showroom 360°...`);
+                    showToast(`Vehículo cargado en Showroom 360°`);
                   }}
                   className="bg-white/10 hover:bg-white/15 text-white font-headline font-bold text-xs sm:text-sm rounded-xl px-2.5 py-1 pr-7 border border-white/20 focus:outline-none focus:border-secondary cursor-pointer max-w-[190px] xs:max-w-[250px] sm:max-w-none truncate"
+                  aria-label="Seleccionar vehículo para el Showroom"
                 >
                   {vehicles.map((v) => (
                     <option key={v.id} value={v.id} className="bg-slate-900 text-white font-normal">
@@ -356,7 +323,7 @@ export const Viewer360Modal: React.FC = () => {
           </div>
 
           {/* Filtros Centrales de Modo & Entorno de Iluminación */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {/* Selector de Modo: Exterior / Cabina Interior */}
             <div className="flex bg-white/10 p-1 rounded-2xl text-xs font-semibold border border-white/10">
               <button
@@ -383,78 +350,82 @@ export const Viewer360Modal: React.FC = () => {
               </button>
             </div>
 
-            {/* Filtro de Ambiente / Iluminación del Showroom */}
+            {/* Selector de Ambiente de Iluminación */}
             <div className="hidden md:flex items-center bg-white/10 p-1 rounded-2xl border border-white/10 text-xs">
-              <button
-                onClick={() => setEnvironment('day')}
-                className={`px-2.5 py-1 rounded-xl transition-all flex items-center gap-1 ${
-                  environment === 'day'
-                    ? 'bg-white text-slate-900 font-bold shadow-xs'
-                    : 'text-white/70 hover:text-white'
-                }`}
-                title="Iluminación Estudio Día (5500K)"
-              >
-                <span className="material-symbols-outlined text-[15px] text-amber-500">light_mode</span>
-                <span>Día</span>
-              </button>
-
-              <button
-                onClick={() => setEnvironment('night')}
-                className={`px-2.5 py-1 rounded-xl transition-all flex items-center gap-1 ${
-                  environment === 'night'
-                    ? 'bg-indigo-600 text-white font-bold shadow-xs'
-                    : 'text-white/70 hover:text-white'
-                }`}
-                title="Modo Nocturno con Faros Bi-LED Encendidos"
-              >
-                <span className="material-symbols-outlined text-[15px] text-cyan-300">nightlight</span>
-                <span>Noche LED</span>
-              </button>
-
-              <button
-                onClick={() => setEnvironment('sunset')}
-                className={`px-2.5 py-1 rounded-xl transition-all flex items-center gap-1 ${
-                  environment === 'sunset'
-                    ? 'bg-gradient-to-r from-amber-600 to-rose-600 text-white font-bold shadow-xs'
-                    : 'text-white/70 hover:text-white'
-                }`}
-                title="Iluminación Golden Hour Sunset"
-              >
-                <span className="material-symbols-outlined text-[15px] text-orange-300">wb_twilight</span>
-                <span>Sunset</span>
-              </button>
+              {Object.values(SHOWROOM_ENVIRONMENTS).map((env) => (
+                <button
+                  key={env.id}
+                  onClick={() => {
+                    setEnvironment(env.id);
+                    if (env.id === 'night') {
+                      setIsHeadlightsOn(true);
+                      showToast('Modo Noche: Faros Bi-LED activados automáticamente');
+                    }
+                  }}
+                  className={`px-2.5 py-1 rounded-xl transition-all flex items-center gap-1 cursor-pointer ${
+                    environment === env.id
+                      ? 'bg-white text-slate-900 font-bold shadow-xs'
+                      : 'text-white/70 hover:text-white'
+                  }`}
+                  title={env.name}
+                >
+                  <span className={`material-symbols-outlined text-[15px] ${
+                    env.id === 'day' ? 'text-amber-500' : env.id === 'night' ? 'text-cyan-400' : 'text-orange-400'
+                  }`}>
+                    {env.icon}
+                  </span>
+                  <span>{env.id === 'day' ? 'Día' : env.id === 'night' ? 'Noche LED' : 'Sunset'}</span>
+                </button>
+              ))}
             </div>
 
-            {/* Botón Cerrar */}
-            <button
-              onClick={() => setIsViewer360Open(false)}
-              className="p-2 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
-              title="Cerrar Showroom"
-            >
-              <span className="material-symbols-outlined text-[20px]">close</span>
-            </button>
+            {/* BOTÓN PROMINENTE DE CONTROL DE FAROS BI-LED */}
+            {mode === 'exterior' && (
+              <button
+                onClick={toggleHeadlights}
+                className={`px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 text-xs font-bold border cursor-pointer ${
+                  isHeadlightsOn
+                    ? 'bg-cyan-500/25 text-cyan-300 border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.45)] ring-2 ring-cyan-400/30'
+                    : 'bg-white/10 text-white/70 border-white/15 hover:text-white hover:bg-white/15'
+                }`}
+                title={isHeadlightsOn ? 'Apagar Faros Bi-LED' : 'Encender Faros Bi-LED'}
+                aria-pressed={isHeadlightsOn}
+              >
+                <span className={`material-symbols-outlined text-[16px] ${isHeadlightsOn ? 'text-cyan-300 animate-pulse' : 'text-white/50'}`}>
+                  highlight
+                </span>
+                <span>Faros Bi-LED: {isHeadlightsOn ? 'ON' : 'OFF'}</span>
+              </button>
+            )}
           </div>
-        </div>
 
-        {/* SUB-BARRA DE FILTROS DE INSPECCIÓN (Componentes del vehículo) */}
-        <div className="px-4 sm:px-6 py-2 border-b border-white/10 bg-[#0a0f1d] flex items-center justify-between gap-3 text-xs overflow-x-auto scrollbar-none z-20">
-          <div className="flex items-center gap-1.5 text-white/70 whitespace-nowrap">
-            <span className="text-[11px] font-bold text-white/50 uppercase tracking-wider flex items-center gap-1 mr-1">
-              <span className="material-symbols-outlined text-[15px] text-secondary">filter_alt</span>
-              Filtro Puntos:
+          {/* Botón de Cierre */}
+          <button
+            onClick={() => setIsViewer360Open(false)}
+            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+            aria-label="Cerrar Showroom"
+          >
+            <span className="material-symbols-outlined text-lg">close</span>
+          </button>
+        </header>
+
+        {/* SUBBARRA: Filtros de Inspección y Zoom */}
+        <div className="px-4 sm:px-6 py-2 border-b border-white/5 flex items-center justify-between gap-3 text-xs z-20 bg-[#070b14]/70">
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+            <span className="text-[11px] font-bold text-white/60 uppercase tracking-wider mr-1 hidden sm:inline">
+              Inspección:
             </span>
-
             {[
-              { id: 'todos', label: 'Todos los Puntos', icon: 'visibility' },
-              { id: 'faros', label: 'Faros & Luces', icon: 'flare' },
-              { id: 'aros', label: 'Aros & Frenos', icon: 'trip_origin' },
-              { id: 'motor', label: 'Motor & Híbrido', icon: 'electric_bolt' },
-              { id: 'techo', label: 'Carrocería & Techo', icon: 'roofing' },
+              { id: 'todos', label: 'Todo el Vehículo', icon: 'view_in_ar' },
+              { id: 'faros', label: 'Ópticas Bi-LED', icon: 'highlight' },
+              { id: 'aros', label: 'Aros & Frenos', icon: 'tire_repair' },
+              { id: 'motor', label: 'Motor Dynamic Force', icon: 'memory' },
+              { id: 'techo', label: 'Sunroof & Portón', icon: 'wb_sunny' },
             ].map((f) => (
               <button
                 key={f.id}
                 onClick={() => setComponentFilter(f.id as any)}
-                className={`px-3 py-1 rounded-xl font-medium transition-all flex items-center gap-1 cursor-pointer ${
+                className={`px-3 py-1 rounded-xl font-medium transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap ${
                   componentFilter === f.id
                     ? 'bg-white/20 text-white font-bold border border-white/30 shadow-xs'
                     : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent'
@@ -466,10 +437,10 @@ export const Viewer360Modal: React.FC = () => {
             ))}
           </div>
 
-          {/* Ángulo Actual & Controles de Zoom */}
+          {/* Perspectiva y Zoom */}
           <div className="flex items-center gap-2 whitespace-nowrap">
             <span className="hidden sm:inline text-[11px] font-mono font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-lg border border-secondary/20">
-              {currentAnglePerspective}
+              {perspectiveLabel}
             </span>
 
             <div className="flex items-center bg-white/10 rounded-xl p-0.5 border border-white/10">
@@ -477,6 +448,7 @@ export const Viewer360Modal: React.FC = () => {
                 onClick={() => setZoomLevel((z) => Math.max(0.85, z - 0.15))}
                 className="p-1 rounded-lg hover:bg-white/20 text-white transition-colors"
                 title="Reducir Zoom"
+                aria-label="Reducir Zoom"
               >
                 <span className="material-symbols-outlined text-[16px]">remove</span>
               </button>
@@ -487,6 +459,7 @@ export const Viewer360Modal: React.FC = () => {
                 onClick={() => setZoomLevel((z) => Math.min(1.45, z + 0.15))}
                 className="p-1 rounded-lg hover:bg-white/20 text-white transition-colors"
                 title="Aumentar Zoom"
+                aria-label="Aumentar Zoom"
               >
                 <span className="material-symbols-outlined text-[16px]">add</span>
               </button>
@@ -494,115 +467,170 @@ export const Viewer360Modal: React.FC = () => {
           </div>
         </div>
 
-        {/* ESCENARIO 360° INTERACTIVO */}
-        <div
+        {/* ESCENARIO PRINCIPAL 360° INTERACTIVO */}
+        <main
           ref={stageRef}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
-          className={`flex-1 relative flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing select-none transition-colors duration-700 ${
-            environment === 'night'
-              ? 'bg-[#03060c]'
-              : environment === 'sunset'
-              ? 'bg-[#140b08]'
-              : 'bg-[#090e1a]'
-          }`}
+          className="flex-1 relative flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing select-none transition-colors duration-700"
+          style={{ background: currentEnvObj.ambientBg }}
+          aria-label="Escenario interactivo 360°"
         >
-          {/* Fondo de Estudio Automotriz con Iluminación Ambiental */}
-          {environment === 'night' ? (
+          {/* ILUMINACIÓN AMBIENTAL DE ESTUDIO */}
+          {environment === 'night' && (
             <div className="absolute inset-0 pointer-events-none">
-              {/* Halos de luz de estudio oscuro */}
-              <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
-              <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
-              {/* Haces de luz LED proyectados según ángulo */}
-              <div
-                className="absolute top-1/2 left-12 -translate-y-1/2 w-[550px] h-[220px] bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent blur-2xl pointer-events-none opacity-90 transition-all duration-300"
-                style={{
-                  transform: `rotate(${(rotationAngle - 45) * 0.25}deg)`,
-                  opacity: rotationAngle < 120 || rotationAngle > 240 ? 0.9 : 0.2,
-                }}
-              ></div>
-            </div>
-          ) : environment === 'sunset' ? (
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute top-0 inset-x-0 h-1/2 bg-gradient-to-b from-amber-600/20 via-orange-900/10 to-transparent"></div>
-              <div className="absolute bottom-10 left-1/3 w-[500px] h-32 bg-amber-500/15 rounded-full blur-3xl"></div>
-            </div>
-          ) : (
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute top-0 inset-x-0 h-48 bg-gradient-to-b from-blue-500/10 to-transparent"></div>
-              <div className="absolute bottom-12 inset-x-0 h-40 bg-white/5 rounded-full blur-3xl"></div>
+              <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
+              <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
             </div>
           )}
 
-          {/* Plataforma Giratoria (Turntable 3D) */}
+          {environment === 'sunset' && (
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute top-0 inset-x-0 h-1/2 bg-gradient-to-b from-amber-600/20 via-orange-900/10 to-transparent" />
+              <div className="absolute bottom-10 left-1/3 w-[500px] h-32 bg-amber-500/15 rounded-full blur-3xl" />
+            </div>
+          )}
+
+          {/* PLATAFORMA GIRATORIA DE ESTUDIO (TURNTABLE 360°) */}
           {mode === 'exterior' && (
             <div
-              className="absolute bottom-8 w-[580px] sm:w-[720px] h-[220px] rounded-full border-2 border-white/10 pointer-events-none transition-transform duration-150 flex items-center justify-center"
+              className="absolute bottom-8 w-[580px] sm:w-[720px] h-[220px] rounded-full border-2 transition-all duration-300 pointer-events-none flex items-center justify-center"
               style={{
-                transform: carShadowTransform,
+                transform: turntableShadowTransform,
+                borderColor: `${currentColorObj.turntableGlow}45`,
                 boxShadow:
                   environment === 'night'
-                    ? '0 0 50px rgba(6, 182, 212, 0.15), inset 0 0 30px rgba(255, 255, 255, 0.05)'
-                    : '0 0 60px rgba(0, 0, 0, 0.5), inset 0 0 30px rgba(255, 255, 255, 0.05)',
+                    ? `0 0 65px ${currentColorObj.turntableGlow}30, inset 0 0 45px ${currentColorObj.turntableGlow}20`
+                    : `0 0 70px rgba(0, 0, 0, 0.6), inset 0 0 30px rgba(255, 255, 255, 0.08)`,
               }}
             >
-              {/* Marcas de grados en el plato giratorio */}
-              <div className="absolute inset-0 rounded-full border border-dashed border-white/20"></div>
-              <div className="w-[85%] h-[85%] rounded-full border border-white/10"></div>
-              {/* Indicador de rumbo giratorio */}
+              {/* Aro Neón Perimetral con color reflectivo del auto */}
               <div
-                className="w-full h-0.5 bg-gradient-to-r from-secondary-container via-transparent to-secondary-container absolute"
+                className="absolute inset-0 rounded-full border transition-all duration-300"
+                style={{
+                  borderColor: `${currentColorObj.turntableGlow}80`,
+                  boxShadow: `0 0 24px ${currentColorObj.turntableGlow}35`,
+                }}
+              />
+              <div className="w-[85%] h-[85%] rounded-full border border-white/10" />
+
+              {/* Proyección de haz de luz en el suelo cuando los faros están encendidos */}
+              {isHeadlightsOn && isFrontFacing && (
+                <div
+                  className="absolute -top-16 inset-x-10 h-48 pointer-events-none transition-opacity duration-300 blur-md rounded-full"
+                  style={{
+                    background: `radial-gradient(ellipse at center bottom, rgba(56, 189, 248, 0.45) 0%, rgba(34, 211, 238, 0.12) 55%, transparent 80%)`,
+                  }}
+                />
+              )}
+
+              {/* Resplandor rojo en el suelo de luces traseras */}
+              {isHeadlightsOn && isRearFacing && (
+                <div
+                  className="absolute -bottom-10 inset-x-16 h-32 pointer-events-none transition-opacity duration-300 blur-lg rounded-full"
+                  style={{
+                    background: `radial-gradient(ellipse at center top, rgba(239, 68, 68, 0.55) 0%, rgba(239, 68, 68, 0.15) 65%, transparent 90%)`,
+                  }}
+                />
+              )}
+
+              {/* Indicador de compás 360° */}
+              <div
+                className="w-full h-0.5 bg-gradient-to-r from-secondary-container via-transparent to-secondary-container absolute transition-transform duration-75"
                 style={{ transform: `rotate(${rotationAngle}deg)` }}
-              ></div>
+              />
             </div>
           )}
 
-          {/* REPRESENTACIÓN VISUAL DEL VEHÍCULO */}
+          {/* VEHÍCULO CON COLOR DINÁMICO Y FAROS BI-LED */}
           <div className="relative max-w-4xl w-full px-6 flex items-center justify-center">
             {mode === 'exterior' ? (
               <div
-                className="relative transition-transform duration-100 ease-out select-none"
+                className="relative transition-transform duration-100 ease-out select-none flex items-center justify-center"
                 style={{
                   transform: rotationTransform,
-                  filter: currentColorObj.filterStyle,
                 }}
               >
-                <img
-                  src={exteriorImage}
-                  alt={`${currentVehicle.name} 360`}
-                  className="w-full max-h-[52vh] object-contain drop-shadow-[0_28px_35px_rgba(0,0,0,0.85)] pointer-events-none"
-                  draggable={false}
-                />
+                {/* Contenedor relativo de imagen y capas lumínicas */}
+                <div className="relative inline-block max-w-full">
+                  {/* IMAGEN DEL VEHÍCULO: Alta Definición con fallback seguro */}
+                  <SafeImage
+                    key={`${currentVehicle.id}-${selectedColor}`}
+                    src={exteriorImage}
+                    fallbackSrc={FALLBACK_IMAGES.vehicleSuv}
+                    typeHint="vehicle"
+                    alt={`${currentVehicle.name} ${currentColorObj.name} 360°`}
+                    className="w-full max-h-[52vh] object-contain drop-shadow-[0_28px_35px_rgba(0,0,0,0.85)] pointer-events-none transition-all duration-300"
+                    draggable={false}
+                    style={{
+                      filter: currentColorObj.filterStyle,
+                    }}
+                  />
 
-                {/* Filtro de color de carrocería superpuesto con modo de mezcla */}
-                <div
-                  className="absolute inset-0 pointer-events-none transition-opacity duration-300 rounded-3xl"
-                  style={{
-                    backgroundColor: currentColorObj.overlayTint,
-                    mixBlendMode: 'color',
-                    opacity: selectedColor === 'blanco' ? 0.1 : 0.65,
-                  }}
-                />
+                  {/* CAPA DE PINTURA DE CARROCERÍA: Mezcla multicapa para reflejos auténticos */}
+                  <div
+                    className="absolute inset-0 pointer-events-none transition-all duration-300 rounded-3xl"
+                    style={{
+                      backgroundColor: currentColorObj.overlayTint,
+                      mixBlendMode: currentColorObj.blendMode,
+                      opacity: currentColorObj.opacity,
+                    }}
+                  />
 
-                {/* Faros Bi-LED encendidos dinámicamente en Modo Nocturno */}
-                {environment === 'night' && (rotationAngle < 110 || rotationAngle > 250) && (
-                  <>
-                    <div
-                      className="absolute top-[52%] left-[23%] w-8 h-8 rounded-full bg-cyan-300/90 blur-xs animate-pulse shadow-[0_0_30px_#22d3ee] pointer-events-none"
-                      style={{ opacity: isMirrored ? 0.4 : 1 }}
-                    />
-                    <div
-                      className="absolute top-[50%] right-[32%] w-7 h-7 rounded-full bg-cyan-300/80 blur-xs animate-pulse shadow-[0_0_25px_#22d3ee] pointer-events-none"
-                      style={{ opacity: isMirrored ? 1 : 0.4 }}
-                    />
-                  </>
-                )}
+                  {/* BRILLO METÁLICO ESPECULAR SECUNDARIO */}
+                  <div
+                    className="absolute inset-0 pointer-events-none transition-all duration-300 rounded-3xl"
+                    style={{
+                      background: `radial-gradient(circle at 50% 40%, ${currentColorObj.hex}40 0%, transparent 75%)`,
+                      mixBlendMode: 'overlay',
+                    }}
+                  />
 
-                {/* Luces traseras rojas encendidas dinámicamente si el auto mira hacia atrás */}
-                {environment === 'night' && rotationAngle >= 110 && rotationAngle <= 250 && (
-                  <div className="absolute top-[48%] right-[18%] w-12 h-6 rounded-full bg-rose-600/90 blur-xs shadow-[0_0_35px_#e11d48] pointer-events-none animate-pulse" />
-                )}
+                  {/* FAROS BI-LED DELANTEROS: Encendido visible con halo y haces ópticos */}
+                  {isHeadlightsOn && isFrontFacing && (
+                    <>
+                      {/* Faro Frontal Izquierdo */}
+                      <div
+                        className="absolute top-[48%] left-[22%] w-10 h-10 pointer-events-none transition-opacity duration-200"
+                        style={{ opacity: isMirrored ? 0.4 : 1 }}
+                      >
+                        <div className="w-full h-full rounded-full bg-cyan-200 blur-[2px] animate-pulse shadow-[0_0_35px_#38bdf8,0_0_60px_#0284c7]" />
+                        <div className="absolute inset-2.5 rounded-full bg-white blur-[1px]" />
+                        {/* Lens Flare Horizontal */}
+                        <div className="absolute top-1/2 -left-4 -right-4 h-1 -translate-y-1/2 bg-cyan-300 blur-[2px] opacity-80" />
+                      </div>
+
+                      {/* Faro Frontal Derecho */}
+                      <div
+                        className="absolute top-[46%] right-[30%] w-9 h-9 pointer-events-none transition-opacity duration-200"
+                        style={{ opacity: isMirrored ? 1 : 0.4 }}
+                      >
+                        <div className="w-full h-full rounded-full bg-cyan-200 blur-[2px] animate-pulse shadow-[0_0_30px_#38bdf8,0_0_55px_#0284c7]" />
+                        <div className="absolute inset-2 rounded-full bg-white blur-[1px]" />
+                        {/* Lens Flare Horizontal */}
+                        <div className="absolute top-1/2 -left-3 -right-3 h-1 -translate-y-1/2 bg-cyan-300 blur-[2px] opacity-80" />
+                      </div>
+
+                      {/* Haz de luz volumétrico frontal proyectado hacia adelante */}
+                      <div
+                        className="absolute -bottom-6 left-[16%] w-[68%] h-28 pointer-events-none blur-sm"
+                        style={{
+                          background:
+                            'radial-gradient(ellipse at top, rgba(186, 230, 253, 0.55) 0%, rgba(56, 189, 248, 0.15) 50%, transparent 80%)',
+                        }}
+                      />
+                    </>
+                  )}
+
+                  {/* LUCES TRASERAS ROJAS LED (Visibles en ángulos posteriores) */}
+                  {isHeadlightsOn && isRearFacing && (
+                    <>
+                      <div className="absolute top-[47%] right-[16%] w-16 h-6 rounded-full bg-rose-600 blur-[3px] shadow-[0_0_40px_#f43f5e,0_0_70px_#e11d48] pointer-events-none animate-pulse" />
+                      <div className="absolute top-[49%] left-[22%] w-12 h-5 rounded-full bg-rose-600 blur-[3px] shadow-[0_0_35px_#f43f5e] pointer-events-none animate-pulse" />
+                    </>
+                  )}
+                </div>
               </div>
             ) : (
               /* MODO CABINA INTERIOR VR PANORÁMICO */
@@ -611,14 +639,16 @@ export const Viewer360Modal: React.FC = () => {
                   className="transition-transform duration-200 ease-out"
                   style={{ transform: `scale(${zoomLevel}) translateX(${interiorPanX}px)` }}
                 >
-                  <img
+                  <SafeImage
                     src={interiorImage}
+                    fallbackSrc={FALLBACK_IMAGES.interiorCockpit}
+                    typeHint="vehicle"
                     alt="Cabina Interior 360 VR"
                     className="w-full max-h-[52vh] object-cover pointer-events-none"
                     draggable={false}
                   />
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
 
                 <div className="absolute bottom-5 left-6 text-white pointer-events-none">
                   <span className="text-[10px] font-mono uppercase bg-white/20 px-2 py-0.5 rounded text-white/80 font-bold">
@@ -637,7 +667,6 @@ export const Viewer360Modal: React.FC = () => {
             {/* PUNTOS DE INSPECCIÓN INTERACTIVOS (HOTSPOTS) */}
             {activeHotspotsList.map((hotspot) => {
               const isActive = activeHotspot === hotspot.id;
-              // Si el hotspot tiene rango de ángulos, solo mostrar si está dentro del ángulo visible
               if (
                 mode === 'exterior' &&
                 hotspot.minAngle !== undefined &&
@@ -648,7 +677,7 @@ export const Viewer360Modal: React.FC = () => {
                     ? rotationAngle >= hotspot.minAngle || rotationAngle <= hotspot.maxAngle
                     : rotationAngle >= hotspot.minAngle && rotationAngle <= hotspot.maxAngle;
                 if (!inRange && componentFilter === 'todos') {
-                  return null; // Ocultar si el ángulo actual mira hacia el lado opuesto
+                  return null;
                 }
               }
 
@@ -658,6 +687,10 @@ export const Viewer360Modal: React.FC = () => {
                   onClick={(e) => {
                     e.stopPropagation();
                     setActiveHotspot(hotspot.id);
+                    if (hotspot.id === 'faros' && !isHeadlightsOn) {
+                      setIsHeadlightsOn(true);
+                      showToast('Faros Bi-LED encendidos');
+                    }
                   }}
                   className="absolute cursor-pointer group z-20"
                   style={{
@@ -666,18 +699,18 @@ export const Viewer360Modal: React.FC = () => {
                   }}
                 >
                   <div className="relative flex items-center justify-center">
-                    <span className="absolute w-8 h-8 rounded-full bg-secondary-container/40 animate-ping pointer-events-none"></span>
+                    <span className="absolute w-8 h-8 rounded-full bg-secondary-container/40 animate-ping pointer-events-none" />
                     <button
                       className={`w-7 h-7 rounded-full flex items-center justify-center shadow-lg transition-all cursor-pointer ${
                         isActive
                           ? 'bg-secondary-container text-white scale-125 ring-4 ring-secondary-container/40'
                           : 'bg-white/90 text-primary hover:bg-white hover:scale-110'
                       }`}
+                      aria-label={hotspot.label}
                     >
                       <span className="material-symbols-outlined text-[15px]">info</span>
                     </button>
 
-                    {/* Etiqueta flotante */}
                     <span className="absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/85 text-white text-[10px] font-bold px-2 py-0.5 rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity border border-white/20">
                       {hotspot.label}
                     </span>
@@ -689,12 +722,12 @@ export const Viewer360Modal: React.FC = () => {
 
           {/* TARJETA DETALLE DEL PUNTO ACTIVO */}
           {currentHotspotData && (
-            <div className="absolute bottom-5 left-5 max-w-sm bg-[#0f172a]/95 border border-white/20 backdrop-blur-md p-4 rounded-2xl shadow-2xl text-white z-20 animate-in fade-in slide-in-from-bottom-2 duration-200">
+            <div className="absolute bottom-5 left-5 max-w-sm bg-[#0f172a]/95 border border-white/20 backdrop-blur-md p-4 rounded-2xl shadow-2xl text-white z-20">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-[10px] font-mono text-secondary-fixed uppercase font-bold tracking-wider">
                   {currentHotspotData.code}
                 </span>
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
               </div>
               <h5 className="font-headline font-bold text-sm text-white mb-1">
                 {currentHotspotData.title}
@@ -702,7 +735,16 @@ export const Viewer360Modal: React.FC = () => {
               <p className="text-xs text-white/70 leading-relaxed mb-3">
                 {currentHotspotData.desc}
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                {currentHotspotData.category === 'faros' && (
+                  <button
+                    onClick={toggleHeadlights}
+                    className="bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1 cursor-pointer shadow-xs"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">highlight</span>
+                    <span>{isHeadlightsOn ? 'Apagar Faros' : 'Encender Faros Bi-LED'}</span>
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     setIsViewer360Open(false);
@@ -735,23 +777,23 @@ export const Viewer360Modal: React.FC = () => {
               {rotationAngle}°
             </span>
           </div>
-        </div>
+        </main>
 
         {/* BARRA INFERIOR DE CONFIGURACIÓN: Colores Oficiales, Presets de Ángulos y Acciones */}
-        <div className="px-4 sm:px-6 py-3 border-t border-white/10 bg-[#070b14]/95 z-30 flex flex-wrap items-center justify-between gap-3">
-          {/* Selector de Colores con Visualización de Acabado */}
+        <footer className="px-4 sm:px-6 py-3 border-t border-white/10 bg-[#070b14]/95 z-30 flex flex-wrap items-center justify-between gap-3">
+          {/* SELECTOR DE COLORES OFICIALES */}
           {mode === 'exterior' ? (
             <div className="flex items-center gap-2.5">
               <span className="text-[11px] font-bold text-white/70 uppercase tracking-wider hidden sm:inline">
                 Color de Carrocería:
               </span>
               <div className="flex items-center gap-1.5">
-                {colorOptions.map((c) => (
+                {SHOWROOM_COLORS.map((c) => (
                   <button
                     key={c.id}
                     onClick={() => {
                       setSelectedColor(c.id);
-                      showToast(`Pintura aplicada: ${c.name}`);
+                      showToast(`Pintura seleccionada: ${c.name}`);
                     }}
                     className={`w-7 h-7 rounded-full border-2 transition-all cursor-pointer relative ${
                       selectedColor === c.id
@@ -760,6 +802,7 @@ export const Viewer360Modal: React.FC = () => {
                     }`}
                     style={{ backgroundColor: c.hex }}
                     title={c.name}
+                    aria-label={c.name}
                   >
                     {selectedColor === c.id && (
                       <span className="absolute inset-0 flex items-center justify-center text-[10px] text-primary font-bold">
@@ -780,7 +823,7 @@ export const Viewer360Modal: React.FC = () => {
             </div>
           )}
 
-          {/* SELECTORES DE ÁNGULOS DE VISIÓN DIRECTOS (0°, 45°, 90°, 135°, 180°, 270°) */}
+          {/* SELECTORES DE ÁNGULOS DE VISIÓN DIRECTOS */}
           {mode === 'exterior' && (
             <div className="flex items-center gap-1 overflow-x-auto scrollbar-none max-w-full py-0.5">
               {/* Botón de Auto-Giro */}
@@ -791,7 +834,7 @@ export const Viewer360Modal: React.FC = () => {
                     ? 'bg-secondary-container text-white border-secondary-container shadow-xs animate-pulse'
                     : 'bg-white/10 text-white/80 border-white/15 hover:bg-white/15'
                 }`}
-                title="Activar/Desactivar Rotación Automática en Plataforma"
+                title="Activar o desactivar rotación automática"
               >
                 <span className="material-symbols-outlined text-[15px]">
                   {isAutoRotating ? 'pause' : 'autorenew'}
@@ -801,14 +844,7 @@ export const Viewer360Modal: React.FC = () => {
                 </span>
               </button>
 
-              {[
-                { angle: 0, label: 'Frontal (0°)' },
-                { angle: 45, label: '3/4 Frontal (45°)' },
-                { angle: 90, label: 'Perfil (90°)' },
-                { angle: 135, label: '3/4 Posterior (135°)' },
-                { angle: 180, label: 'Posterior (180°)' },
-                { angle: 270, label: 'Perfil Izq. (270°)' },
-              ].map((btn) => {
+              {ANGLE_PRESETS.map((btn) => {
                 const isActive =
                   Math.abs(rotationAngle - btn.angle) < 15 ||
                   (btn.angle === 0 && rotationAngle > 345);
@@ -818,7 +854,7 @@ export const Viewer360Modal: React.FC = () => {
                     onClick={() => {
                       setRotationAngle(btn.angle);
                       setIsAutoRotating(false);
-                      showToast(`Ángulo cambiado a: ${btn.label}`);
+                      showToast(`Ángulo: ${btn.label}`);
                     }}
                     className={`px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                       isActive
@@ -826,14 +862,14 @@ export const Viewer360Modal: React.FC = () => {
                         : 'bg-white/5 text-white/70 border-white/10 hover:bg-white/15 hover:text-white'
                     }`}
                   >
-                    {btn.label}
+                    {btn.shortLabel}
                   </button>
                 );
               })}
             </div>
           )}
 
-          {/* Botones de Acción Comercial */}
+          {/* ACCIONES COMERCIALES */}
           <div className="flex items-center gap-2 shrink-0">
             <a
               href={`https://wa.me/51987654321?text=${whatsappConfigMessage}`}
@@ -856,7 +892,7 @@ export const Viewer360Modal: React.FC = () => {
               <span>Test Drive</span>
             </button>
           </div>
-        </div>
+        </footer>
       </div>
     </div>
   );

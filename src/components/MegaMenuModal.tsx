@@ -1,5 +1,20 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
+import {
+  AutoPartsIcon,
+  VehicleIcon,
+  WorkshopServiceIcon,
+  PlanRetomaIcon,
+  Showroom360Icon,
+  MasterCatalogIcon,
+  GarageLiftIcon,
+  TireOffRoadIcon,
+  Equip4x4Icon,
+  LubricantOilIcon,
+  SecurityFilmIcon,
+  DetailingPPFIcon,
+  SuspensionHDIcon,
+} from './AutoIcons';
 
 interface MegaMenuModalProps {
   isOpen: boolean;
@@ -810,9 +825,9 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
           </span>
           <button
             onClick={() => handleNav(() => setCurrentView('trade-in'))}
-            className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex items-center gap-1 shrink-0 cursor-pointer shadow-2xs"
+            className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer shadow-2xs"
           >
-            <span className="material-symbols-outlined text-[14px]">swap_horiz</span>
+            <PlanRetomaIcon size={14} className="text-white" />
             <span>Plan Retoma (Bono S/ 7,500)</span>
           </button>
           <button
@@ -824,23 +839,23 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
           </button>
           <button
             onClick={() => handleNav(() => setIsGarageModalOpen(true))}
-            className="px-3 py-1.5 rounded-lg bg-surface-container-lowest text-primary hover:bg-primary hover:text-white border border-surface-container transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
+            className="px-3 py-1.5 rounded-lg bg-surface-container-lowest text-primary hover:bg-primary hover:text-white border border-surface-container transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
           >
-            <span className="material-symbols-outlined text-[14px]">garage</span>
+            <GarageLiftIcon size={14} />
             <span>Mi Garaje Virtual</span>
           </button>
           <button
             onClick={() => handleNav(() => setIsViewer360Open(true))}
-            className="px-3 py-1.5 rounded-lg bg-surface-container-lowest text-secondary hover:bg-secondary hover:text-white border border-surface-container transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
+            className="px-3 py-1.5 rounded-lg bg-surface-container-lowest text-secondary hover:bg-secondary hover:text-white border border-surface-container transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
           >
-            <span className="material-symbols-outlined text-[14px]">360</span>
+            <Showroom360Icon size={14} />
             <span>Showroom 360°</span>
           </button>
           <button
             onClick={() => handleNav(() => setCurrentView('services'))}
-            className="px-3 py-1.5 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-primary hover:text-white border border-surface-container transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
+            className="px-3 py-1.5 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-primary hover:text-white border border-surface-container transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
           >
-            <span className="material-symbols-outlined text-[14px]">event_available</span>
+            <WorkshopServiceIcon size={14} />
             <span>Cita de Taller Online</span>
           </button>
           <button
@@ -863,6 +878,36 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
             ) : (
               filteredCategories.map((cat) => {
                 const isActive = cat.id === currentActiveCategory.id;
+                const iconColorClass = isActive ? 'text-secondary-fixed' : 'text-primary';
+
+                const renderCatIcon = () => {
+                  switch (cat.id) {
+                    case 'vehiculos-2025':
+                    case 'seminuevos':
+                      return <VehicleIcon size={18} className={iconColorClass} />;
+                    case 'mickey-thompson':
+                      return <TireOffRoadIcon size={18} className={iconColorClass} />;
+                    case 'keko-4x4':
+                      return <Equip4x4Icon size={18} className={iconColorClass} />;
+                    case 'mobil-lubricantes':
+                      return <LubricantOilIcon size={18} className={iconColorClass} />;
+                    case 'llumar-seguridad':
+                      return <SecurityFilmIcon size={18} className={iconColorClass} />;
+                    case 'detailing-3m':
+                      return <DetailingPPFIcon size={18} className={iconColorClass} />;
+                    case 'trakko-suspension':
+                      return <SuspensionHDIcon size={18} className={iconColorClass} />;
+                    case 'toyota-oem':
+                      return <AutoPartsIcon size={18} className={iconColorClass} />;
+                    case 'plan-retoma':
+                      return <PlanRetomaIcon size={18} className={iconColorClass} />;
+                    case 'taller-servicios':
+                      return <WorkshopServiceIcon size={18} className={iconColorClass} />;
+                    default:
+                      return <MasterCatalogIcon size={18} className={iconColorClass} />;
+                  }
+                };
+
                 return (
                   <button
                     key={cat.id}
@@ -875,9 +920,9 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
                     }`}
                   >
                     <div className="flex items-center gap-2.5 truncate pr-2">
-                      <span className={`material-symbols-outlined text-lg shrink-0 ${isActive ? 'text-secondary-fixed' : 'text-outline'}`}>
-                        {cat.icon}
-                      </span>
+                      <div className="shrink-0 flex items-center justify-center">
+                        {renderCatIcon()}
+                      </div>
                       <span className="text-xs sm:text-sm truncate">{cat.name}</span>
                     </div>
 

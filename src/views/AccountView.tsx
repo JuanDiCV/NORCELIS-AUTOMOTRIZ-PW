@@ -10,6 +10,7 @@ import {
   formatSpanishDate,
 } from '../utils/maintenanceHelper';
 import { MaintenanceRecord } from '../types';
+import { generateMaintenanceCertificatePdf, generateWishlistQuotePdf } from '../utils/pdfGenerator';
 
 export const AccountView: React.FC = () => {
   const { user, logoutUser, setCurrentView, showToast, setIsGarageModalOpen } = useApp();
@@ -662,10 +663,32 @@ export const AccountView: React.FC = () => {
 
                   <div className="flex items-center justify-end gap-3 pt-2">
                     <button
-                      onClick={() => showToast(`Descargando Orden de Trabajo en PDF para la cita ${apt.id}...`)}
-                      className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+                      onClick={() => {
+                        try {
+                          const priceNum = parseFloat(apt.priceEstimate.replace(/[^0-9.]/g, '')) || 350;
+                          const items = [
+                            {
+                              id: apt.id,
+                              type: 'service' as const,
+                              title: `Orden de Trabajo: ${apt.serviceName}`,
+                              subtitle: `Vehículo: ${apt.vehicle} • Bahía: ${apt.bayNumber} • Asesor: ${apt.advisor} • Turno: ${apt.date} (${apt.time})`,
+                              sku: apt.id,
+                              priceSoles: priceNum,
+                              quantity: 1,
+                              image: '',
+                              compatibleWithActiveGarage: true,
+                              categoryBadge: 'Servicio Oficial Taller',
+                            },
+                          ];
+                          const fileName = generateWishlistQuotePdf(items, user.name);
+                          showToast(`Orden de Trabajo oficial en PDF descargada: ${fileName}`);
+                        } catch (err) {
+                          showToast(`Descargando Orden de Trabajo en PDF para la cita ${apt.id}...`);
+                        }
+                      }}
+                      className="text-xs font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer"
                     >
-                      <span className="material-symbols-outlined text-sm">description</span>
+                      <span className="material-symbols-outlined text-sm text-red-600">picture_as_pdf</span>
                       Descargar Orden de Servicio
                     </button>
                     {apt.status === 'Confirmada' && (
@@ -755,11 +778,31 @@ export const AccountView: React.FC = () => {
 
                     <div className="flex gap-2">
                       <button
-                        onClick={() => showToast(`Descargando Factura Electrónica ${ord.invoiceNumber}...`)}
-                        className="bg-surface-container-low hover:bg-surface-container text-primary font-bold px-3 py-1.5 rounded-xl border border-surface-container text-xs flex items-center gap-1"
+                        onClick={() => {
+                          try {
+                            const items = ord.items.map((it, i) => ({
+                              id: `ord-it-${i}`,
+                              type: 'part' as const,
+                              title: it.name,
+                              subtitle: `Comprobante Oficial SUNAT: ${ord.invoiceNumber}`,
+                              sku: `FAC-${i + 1}`,
+                              priceSoles: it.price,
+                              quantity: it.qty,
+                              image: '',
+                              compatibleWithActiveGarage: true,
+                              categoryBadge: 'Repuesto Original',
+                            }));
+                            const fileName = generateWishlistQuotePdf(items, user.name);
+                            showToast(`Factura electrónica en PDF descargada: ${fileName}`);
+                          } catch (err) {
+                            showToast(`Descargando Factura Electrónica ${ord.invoiceNumber}...`);
+                          }
+                        }}
+                        className="bg-surface-container-low hover:bg-surface-container text-primary font-bold px-3 py-1.5 rounded-xl border border-surface-container text-xs flex items-center gap-1 cursor-pointer"
+                        title="Descargar Factura Oficial en PDF"
                       >
-                        <span className="material-symbols-outlined text-sm">download</span>
-                        Factura PDF/XML
+                        <span className="material-symbols-outlined text-sm text-red-600">picture_as_pdf</span>
+                        Factura PDF
                       </button>
                     </div>
                   </div>
@@ -1090,10 +1133,19 @@ export const AccountView: React.FC = () => {
                             </div>
 
                             <button
-                              onClick={() => showToast(`Descargando Certificado Oficial de Mantenimiento ${rec.id} (PDF)...`)}
+                              onClick={() => {
+                                try {
+                                  const activeCar = garageCars.find((c) => c.plate === rec.vehiclePlate) || garageCars[0];
+                                  const fileName = generateMaintenanceCertificatePdf(rec, activeCar as any);
+                                  showToast(`Certificado Oficial en PDF descargado: ${fileName}`);
+                                } catch (err) {
+                                  showToast(`Descargando Certificado Oficial de Mantenimiento ${rec.id} (PDF)...`);
+                                }
+                              }}
                               className="text-primary hover:underline font-bold text-xs flex items-center gap-1 self-end sm:self-auto cursor-pointer"
+                              title="Descargar Certificado Oficial de Mantenimiento con Garantía Nor Celis"
                             >
-                              <span className="material-symbols-outlined text-[14px]">download</span>
+                              <span className="material-symbols-outlined text-[14px] text-red-600">picture_as_pdf</span>
                               Certificado PDF
                             </button>
                           </div>

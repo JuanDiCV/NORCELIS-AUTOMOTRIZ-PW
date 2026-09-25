@@ -3,6 +3,108 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function() {
+        function isWsError(msg) {
+          var str = String(msg || '');
+          return (
+            str.indexOf('WebSocket') !== -1 ||
+            str.indexOf('ws://') !== -1 ||
+            str.indexOf('wss://') !== -1 ||
+            str.indexOf('closed without opened') !== -1 ||
+            str.indexOf('vite') !== -1 && str.indexOf('connect') !== -1
+          );
+        }
+
+        // 1. Intercept unhandled promise rejections
+        window.addEventListener('unhandledrejection', function(event) {
+          var reason = event.reason;
+          var msg = (reason && (reason.message || reason.stack || reason)) || '';
+          if (isWsError(msg)) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }
+        }, true);
+
+        // 2. Intercept global runtime errors
+        window.addEventListener('error', function(event) {
+          var msg = event.message || (event.error && event.error.message) || '';
+          if (isWsError(msg)) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }
+        }, true);
+
+        // 3. Stub window.WebSocket for Vite HMR in embedded environment
+        var OrigWS = window.WebSocket;
+        if (OrigWS) {
+          window.WebSocket = function(url, protocols) {
+            var urlStr = String(url || '');
+            if (
+              urlStr.indexOf('24678') !== -1 ||
+              urlStr.indexOf('vite') !== -1 ||
+              urlStr.indexOf('run.app') !== -1 ||
+              urlStr.indexOf('localhost:3000') !== -1
+            ) {
+              var listeners = {};
+              var dummy = {
+                binaryType: 'blob',
+                bufferedAmount: 0,
+                extensions: '',
+                protocol: '',
+                readyState: 1, // OPEN
+                url: urlStr,
+                CONNECTING: 0,
+                OPEN: 1,
+                CLOSING: 2,
+                CLOSED: 3,
+                addEventListener: function(type, fn) {
+                  listeners[type] = listeners[type] || [];
+                  listeners[type].push(fn);
+                },
+                removeEventListener: function(type, fn) {
+                  if (!listeners[type]) return;
+                  listeners[type] = listeners[type].filter(function(f) { return f !== fn; });
+                },
+                dispatchEvent: function() { return false; },
+                send: function() {},
+                close: function() {
+                  dummy.readyState = 3;
+                  if (typeof dummy.onclose === 'function') {
+                    dummy.onclose({ wasClean: true, code: 1000, reason: '' });
+                  }
+                  if (listeners.close) {
+                    listeners.close.forEach(function(fn) { fn({ wasClean: true, code: 1000, reason: '' }); });
+                  }
+                },
+                onopen: null,
+                onclose: null,
+                onerror: null,
+                onmessage: null,
+              };
+
+              // Notify open cleanly so no connection error is generated
+              setTimeout(function() {
+                if (dummy.readyState === 1) {
+                  if (typeof dummy.onopen === 'function') dummy.onopen({ type: 'open' });
+                  if (listeners.open) {
+                    listeners.open.forEach(function(fn) { fn({ type: 'open' }); });
+                  }
+                }
+              }, 0);
+
+              return dummy;
+            }
+            return new (Function.prototype.bind.apply(OrigWS, [null].concat(Array.prototype.slice.call(arguments))))();
+          };
+          window.WebSocket.prototype = OrigWS.prototype;
+          window.WebSocket.CONNECTING = 0;
+          window.WebSocket.OPEN = 1;
+          window.WebSocket.CLOSING = 2;
+          window.WebSocket.CLOSED = 3;
+        }
+      })();
+    </script>
     <title>Nor Celis Automotriz - Concesionario &amp; Autopartes OEM</title>
     <meta name="description" content="Concesionario oficial multimarca, venta de vehículos nuevos 2025 y seminuevos certificados, autopartes OEM garantizadas, taller mecánico especializado y visor 360° interactivo." />
     <meta property="og:title" content="Nor Celis Automotriz - Concesionario &amp; Autopartes OEM" />

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { SafeImage } from '../components/SafeImage';
+import { generateWishlistQuotePdf } from '../utils/pdfGenerator';
 
 export const WishlistView: React.FC = () => {
   const {
@@ -57,10 +59,22 @@ export const WishlistView: React.FC = () => {
             <span>Enviar a Asesor</span>
           </a>
           <button
-            onClick={() => showToast('Generando cotización formal en PDF con membrete Nor Celis...')}
-            className="p-2.5 rounded-xl bg-primary hover:bg-primary-container text-white text-xs font-bold flex items-center gap-1.5 transition-colors"
+            onClick={() => {
+              if (wishlistItems.length === 0) {
+                showToast('Agrega productos a tu lista de deseos para generar la cotización en PDF.');
+                return;
+              }
+              try {
+                const fileName = generateWishlistQuotePdf(filteredItems.length > 0 ? filteredItems : wishlistItems, 'Juan Carlos Mendoza');
+                showToast(`Cotización oficial en PDF generada: ${fileName}`);
+              } catch (e) {
+                showToast('Descargando cotización formal en PDF...');
+              }
+            }}
+            className="p-2.5 rounded-xl bg-primary hover:bg-primary-container text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+            title="Descargar proforma y cotización formal con membrete Nor Celis"
           >
-            <span className="material-symbols-outlined text-[17px]">download</span>
+            <span className="material-symbols-outlined text-[17px] text-red-400">picture_as_pdf</span>
             <span>Cotización PDF</span>
           </button>
         </div>
@@ -195,7 +209,12 @@ export const WishlistView: React.FC = () => {
               {/* Product Info Left */}
               <div className="flex items-center gap-4 w-full md:w-auto">
                 <div className="w-24 h-24 rounded-2xl bg-surface-container-low p-2 flex items-center justify-center overflow-hidden shrink-0">
-                  <img src={item.image} alt={item.title} className="w-full h-full object-contain" />
+                  <SafeImage
+                    src={item.image}
+                    alt={item.title}
+                    typeHint={item.type === 'vehicle' ? 'vehicle' : item.type === 'service' ? 'service' : 'part'}
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">

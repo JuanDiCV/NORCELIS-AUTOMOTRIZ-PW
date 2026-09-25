@@ -1,6 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { Vehicle } from '../types';
+import { SafeImage } from '../components/SafeImage';
+import { FocalZoomImage } from '../components/FocalZoomImage';
+import { FALLBACK_IMAGES } from '../utils/imageAssets';
 
 export const CarsCatalogView: React.FC = () => {
   const {
@@ -18,6 +21,7 @@ export const CarsCatalogView: React.FC = () => {
   const [conditionFilter, setConditionFilter] = useState<'all' | 'nuevo' | 'seminuevo'>('all');
   const [bodyTypeFilter, setBodyTypeFilter] = useState<string>('all');
   const [brandFilter, setBrandFilter] = useState<string>('all');
+  const [brandSegment, setBrandSegment] = useState<'all' | 'oficial' | 'alternativa'>('all');
 
   // 1. Rango de precio (Soles)
   const MIN_POSSIBLE_PRICE = 60000;
@@ -44,6 +48,7 @@ export const CarsCatalogView: React.FC = () => {
 
   // Mobile drawer state
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState<boolean>(false);
+  const [zoomModalVehicle, setZoomModalVehicle] = useState<Vehicle | null>(null);
 
   // --- Simulador de Crédito Rápido ---
   const [calcCarPrice] = useState<number>(121830);
@@ -102,6 +107,7 @@ export const CarsCatalogView: React.FC = () => {
     setConditionFilter('all');
     setBodyTypeFilter('all');
     setBrandFilter('all');
+    setBrandSegment('all');
     setMinPrice(MIN_POSSIBLE_PRICE);
     setMaxPrice(MAX_POSSIBLE_PRICE);
     setMaxMileage(MAX_POSSIBLE_MILEAGE);
@@ -120,6 +126,7 @@ export const CarsCatalogView: React.FC = () => {
     if (conditionFilter !== 'all') count++;
     if (bodyTypeFilter !== 'all') count++;
     if (brandFilter !== 'all') count++;
+    if (brandSegment !== 'all') count++;
     if (minPrice > MIN_POSSIBLE_PRICE || maxPrice < MAX_POSSIBLE_PRICE) count++;
     if (maxMileage < MAX_POSSIBLE_MILEAGE || onlyZeroKm) count++;
     if (minYear > MIN_POSSIBLE_YEAR || maxYear < MAX_POSSIBLE_YEAR) count++;
@@ -130,6 +137,7 @@ export const CarsCatalogView: React.FC = () => {
     conditionFilter,
     bodyTypeFilter,
     brandFilter,
+    brandSegment,
     minPrice,
     maxPrice,
     maxMileage,
@@ -143,6 +151,10 @@ export const CarsCatalogView: React.FC = () => {
   const filteredVehicles = useMemo(() => {
     return vehicles
       .filter((v) => {
+        // Segmento de marca: Oficial vs Alternativa / China
+        if (brandSegment === 'oficial' && v.brandType === 'alternativa') return false;
+        if (brandSegment === 'alternativa' && v.brandType !== 'alternativa') return false;
+
         // Texto libre
         if (searchQuery.trim() !== '') {
           const q = searchQuery.toLowerCase();
@@ -626,27 +638,124 @@ export const CarsCatalogView: React.FC = () => {
         </div>
       </div>
 
-      {/* Marca & Fabricante */}
-      <div className="space-y-2">
-        <label className="block text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
-          <span className="material-symbols-outlined text-[16px] text-secondary">verified</span>
-          Marca Oficial
+      {/* Marca & Segmento de Fabricante */}
+      <div className="space-y-3">
+        <label className="block text-xs font-bold text-primary uppercase tracking-wider flex items-center justify-between">
+          <span className="flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[16px] text-secondary">verified</span>
+            Marcas & Fabricantes
+          </span>
+          <span className="text-[10px] text-outline font-medium">Oficiales & Alternativas</span>
         </label>
-        <div className="flex flex-wrap gap-1 text-xs">
-          {['all', 'Toyota', 'Nissan', 'Hyundai', 'Volvo', 'BMW', 'Audi', 'Kia'].map((brand) => (
-            <button
-              key={brand}
-              onClick={() => setBrandFilter(brand)}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
-                brandFilter === brand
-                  ? 'bg-primary text-white font-bold shadow-xs'
-                  : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'
-              }`}
-            >
-              {brand === 'all' ? 'Todas' : brand}
-            </button>
-          ))}
+
+        {/* Selector de Segmento: Oficial vs China / Alternativa */}
+        <div className="grid grid-cols-3 gap-1 bg-surface-container-low p-1 rounded-xl text-[11px] font-bold">
+          <button
+            type="button"
+            onClick={() => {
+              setBrandSegment('all');
+              setBrandFilter('all');
+            }}
+            className={`py-1.5 px-2 rounded-lg transition-all text-center cursor-pointer ${
+              brandSegment === 'all'
+                ? 'bg-primary text-white shadow-xs'
+                : 'text-outline hover:text-on-surface'
+            }`}
+          >
+            Todas
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setBrandSegment('oficial');
+              if (['Geely', 'Haval', 'Chery', 'Changan', 'Jetour', 'BYD', 'GWM'].includes(brandFilter)) {
+                setBrandFilter('all');
+              }
+            }}
+            className={`py-1.5 px-2 rounded-lg transition-all text-center cursor-pointer ${
+              brandSegment === 'oficial'
+                ? 'bg-primary text-white shadow-xs'
+                : 'text-outline hover:text-on-surface'
+            }`}
+          >
+            Oficiales
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setBrandSegment('alternativa');
+              if (['Toyota', 'Nissan', 'Hyundai', 'Volvo', 'BMW', 'Audi', 'Kia'].includes(brandFilter)) {
+                setBrandFilter('all');
+              }
+            }}
+            className={`py-1.5 px-2 rounded-lg transition-all text-center cursor-pointer ${
+              brandSegment === 'alternativa'
+                ? 'bg-amber-600 text-white shadow-xs'
+                : 'text-outline hover:text-on-surface'
+            }`}
+          >
+            Chinas / Alt.
+          </button>
         </div>
+
+        {/* Marcas Oficiales */}
+        {(brandSegment === 'all' || brandSegment === 'oficial') && (
+          <div className="space-y-1.5">
+            <span className="text-[10px] font-bold text-outline uppercase tracking-wider block">
+              Marcas Oficiales Tradicionales:
+            </span>
+            <div className="flex flex-wrap gap-1 text-xs">
+              {['Toyota', 'Nissan', 'Hyundai', 'Volvo', 'BMW', 'Audi', 'Kia'].map((brand) => {
+                const count = vehicles.filter((v) => v.brand === brand).length;
+                return (
+                  <button
+                    key={brand}
+                    type="button"
+                    onClick={() => setBrandFilter(brandFilter === brand ? 'all' : brand)}
+                    className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+                      brandFilter === brand
+                        ? 'bg-primary text-white font-bold shadow-xs'
+                        : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'
+                    }`}
+                  >
+                    <span>{brand}</span>
+                    <span className="text-[10px] opacity-70">({count})</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Marcas Alternativas & Chinas */}
+        {(brandSegment === 'all' || brandSegment === 'alternativa') && (
+          <div className="space-y-1.5 pt-1">
+            <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
+              <span className="material-symbols-outlined text-[13px]">stars</span>
+              Marcas Alternativas & Chinas Garantizadas:
+            </span>
+            <div className="flex flex-wrap gap-1 text-xs">
+              {['Geely', 'Haval', 'Chery', 'Changan', 'Jetour', 'BYD', 'GWM'].map((brand) => {
+                const count = vehicles.filter((v) => v.brand === brand).length;
+                return (
+                  <button
+                    key={brand}
+                    type="button"
+                    onClick={() => setBrandFilter(brandFilter === brand ? 'all' : brand)}
+                    className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+                      brandFilter === brand
+                        ? 'bg-amber-600 text-white font-bold shadow-xs'
+                        : 'bg-amber-500/10 text-amber-900 dark:text-amber-300 border border-amber-500/20 hover:bg-amber-500/20'
+                    }`}
+                  >
+                    <span>{brand}</span>
+                    <span className="text-[10px] opacity-80">({count})</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1173,8 +1282,10 @@ export const CarsCatalogView: React.FC = () => {
                         setCurrentView('vehicle-pdp');
                       }}
                     >
-                      <img
+                      <SafeImage
                         src={car.image}
+                        fallbackSrc={FALLBACK_IMAGES.vehicleSuv}
+                        typeHint="vehicle"
                         alt={car.name}
                         className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110 hover:scale-110"
                       />
@@ -1230,16 +1341,30 @@ export const CarsCatalogView: React.FC = () => {
                         </span>
                       </button>
 
-                      {/* Barra inferior sobre la imagen con Año y Kilometraje destacados */}
+                      {/* Barra inferior sobre la imagen con Año, Kilometraje y Botón Zoom HD */}
                       <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[11px] font-bold">
-                        <span className="bg-black/75 backdrop-blur-xs text-white px-2.5 py-0.5 rounded-lg flex items-center gap-1">
-                          <span className="material-symbols-outlined text-[13px] text-amber-400">calendar_month</span>
-                          Año {car.year}
-                        </span>
-                        <span className="bg-black/75 backdrop-blur-xs text-white px-2.5 py-0.5 rounded-lg flex items-center gap-1">
-                          <span className="material-symbols-outlined text-[13px] text-emerald-400">speed</span>
-                          {car.condition === 'nuevo' ? '0 km (Nuevo)' : `${carMileage.toLocaleString()} km`}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="bg-black/75 backdrop-blur-xs text-white px-2 py-0.5 rounded-lg flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[13px] text-amber-400">calendar_month</span>
+                            Año {car.year}
+                          </span>
+                          <span className="bg-black/75 backdrop-blur-xs text-white px-2 py-0.5 rounded-lg flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[13px] text-emerald-400">speed</span>
+                            {car.condition === 'nuevo' ? '0 km' : `${carMileage.toLocaleString()} km`}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setZoomModalVehicle(car);
+                          }}
+                          className="bg-white/90 hover:bg-primary hover:text-white text-on-surface text-[10px] font-bold px-2 py-0.5 rounded-lg shadow-sm border border-white/40 flex items-center gap-1 transition-all opacity-90 group-hover:opacity-100 cursor-pointer"
+                          title="Inspeccionar con Zoom Focal HD"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">zoom_in</span>
+                          <span>Zoom HD</span>
+                        </button>
                       </div>
                     </div>
 
@@ -1251,6 +1376,16 @@ export const CarsCatalogView: React.FC = () => {
                           <span className="bg-surface-container px-2 py-0.5 rounded-md text-on-surface uppercase">
                             {car.brand}
                           </span>
+                          {car.brandType === 'alternativa' ? (
+                            <span className="bg-amber-500/15 text-amber-900 dark:text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-md flex items-center gap-1 font-bold">
+                              <span className="material-symbols-outlined text-[12px] text-amber-600">stars</span>
+                              <span>Marca Alternativa China • Garantía 5 Años</span>
+                            </span>
+                          ) : (
+                            <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-md">
+                              OEM Oficial
+                            </span>
+                          )}
                           <span className="bg-surface-container px-2 py-0.5 rounded-md text-on-surface">
                             {car.bodyType}
                           </span>
@@ -1358,6 +1493,79 @@ export const CarsCatalogView: React.FC = () => {
           )}
         </main>
       </div>
+      {/* Quick Focal Zoom Modal for Vehicles */}
+      {zoomModalVehicle && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 md:p-6 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl border border-surface-container flex flex-col max-h-[92vh]">
+            <div className="p-4 md:p-5 flex items-center justify-between border-b border-surface-container bg-surface-container-low">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-cyan-600 text-lg">zoom_in</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-secondary">
+                    {zoomModalVehicle.brand} • {zoomModalVehicle.condition === 'nuevo' ? '0 KM 2025' : 'Seminuevo'}
+                  </span>
+                </div>
+                <h3 className="text-sm md:text-base font-bold text-primary truncate max-w-lg">
+                  {zoomModalVehicle.name}
+                </h3>
+              </div>
+              <button
+                onClick={() => setZoomModalVehicle(null)}
+                className="w-9 h-9 rounded-full bg-white hover:bg-surface-container text-outline flex items-center justify-center shadow-xs cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-5 overflow-y-auto space-y-4">
+              <FocalZoomImage
+                src={zoomModalVehicle.image}
+                alt={zoomModalVehicle.name}
+                typeHint="vehicle"
+                aspectRatioClass="h-72 sm:h-96 w-full"
+                badge={zoomModalVehicle.condition === 'nuevo' ? '0 KM 2025' : 'Seminuevo Certificado'}
+                discountBadge={zoomModalVehicle.discountBonus}
+                subBadge={zoomModalVehicle.brandType === 'alternativa' ? 'Marca Alternativa Garantizada' : undefined}
+              />
+
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-3 border-t border-surface-container">
+                <div>
+                  <div className="text-xs text-outline font-medium">{zoomModalVehicle.subtitle}</div>
+                  <div className="text-xl font-black text-primary font-mono">
+                    S/ {zoomModalVehicle.priceSoles.toLocaleString()}{' '}
+                    <span className="text-xs text-outline font-normal">(${zoomModalVehicle.priceUsd.toLocaleString()} USD)</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <button
+                    onClick={() => {
+                      const id = zoomModalVehicle.id;
+                      setZoomModalVehicle(null);
+                      setSelectedVehicleId(id);
+                      setIsViewer360Open(true);
+                    }}
+                    className="flex-1 sm:flex-none bg-surface-container hover:bg-surface-container-high text-primary text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer min-h-[44px] flex items-center justify-center gap-1"
+                  >
+                    <span className="material-symbols-outlined text-base">360</span>
+                    <span>Visor 360°</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      const id = zoomModalVehicle.id;
+                      setZoomModalVehicle(null);
+                      setSelectedVehicleId(id);
+                      setCurrentView('vehicle-pdp');
+                    }}
+                    className="flex-1 sm:flex-none bg-primary hover:bg-primary-container text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-xs cursor-pointer min-h-[44px]"
+                  >
+                    Ver Ficha Completa
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

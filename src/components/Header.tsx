@@ -2,6 +2,16 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { NorCelisLogo } from './NorCelisLogo';
 import { MegaMenuModal } from './MegaMenuModal';
+import {
+  AutoPartsIcon,
+  VehicleIcon,
+  WorkshopServiceIcon,
+  PlanRetomaIcon,
+  Showroom360Icon,
+  MasterCatalogIcon,
+  GarageLiftIcon,
+  DealershipPinIcon,
+} from './AutoIcons';
 
 type NavDropdownType = 'none' | 'vehiculos' | 'repuestos' | 'finanzas' | 'taller';
 
@@ -109,49 +119,6 @@ export const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 bg-surface-container-lowest border-b border-surface-container shadow-sm">
-      {/* Top Utility Bar */}
-      <div className="bg-primary text-surface-container-highest font-label-md py-2 px-4 sm:px-6 lg:px-8 hidden md:block border-b border-white/10">
-        <div className="max-w-7xl mx-auto flex items-center justify-between text-xs tracking-tight">
-          <div className="flex items-center gap-3 lg:gap-4 flex-wrap">
-            <span className="flex items-center gap-1.5 font-semibold text-secondary-fixed">
-              <span className="material-symbols-outlined text-[15px] text-secondary-fixed">call</span>
-              <span>Central: (076) 364-520</span>
-            </span>
-            <span className="text-white/20 select-none">|</span>
-            <button
-              onClick={() => setCurrentView('locations')}
-              className="hover:text-white transition-colors cursor-pointer flex items-center gap-1.5 font-medium text-white/90"
-              title="Concesionario y Taller en Cajamarca"
-            >
-              <span className="material-symbols-outlined text-[15px] text-amber-300">location_on</span>
-              <span className="truncate max-w-[280px] lg:max-w-none">Concesionario y Taller: AV. VIA DE EVITAMIENTO SUR 6003 – CAJAMARCA</span>
-            </button>
-            <span className="text-white/20 select-none">|</span>
-            <button
-              onClick={() => setCurrentView('trade-in')}
-              className="hover:text-white transition-colors cursor-pointer text-secondary-fixed font-bold flex items-center gap-1.5 bg-white/10 hover:bg-white/15 px-2 py-0.5 rounded-md"
-            >
-              <span className="material-symbols-outlined text-[14px] text-amber-300">local_fire_department</span>
-              <span>Bono Retoma hasta S/ 7,500</span>
-            </button>
-          </div>
-          <div className="flex items-center gap-3 lg:gap-4 shrink-0">
-            <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
-              <span className="material-symbols-outlined text-[15px]">verified</span>
-              <span>Garantía Nor Celis de 1 a 5 Años</span>
-            </span>
-            <span className="text-white/20 select-none">|</span>
-            <button
-              onClick={() => setCurrentView('claims')}
-              className="hover:text-white transition-colors cursor-pointer flex items-center gap-1.5 text-white/80"
-            >
-              <span className="material-symbols-outlined text-[15px]">menu_book</span>
-              <span>Libro de Reclamaciones</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Main Bar */}
       <div className="px-4 sm:px-6 lg:px-8 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
@@ -190,16 +157,9 @@ export const Header: React.FC = () => {
               aria-expanded={isMenuDropdownOpen}
             >
               <div className="w-5 h-5 rounded-md bg-white/20 flex items-center justify-center group-hover:rotate-90 transition-transform">
-                <span className="material-symbols-outlined text-sm text-secondary-fixed">menu</span>
+                <MasterCatalogIcon size={14} className="text-secondary-fixed" />
               </div>
               <span>Menú</span>
-              <span
-                className={`material-symbols-outlined text-sm text-surface-container-highest/80 transition-transform duration-200 ${
-                  isMenuDropdownOpen ? 'rotate-180 text-secondary' : ''
-                }`}
-              >
-                keyboard_arrow_down
-              </span>
             </button>
 
             {/* Interactive Attached Dropdown */}
@@ -207,19 +167,9 @@ export const Header: React.FC = () => {
               <div className="absolute top-full mt-2 left-0 w-[580px] bg-white rounded-2xl shadow-2xl border border-surface-container z-50 p-5 animate-in fade-in zoom-in-95 duration-150">
                 <div className="flex items-center justify-between border-b border-surface-container pb-3 mb-4">
                   <div className="flex items-center gap-2 text-primary font-bold text-sm">
-                    <span className="material-symbols-outlined text-secondary text-lg">widgets</span>
+                    <MasterCatalogIcon size={18} className="text-secondary" />
                     <span>Explorador de Departamentos &amp; Servicios</span>
                   </div>
-                  <button
-                    onClick={() => {
-                      setIsMenuDropdownOpen(false);
-                      setIsMegaMenuOpen(true);
-                    }}
-                    className="text-[11px] font-bold text-primary hover:text-secondary flex items-center gap-1 transition-colors cursor-pointer"
-                  >
-                    <span>Ver Pantalla Completa</span>
-                    <span className="material-symbols-outlined text-xs">open_in_new</span>
-                  </button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -236,7 +186,7 @@ export const Header: React.FC = () => {
                       className="w-full flex items-start gap-3 p-2.5 rounded-xl hover:bg-surface-container-low transition-colors text-left group cursor-pointer"
                     >
                       <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
-                        <span className="material-symbols-outlined text-lg">directions_car</span>
+                        <VehicleIcon size={20} />
                       </div>
                       <div>
                         <div className="text-xs font-bold text-on-surface group-hover:text-primary">
@@ -256,7 +206,7 @@ export const Header: React.FC = () => {
                       className="w-full flex items-start gap-3 p-2.5 rounded-xl hover:bg-surface-container-low transition-colors text-left group cursor-pointer"
                     >
                       <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                        <span className="material-symbols-outlined text-lg">swap_horiz</span>
+                        <PlanRetomaIcon size={20} />
                       </div>
                       <div>
                         <div className="text-xs font-bold text-emerald-900 group-hover:text-emerald-700 flex items-center gap-1.5">
@@ -299,7 +249,7 @@ export const Header: React.FC = () => {
                       className="w-full flex items-start gap-3 p-2.5 rounded-xl hover:bg-surface-container-low transition-colors text-left group cursor-pointer"
                     >
                       <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
-                        <span className="material-symbols-outlined text-lg">360</span>
+                        <Showroom360Icon size={20} />
                       </div>
                       <div>
                         <div className="text-xs font-bold text-on-surface group-hover:text-primary">
@@ -325,7 +275,7 @@ export const Header: React.FC = () => {
                       className="w-full flex items-start gap-3 p-2.5 rounded-xl hover:bg-surface-container-low transition-colors text-left group cursor-pointer"
                     >
                       <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
-                        <span className="material-symbols-outlined text-lg">tune</span>
+                        <AutoPartsIcon size={20} />
                       </div>
                       <div>
                         <div className="text-xs font-bold text-on-surface group-hover:text-primary">
@@ -345,7 +295,7 @@ export const Header: React.FC = () => {
                       className="w-full flex items-start gap-3 p-2.5 rounded-xl hover:bg-surface-container-low transition-colors text-left group cursor-pointer"
                     >
                       <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
-                        <span className="material-symbols-outlined text-lg">car_repair</span>
+                        <WorkshopServiceIcon size={20} />
                       </div>
                       <div>
                         <div className="text-xs font-bold text-on-surface group-hover:text-primary">
@@ -365,7 +315,7 @@ export const Header: React.FC = () => {
                       className="w-full flex items-start gap-3 p-2.5 rounded-xl hover:bg-surface-container-low transition-colors text-left group cursor-pointer"
                     >
                       <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 group-hover:bg-amber-600 group-hover:text-white transition-colors">
-                        <span className="material-symbols-outlined text-lg">garage</span>
+                        <GarageLiftIcon size={20} />
                       </div>
                       <div>
                         <div className="text-xs font-bold text-on-surface group-hover:text-primary">
@@ -385,7 +335,7 @@ export const Header: React.FC = () => {
                       className="w-full flex items-start gap-3 p-2.5 rounded-xl hover:bg-surface-container-low transition-colors text-left group cursor-pointer"
                     >
                       <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
-                        <span className="material-symbols-outlined text-lg">location_on</span>
+                        <DealershipPinIcon size={20} />
                       </div>
                       <div>
                         <div className="text-xs font-bold text-on-surface group-hover:text-primary">
@@ -469,7 +419,7 @@ export const Header: React.FC = () => {
               aria-label="Configurar Mi Garaje"
             >
               <div className="w-8 h-8 rounded-lg bg-primary text-secondary-container flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[18px]">garage</span>
+                <GarageLiftIcon size={18} className="text-secondary-container" />
               </div>
               <div className="hidden xl:block">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-outline flex items-center gap-1">
@@ -529,8 +479,8 @@ export const Header: React.FC = () => {
                 CM
               </div>
               <div className="hidden lg:block">
-                <div className="text-[10px] text-outline font-medium">Hola, Carlos</div>
-                <div className="text-xs font-bold text-on-surface">Mi Cuenta</div>
+                <div className="text-[10px] text-outline font-normal">Mi Cuenta</div>
+                <div className="text-xs font-bold text-on-surface">Hola, Carlos</div>
               </div>
             </button>
           </div>
@@ -542,15 +492,25 @@ export const Header: React.FC = () => {
         className="border-t border-surface-container bg-surface-container-lowest relative px-4 sm:px-6 lg:px-8 hidden md:block"
         onMouseLeave={handleMouseLeave}
       >
-        <nav aria-label="Categorías principales" className="max-w-7xl mx-auto flex items-center gap-1.5 sm:gap-2 py-1.5 text-xs font-semibold">
-          {/* Direct Mega Menu Quick Trigger */}
-          <button
-            onClick={() => setIsMegaMenuOpen(true)}
-            className="px-3 py-2 min-h-[40px] rounded-xl bg-surface-container text-primary hover:bg-primary hover:text-white transition-all flex items-center gap-1.5 font-bold cursor-pointer shrink-0"
+        <nav aria-label="Categorías principales" className="max-w-7xl mx-auto flex items-center justify-center gap-2 sm:gap-3 py-1.5 text-xs font-semibold">
+          {/* Autopartes y Accesorios Nav Item */}
+          <div
+            className="relative"
+            onMouseEnter={() => handleMouseEnter('repuestos')}
           >
-            <span className="material-symbols-outlined text-[16px]">grid_view</span>
-            <span>Todas las Categorías</span>
-          </button>
+            <button
+              onClick={() => navigateToPartsCatalog('todos')}
+              className={`px-3 py-2 min-h-[40px] rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer ${
+                currentView === 'parts' || currentView === 'part-pdp' || activeDropdown === 'repuestos'
+                  ? 'bg-primary/10 text-primary font-bold'
+                  : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
+              }`}
+            >
+              <AutoPartsIcon size={17} />
+              <span>Autopartes y Accesorios</span>
+              <span className="material-symbols-outlined text-xs">arrow_drop_down</span>
+            </button>
+          </div>
 
           {/* Vehículos Nav Item */}
           <div
@@ -565,33 +525,8 @@ export const Header: React.FC = () => {
                   : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
               }`}
             >
-              <span className="material-symbols-outlined text-[16px]">directions_car</span>
+              <VehicleIcon size={17} />
               <span>Vehículos</span>
-              <span className="bg-secondary-container text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-md">
-                0 KM
-              </span>
-              <span className="material-symbols-outlined text-xs">arrow_drop_down</span>
-            </button>
-          </div>
-
-          {/* Repuestos & Marcas Oficiales Nav Item */}
-          <div
-            className="relative"
-            onMouseEnter={() => handleMouseEnter('repuestos')}
-          >
-            <button
-              onClick={() => navigateToPartsCatalog('todos')}
-              className={`px-3 py-2 min-h-[40px] rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer ${
-                currentView === 'parts' || currentView === 'part-pdp' || activeDropdown === 'repuestos'
-                  ? 'bg-primary/10 text-primary font-bold'
-                  : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[16px]">tune</span>
-              <span>Autopartes y Accesorios</span>
-              <span className="bg-primary text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-md">
-                OFICIAL
-              </span>
               <span className="material-symbols-outlined text-xs">arrow_drop_down</span>
             </button>
           </div>
@@ -609,7 +544,7 @@ export const Header: React.FC = () => {
                   : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
               }`}
             >
-              <span className="material-symbols-outlined text-[16px]">car_repair</span>
+              <WorkshopServiceIcon size={17} />
               <span>Servicios</span>
               <span className="material-symbols-outlined text-xs">arrow_drop_down</span>
             </button>
@@ -628,11 +563,8 @@ export const Header: React.FC = () => {
                   : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
               }`}
             >
-              <span className="material-symbols-outlined text-[16px] text-emerald-600">swap_horiz</span>
+              <PlanRetomaIcon size={17} className="text-emerald-600" />
               <span className="text-emerald-800 font-bold">Plan Retoma &amp; Cuotas</span>
-              <span className="bg-emerald-600 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-md">
-                BONO S/ 7.5K
-              </span>
               <span className="material-symbols-outlined text-xs">arrow_drop_down</span>
             </button>
           </div>
@@ -642,7 +574,7 @@ export const Header: React.FC = () => {
             onClick={() => setIsViewer360Open(true)}
             className="px-3 py-2 min-h-[40px] rounded-xl bg-secondary-container/10 text-secondary hover:bg-secondary-container hover:text-white transition-all flex items-center gap-1.5 font-bold cursor-pointer border border-secondary-container/30"
           >
-            <span className="material-symbols-outlined text-[16px]">360</span>
+            <Showroom360Icon size={17} />
             <span>Showroom 360°</span>
           </button>
 
@@ -655,7 +587,7 @@ export const Header: React.FC = () => {
                 : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
             }`}
           >
-            <span className="material-symbols-outlined text-[16px]">location_on</span>
+            <DealershipPinIcon size={16} />
             <span>Cajamarca</span>
           </button>
         </nav>
@@ -1235,24 +1167,24 @@ export const Header: React.FC = () => {
               <span>Inicio</span>
             </button>
             <button
-              onClick={() => { setCurrentView('cars'); setIsMobileNavOpen(false); }}
-              className="p-3 min-h-[46px] flex items-center gap-2 text-left bg-surface-container-low rounded-xl cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-lg text-primary">directions_car</span>
-              <span>Vehículos</span>
-            </button>
-            <button
               onClick={() => { navigateToPartsCatalog('todos'); setIsMobileNavOpen(false); }}
               className="p-3 min-h-[46px] flex items-center gap-2 text-left bg-surface-container-low rounded-xl cursor-pointer"
             >
-              <span className="material-symbols-outlined text-lg text-primary">tune</span>
+              <AutoPartsIcon size={18} className="text-primary" />
               <span>Autopartes y Accesorios</span>
+            </button>
+            <button
+              onClick={() => { setCurrentView('cars'); setIsMobileNavOpen(false); }}
+              className="p-3 min-h-[46px] flex items-center gap-2 text-left bg-surface-container-low rounded-xl cursor-pointer"
+            >
+              <VehicleIcon size={18} className="text-primary" />
+              <span>Vehículos</span>
             </button>
             <button
               onClick={() => { setCurrentView('services'); setIsMobileNavOpen(false); }}
               className="p-3 min-h-[46px] flex items-center gap-2 text-left bg-surface-container-low rounded-xl cursor-pointer"
             >
-              <span className="material-symbols-outlined text-lg text-primary">car_repair</span>
+              <WorkshopServiceIcon size={18} className="text-primary" />
               <span>Servicios</span>
             </button>
           </div>
@@ -1268,7 +1200,7 @@ export const Header: React.FC = () => {
               className="w-full p-3 min-h-[46px] flex items-center justify-between text-left bg-emerald-50 border border-emerald-200 text-emerald-950 rounded-xl font-bold cursor-pointer"
             >
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-xl text-emerald-700">swap_horiz</span>
+                <PlanRetomaIcon size={20} className="text-emerald-700" />
                 <span>Plan Retoma (Bono hasta S/ 7,500)</span>
               </div>
               <span className="text-[10px] bg-emerald-700 text-white px-2 py-0.5 rounded-full uppercase">
@@ -1294,7 +1226,7 @@ export const Header: React.FC = () => {
               className="w-full p-3 min-h-[46px] flex items-center justify-between text-left bg-surface-container-low border border-surface-container text-on-surface rounded-xl font-bold cursor-pointer"
             >
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-xl text-primary">garage</span>
+                <GarageLiftIcon size={20} className="text-primary" />
                 <span>Mi Garaje Virtual (Compatibilidad VIN)</span>
               </div>
               <span className="text-xs text-emerald-600 font-bold">{activeGarage.model}</span>
@@ -1305,7 +1237,7 @@ export const Header: React.FC = () => {
               className="w-full p-3 min-h-[46px] flex items-center justify-between text-left bg-surface-container-low border border-surface-container text-secondary rounded-xl font-bold cursor-pointer"
             >
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-xl">360</span>
+                <Showroom360Icon size={20} className="text-secondary" />
                 <span>Showroom Interactivo 360°</span>
               </div>
               <span className="material-symbols-outlined text-sm">arrow_forward</span>

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { AUTO_PARTS_DATA } from '../data/mockData';
+import { SafeImage } from '../components/SafeImage';
+import { FocalZoomImage } from '../components/FocalZoomImage';
 
 export const PartPdpView: React.FC = () => {
   const {
@@ -19,12 +21,11 @@ export const PartPdpView: React.FC = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [includeInstallation, setIncludeInstallation] = useState(true);
   const [quantity, setQuantity] = useState(1);
-  const [activeDiagramHotspot, setActiveDiagramHotspot] = useState<number | null>(1);
 
   // Gallery of high-res photos
   const gallery = [
     part.image,
-    'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=800&q=80',
   ];
 
@@ -43,15 +44,6 @@ export const PartPdpView: React.FC = () => {
     { brand: 'Toyota', model: 'Camry', years: '2018 - 2024', engine: '2.5L DOHC Dual VVT-i' },
     { brand: 'Toyota', model: 'Hilux Revo / Rocco', years: '2016 - 2024', engine: '2.4L / 2.8L 1GD-FTV Turbo Diésel' },
     { brand: 'Lexus', model: 'NX 250 / NX 350h', years: '2022 - 2025', engine: '2.5L HEV E-Four' },
-  ];
-
-  // OEM exploded diagram parts
-  const diagramParts = [
-    { id: 1, name: 'Juego de Pastillas Cerámicas OEM (Este Producto)', partNumber: part.oemCode, pos: 'top-[42%] left-[45%]' },
-    { id: 2, name: 'Láminas Anti-Ruido y Shims de Acero Inoxidable', partNumber: 'OEM-SHM-4821', pos: 'top-[35%] left-[30%]' },
-    { id: 3, name: 'Pernos Guía de Caliper con Grasa Sintética de Freno', partNumber: 'OEM-BLT-9902', pos: 'top-[25%] left-[60%]' },
-    { id: 4, name: 'Disco de Freno Ventilado con Tratamiento UV', partNumber: 'OEM-DSC-7712', pos: 'top-[60%] left-[55%]' },
-    { id: 5, name: 'Sensor Electrónico de Desgaste de Freno', partNumber: 'OEM-SNS-1102', pos: 'top-[50%] left-[20%]' },
   ];
 
   const handleAddToCart = () => {
@@ -123,22 +115,16 @@ export const PartPdpView: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 bg-white rounded-3xl p-6 md:p-10 border border-surface-container shadow-xs">
           {/* Gallery Column (5 cols) */}
           <div className="lg:col-span-6 space-y-4">
-            <div className="relative rounded-2xl overflow-hidden bg-surface-container-low border border-surface-container flex items-center justify-center p-6 h-80 sm:h-96 group">
-              <img
-                src={gallery[selectedImageIndex]}
-                alt={part.name}
-                className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
-              />
-              {part.discount && (
-                <div className="absolute top-4 left-4 bg-secondary text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
-                  {part.discount}
-                </div>
-              )}
-              <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-lg text-[10px] font-bold text-outline border border-surface-container flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm">zoom_in</span>
-                Vista HD OEM
-              </div>
-            </div>
+            <FocalZoomImage
+              src={gallery[selectedImageIndex]}
+              alt={part.name}
+              typeHint="part"
+              categoryHint={part.category}
+              aspectRatioClass="h-80 sm:h-96 w-full"
+              badge={part.badge || (part.brandType === 'alternativa' ? 'Marca Alternativa A+' : 'OEM Oficial')}
+              discountBadge={part.discount}
+              subBadge={part.brandOrigin === 'china' ? 'Calidad China A+' : undefined}
+            />
 
             {/* Thumbnail selector */}
             <div className="flex gap-3">
@@ -152,7 +138,7 @@ export const PartPdpView: React.FC = () => {
                       : 'border-surface-container hover:border-outline'
                   }`}
                 >
-                  <img src={img} alt="Miniatura" className="w-full h-full object-contain" />
+                  <SafeImage src={img} alt="Miniatura" typeHint="part" className="w-full h-full object-contain" />
                 </button>
               ))}
             </div>
@@ -301,115 +287,6 @@ export const PartPdpView: React.FC = () => {
                   <span className="material-symbols-outlined text-base">chat</span>
                   Consultar por WhatsApp
                 </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* SECTION: Interactive Exploded OEM Assembly Diagram */}
-        <div className="bg-white rounded-3xl p-6 md:p-10 border border-surface-container shadow-xs space-y-6">
-          <div className="border-b border-surface-container pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-            <div>
-              <h2 className="text-xl font-headline font-bold text-primary flex items-center gap-2">
-                <span className="material-symbols-outlined text-secondary">schema</span>
-                Diagrama de Ensamble y Despiece OEM Oficial
-              </h2>
-              <p className="text-xs text-outline">
-                Haz clic en los puntos interactivos del esquema técnico para identificar la pieza y sus componentes adyacentes
-              </p>
-            </div>
-            <span className="text-[10px] uppercase font-mono bg-surface-container-low px-2 py-1 rounded border border-surface-container text-primary font-bold">
-              Esquema Homologado ISO 9001
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            {/* Visual Diagram with Hotspots */}
-            <div className="lg:col-span-7 relative bg-slate-950 rounded-3xl p-6 min-h-[340px] flex items-center justify-center overflow-hidden border border-slate-800">
-              {/* Technical Grid Pattern */}
-              <div
-                className="absolute inset-0 opacity-15"
-                style={{
-                  backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)',
-                  backgroundSize: '20px 20px',
-                }}
-              />
-
-              <div className="relative z-10 w-full max-w-md h-64 flex items-center justify-center">
-                {/* Schematic Graphic */}
-                <div className="relative w-72 h-56 border-2 border-dashed border-cyan-500/40 rounded-3xl flex items-center justify-center bg-cyan-950/20">
-                  <div className="text-center space-y-1">
-                    <span className="material-symbols-outlined text-5xl text-cyan-400">tune</span>
-                    <div className="text-xs font-mono text-cyan-200 font-bold">CONJUNTO DE FRENO OEM</div>
-                    <div className="text-[10px] text-cyan-300/60 font-mono">DESPIECE MECÁNICO CALIPER 3D</div>
-                  </div>
-
-                  {/* Hotspots */}
-                  {diagramParts.map((pt) => {
-                    const isActive = activeDiagramHotspot === pt.id;
-                    return (
-                      <button
-                        key={pt.id}
-                        onClick={() => setActiveDiagramHotspot(pt.id)}
-                        className={`absolute ${pt.pos} -translate-x-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs transition-all shadow-lg ${
-                          isActive
-                            ? 'bg-secondary text-white scale-125 ring-4 ring-secondary/40'
-                            : 'bg-white text-primary hover:bg-secondary-container hover:text-white'
-                        }`}
-                        title={pt.name}
-                      >
-                        {pt.id}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="absolute bottom-3 left-4 text-[10px] font-mono text-slate-400">
-                Puntos 1 a 5 interactivos • Haz clic para ver especificación técnica
-              </div>
-            </div>
-
-            {/* Hotspot details sidebar */}
-            <div className="lg:col-span-5 space-y-4">
-              <h3 className="text-xs font-headline font-bold text-outline uppercase tracking-wider">
-                Componentes del Subconjunto
-              </h3>
-
-              <div className="space-y-2">
-                {diagramParts.map((pt) => {
-                  const isActive = activeDiagramHotspot === pt.id;
-                  return (
-                    <div
-                      key={pt.id}
-                      onClick={() => setActiveDiagramHotspot(pt.id)}
-                      className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
-                        isActive
-                          ? 'border-primary bg-primary/5 shadow-xs'
-                          : 'border-surface-container hover:border-outline bg-surface-container-lowest'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                            isActive ? 'bg-secondary text-white' : 'bg-surface-container text-outline'
-                          }`}
-                        >
-                          {pt.id}
-                        </div>
-                        <div>
-                          <h4 className="text-xs font-bold text-on-surface line-clamp-1">{pt.name}</h4>
-                          <span className="font-mono text-[10px] text-outline">Código: {pt.partNumber}</span>
-                        </div>
-                      </div>
-                      {pt.id === 1 && (
-                        <span className="text-[10px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full shrink-0">
-                          Este Producto
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
               </div>
             </div>
           </div>

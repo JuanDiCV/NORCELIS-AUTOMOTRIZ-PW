@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Vehicle } from '../types';
 import { useApp } from '../context/AppContext';
+import { generateFinancingSimulationPdf } from '../utils/pdfGenerator';
 
 interface VehicleFinancingCalculatorProps {
   vehicle: Vehicle;
@@ -50,7 +51,7 @@ export const VehicleFinancingCalculator: React.FC<VehicleFinancingCalculatorProp
   vehicle,
   compact = false,
 }) => {
-  const { showToast } = useApp();
+  const { showToast, openPdfModal } = useApp();
 
   // Moneda activa: 'soles' | 'usd'
   const [currency, setCurrency] = useState<'soles' | 'usd'>('soles');
@@ -525,13 +526,41 @@ export const VehicleFinancingCalculator: React.FC<VehicleFinancingCalculatorProp
 
                   <button
                     onClick={() => {
-                      window.print();
-                      showToast('Generando vista de impresión de la simulación...');
+                      try {
+                        const financingParams = {
+                          vehicleName: vehicle.name,
+                          vehicleYear: vehicle.year,
+                          vehiclePriceSoles: vehicle.priceSoles,
+                          vehiclePriceUsd: vehicle.priceUsd,
+                          bankName: currentBank.name,
+                          downPaymentSoles: downPaymentAmount,
+                          downPaymentPercent: downPaymentPercent,
+                          loanAmountSoles: principal,
+                          loanTermMonths: loanTermMonths,
+                          monthlyPaymentSoles: totalMonthlyPayment,
+                          teaPercent: currentBank.tea,
+                        };
+                        const fileName = generateFinancingSimulationPdf(financingParams);
+                        const simCode = `FIN-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+                        openPdfModal({
+                          isOpen: true,
+                          docType: 'financiamiento',
+                          title: `Simulación de Crédito: ${currentBank.name}`,
+                          code: simCode,
+                          vehicle,
+                          financingParams,
+                          fileName,
+                        });
+                        showToast(`✓ PDF oficial generado y listo para guardar: ${fileName}`);
+                      } catch (err) {
+                        showToast('Descargando simulación en PDF oficial...');
+                      }
                     }}
-                    className="py-2.5 px-3 rounded-xl border border-surface-container bg-surface-container-lowest hover:bg-surface-container font-bold text-[11px] text-primary transition-colors flex items-center justify-center gap-1.5"
+                    className="py-2.5 px-3 rounded-xl border border-surface-container bg-surface-container-lowest hover:bg-surface-container font-bold text-[11px] text-primary transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                    title="Descargar Cronograma de Financiamiento Oficial en PDF"
                   >
-                    <span className="material-symbols-outlined text-[15px]">print</span>
-                    <span>Imprimir / PDF</span>
+                    <span className="material-symbols-outlined text-[15px] text-red-600">picture_as_pdf</span>
+                    <span>Descargar PDF</span>
                   </button>
                 </div>
               </div>

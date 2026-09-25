@@ -1,6 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { AutoPart } from '../types';
+import { SafeImage } from '../components/SafeImage';
+import { FocalZoomImage } from '../components/FocalZoomImage';
+import { FALLBACK_IMAGES } from '../utils/imageAssets';
 
 export const PartsCatalogView: React.FC = () => {
   const {
@@ -36,6 +39,7 @@ export const PartsCatalogView: React.FC = () => {
   const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'rating-desc' | 'name-asc'>('featured');
   const [vinInput, setVinInput] = useState('');
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const [zoomModalPart, setZoomModalPart] = useState<AutoPart | null>(null);
 
   // Sync when context changes (e.g. user clicked from mega menu)
   useEffect(() => {
@@ -65,29 +69,50 @@ export const PartsCatalogView: React.FC = () => {
     { id: 'motor', label: 'Bujías & Componentes de Motor', icon: 'speed' },
   ];
 
-  // Official Brands
-  const OFFICIAL_BRANDS = [
-    { id: 'todos', label: 'Todas las Marcas' },
-    { id: 'TOYOTA Genuino', label: 'TOYOTA Genuino' },
-    { id: 'Mickey Thompson', label: 'MICKEY THOMPSON (M/T)' },
-    { id: 'KEKO', label: 'KEKO 4x4' },
-    { id: 'Mobil', label: 'Mobil Lubricantes' },
-    { id: 'LLumar', label: 'LLumar Seguridad' },
-    { id: 'BLACK RHINO', label: 'BLACK RHINO Aros' },
-    { id: '3M', label: '3M Auto & PPF' },
-    { id: 'TRAKKO® AUTORUS', label: 'TRAKKO® AUTORUS' },
-    { id: 'Brembo Official', label: 'Brembo Official' },
-    { id: 'Bosch Automotive', label: 'Bosch Automotive' },
-    { id: 'KYB Shocks & Struts', label: 'KYB Shocks' },
-    { id: 'Denso Corporation', label: 'Denso Corporation' },
-    { id: 'Aisin Seiki', label: 'Aisin Seiki' },
-    { id: 'K&N Engineering', label: 'K&N Engineering' },
-  ];
+  // Brands: Official OEM & Alternative / Chinese Brands
+  const [brandSegment, setBrandSegment] = useState<'todos' | 'oficial' | 'alternativa'>('todos');
+
+  const ALL_PART_BRANDS = useMemo(() => [
+    { id: 'todos', label: 'Todas las Marcas', segment: 'todos' },
+    // Marcas Oficiales OEM & Tradicionales
+    { id: 'TOYOTA Genuino', label: 'TOYOTA Genuino', segment: 'oficial', badge: 'OEM Oficial' },
+    { id: 'Mickey Thompson', label: 'MICKEY THOMPSON (M/T)', segment: 'oficial', badge: 'USA' },
+    { id: 'KEKO', label: 'KEKO 4x4', segment: 'oficial', badge: 'Brasil' },
+    { id: 'Mobil', label: 'Mobil Lubricantes', segment: 'oficial', badge: 'USA' },
+    { id: 'LLumar', label: 'LLumar Seguridad', segment: 'oficial', badge: 'USA' },
+    { id: 'BLACK RHINO', label: 'BLACK RHINO Aros', segment: 'oficial', badge: 'USA' },
+    { id: '3M', label: '3M Auto & PPF', segment: 'oficial', badge: 'USA' },
+    { id: 'TRAKKO® AUTORUS', label: 'TRAKKO® AUTORUS', segment: 'oficial', badge: 'Lift Pro' },
+    { id: 'Brembo Official', label: 'Brembo Official', segment: 'oficial', badge: 'Italia' },
+    { id: 'Bosch Automotive', label: 'Bosch Automotive', segment: 'oficial', badge: 'Alemania' },
+    { id: 'KYB Shocks & Struts', label: 'KYB Shocks', segment: 'oficial', badge: 'Japón' },
+    { id: 'Denso Corporation', label: 'Denso Corporation', segment: 'oficial', badge: 'Japón' },
+    { id: 'Aisin Seiki', label: 'Aisin Seiki', segment: 'oficial', badge: 'Japón' },
+    { id: 'K&N Engineering', label: 'K&N Engineering', segment: 'oficial', badge: 'USA' },
+    // Marcas Alternativas & Chinas Garantizadas
+    { id: 'Triangle Tire', label: 'Triangle Tire (China)', segment: 'alternativa', badge: 'Marca China A+' },
+    { id: 'Sailun Tire', label: 'Sailun Tire (China)', segment: 'alternativa', badge: 'Marca China A+' },
+    { id: 'Longji Brakes', label: 'Longji Brakes (China)', segment: 'alternativa', badge: 'Marca China A+' },
+    { id: 'SenSen Shocks', label: 'SenSen Shocks (China)', segment: 'alternativa', badge: 'Marca China A+' },
+    { id: 'Camel Battery', label: 'Camel Battery (China)', segment: 'alternativa', badge: 'Marca China A+' },
+    { id: 'Sakura Filters', label: 'Sakura Filters (Alternativa)', segment: 'alternativa', badge: 'Alternativa A+' },
+    { id: 'WINBO 4x4', label: 'WINBO 4x4 (China)', segment: 'alternativa', badge: 'Marca China A+' },
+    { id: 'Huayang Lighting', label: 'Huayang LED (China)', segment: 'alternativa', badge: 'Marca China A+' },
+    { id: 'Wanxiang Automotive', label: 'Wanxiang (China)', segment: 'alternativa', badge: 'Marca China A+' },
+  ], []);
 
   // Filter & Sort Logic
   const filteredParts = useMemo(() => {
     return autoParts
       .filter((part) => {
+        // Segmento: Oficial vs Alternativa / China
+        if (brandSegment === 'oficial' && part.brandType === 'alternativa') {
+          return false;
+        }
+        if (brandSegment === 'alternativa' && part.brandType !== 'alternativa' && part.brandOrigin !== 'china') {
+          return false;
+        }
+
         // Categoría
         if (selectedCategory !== 'todos' && part.category !== selectedCategory) {
           return false;
@@ -142,11 +167,12 @@ export const PartsCatalogView: React.FC = () => {
         // 'featured': prioriza los que tienen descuento y rating alto
         return (b.discount ? 1 : 0) - (a.discount ? 1 : 0) || b.rating - a.rating;
       });
-  }, [autoParts, selectedCategory, selectedBrand, onlyOffers, priceMax, onlyCompatible, searchFilter, sortBy, activeGarage]);
+  }, [autoParts, selectedCategory, selectedBrand, brandSegment, onlyOffers, priceMax, onlyCompatible, searchFilter, sortBy, activeGarage]);
 
   const handleResetFilters = () => {
     setSelectedCategory('todos');
     setSelectedBrand('todos');
+    setBrandSegment('todos');
     setSearchFilter('');
     setOnlyCompatible(false);
     setOnlyOffers(false);
@@ -164,19 +190,20 @@ export const PartsCatalogView: React.FC = () => {
       showToast('Ingresa los dígitos de tu chasis / VIN para verificar compatibilidad');
       return;
     }
-    showToast(`✓ Chasis "${vinInput.toUpperCase()}" validado con despiece OEM de ${activeGarage.brand}. Mostrando catálogo 100% compatible.`);
+    showToast(`✓ Chasis "${vinInput.toUpperCase()}" validado con catálogo de fábrica de ${activeGarage.brand}. Mostrando productos 100% compatibles.`);
   };
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
     if (selectedCategory !== 'todos') count++;
     if (selectedBrand !== 'todos') count++;
+    if (brandSegment !== 'todos') count++;
     if (searchFilter.trim() !== '') count++;
     if (onlyCompatible) count++;
     if (onlyOffers) count++;
     if (priceMax < 3500) count++;
     return count;
-  }, [selectedCategory, selectedBrand, searchFilter, onlyCompatible, onlyOffers, priceMax]);
+  }, [selectedCategory, selectedBrand, brandSegment, searchFilter, onlyCompatible, onlyOffers, priceMax]);
 
   return (
     <div className="max-w-7xl mx-auto px-gutter py-6 space-y-6">
@@ -379,13 +406,55 @@ export const PartsCatalogView: React.FC = () => {
               </div>
             </div>
 
-            {/* Fabricantes Oficiales */}
+            {/* Tipo de Marca: Oficiales OEM vs Alternativas / Chinas */}
+            <div className="space-y-2 pt-2 border-t border-surface-container">
+              <label className="block text-xs font-bold text-on-surface uppercase tracking-wider">
+                Línea de Marca
+              </label>
+              <div className="grid grid-cols-3 gap-1 bg-surface-container p-1 rounded-xl text-[11px] font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setBrandSegment('todos')}
+                  className={`py-1.5 px-2 rounded-lg transition-all text-center cursor-pointer ${
+                    brandSegment === 'todos'
+                      ? 'bg-primary text-white font-bold shadow-xs'
+                      : 'text-on-surface hover:bg-surface-container-low'
+                  }`}
+                >
+                  Todas
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBrandSegment('oficial')}
+                  className={`py-1.5 px-2 rounded-lg transition-all text-center cursor-pointer ${
+                    brandSegment === 'oficial'
+                      ? 'bg-primary text-white font-bold shadow-xs'
+                      : 'text-on-surface hover:bg-surface-container-low'
+                  }`}
+                >
+                  Oficial OEM
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBrandSegment('alternativa')}
+                  className={`py-1.5 px-2 rounded-lg transition-all text-center cursor-pointer ${
+                    brandSegment === 'alternativa'
+                      ? 'bg-primary text-white font-bold shadow-xs'
+                      : 'text-on-surface hover:bg-surface-container-low'
+                  }`}
+                >
+                  Alternativa / China
+                </button>
+              </div>
+            </div>
+
+            {/* Fabricantes y Marcas */}
             <div className="space-y-2 pt-2 border-t border-surface-container">
               <label className="block text-xs font-bold text-on-surface uppercase tracking-wider">
                 Marca / Fabricante
               </label>
               <div className="space-y-1 text-xs max-h-56 overflow-y-auto pr-1">
-                {OFFICIAL_BRANDS.map((b) => {
+                {ALL_PART_BRANDS.filter((b) => brandSegment === 'todos' || b.segment === 'todos' || b.segment === brandSegment).map((b) => {
                   const isSelected = selectedBrand === b.id;
                   const count = b.id === 'todos'
                     ? autoParts.length
@@ -400,8 +469,15 @@ export const PartsCatalogView: React.FC = () => {
                           : 'text-on-surface-variant hover:bg-surface-container-low'
                       }`}
                     >
-                      <span className="truncate">{b.label}</span>
-                      <span className={`text-[10px] ${isSelected ? 'text-white' : 'text-outline'}`}>
+                      <div className="flex items-center gap-1.5 truncate">
+                        <span className="truncate">{b.label}</span>
+                        {b.badge && (
+                          <span className={`text-[9px] px-1 py-0.2 rounded font-bold shrink-0 ${isSelected ? 'bg-white/20 text-white' : 'bg-surface-container text-outline'}`}>
+                            {b.badge}
+                          </span>
+                        )}
+                      </div>
+                      <span className={`text-[10px] shrink-0 ml-1 ${isSelected ? 'text-white' : 'text-outline'}`}>
                         ({count})
                       </span>
                     </button>
@@ -458,10 +534,10 @@ export const PartsCatalogView: React.FC = () => {
           <div className="bg-surface-container-low p-5 rounded-3xl border border-surface-container space-y-3">
             <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-wider">
               <span className="material-symbols-outlined text-base text-secondary">pin</span>
-              ¿Dudas de Compatibilidad OEM?
+              ¿Dudas de Compatibilidad?
             </div>
             <p className="text-xs text-outline leading-relaxed">
-              Ingresa los 17 dígitos del número de Chasis (VIN) de tu tarjeta de propiedad y nuestro sistema cotejará el despiece de fábrica al 100%.
+              Ingresa los 17 dígitos del número de Chasis (VIN) de tu tarjeta de propiedad y nuestro sistema cotejará la compatibilidad de fábrica al 100%.
             </p>
             <form onSubmit={handleVinValidate} className="space-y-2">
               <input
@@ -476,7 +552,7 @@ export const PartsCatalogView: React.FC = () => {
                 type="submit"
                 className="w-full bg-primary hover:bg-primary-container text-white py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[44px]"
               >
-                Validar Despiece OEM
+                Validar Compatibilidad de Fábrica
               </button>
             </form>
           </div>
@@ -582,13 +658,16 @@ export const PartsCatalogView: React.FC = () => {
                     key={part.id}
                     className="bg-surface-container-lowest rounded-3xl border border-surface-container hover:border-primary/40 hover:shadow-lg transition-all flex flex-col justify-between overflow-hidden group"
                   >
-                    {/* Photo area */}
+                    {/* Photo area with Quick Zoom Button */}
                     <div
                       onClick={() => openPartDetail(part.sku)}
                       className="relative aspect-video bg-surface-container-low p-4 flex items-center justify-center overflow-hidden cursor-pointer"
                     >
-                      <img
+                      <SafeImage
                         src={part.image}
+                        fallbackSrc={FALLBACK_IMAGES.partDefault}
+                        typeHint="part"
+                        categoryHint={part.category}
                         alt={part.name}
                         className="max-h-36 object-contain transition-transform duration-500 ease-out group-hover:scale-110 hover:scale-110"
                         loading="lazy"
@@ -603,6 +682,21 @@ export const PartsCatalogView: React.FC = () => {
                           {part.discount}
                         </span>
                       )}
+
+                      {/* Quick Focal Zoom Trigger Button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setZoomModalPart(part);
+                        }}
+                        className="absolute bottom-3 right-3 bg-white/90 hover:bg-primary hover:text-white text-on-surface text-[11px] font-bold px-2.5 py-1 rounded-xl shadow-md border border-surface-container flex items-center gap-1 transition-all opacity-0 group-hover:opacity-100 hover:scale-105 cursor-pointer z-10"
+                        title="Ver con Zoom Focal HD"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">zoom_in</span>
+                        <span className="hidden sm:inline">Zoom HD</span>
+                      </button>
+
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -619,7 +713,7 @@ export const PartsCatalogView: React.FC = () => {
                             categoryBadge: 'Repuesto Oficial',
                           });
                         }}
-                        className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                        className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer z-10 ${
                           inWish
                             ? 'bg-secondary-container text-white shadow-md'
                             : 'bg-white/80 hover:bg-white text-on-surface shadow-xs'
@@ -780,19 +874,58 @@ export const PartsCatalogView: React.FC = () => {
               </div>
             </div>
 
+            {/* Brands Line Segment */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-on-surface uppercase">Tipo de Marca</label>
+              <div className="grid grid-cols-3 gap-1 bg-surface-container p-1 rounded-xl text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setBrandSegment('todos')}
+                  className={`py-1.5 px-2 rounded-lg text-center ${
+                    brandSegment === 'todos' ? 'bg-primary text-white font-bold' : 'text-on-surface'
+                  }`}
+                >
+                  Todas
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBrandSegment('oficial')}
+                  className={`py-1.5 px-2 rounded-lg text-center ${
+                    brandSegment === 'oficial' ? 'bg-primary text-white font-bold' : 'text-on-surface'
+                  }`}
+                >
+                  Oficial OEM
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBrandSegment('alternativa')}
+                  className={`py-1.5 px-2 rounded-lg text-center ${
+                    brandSegment === 'alternativa' ? 'bg-primary text-white font-bold' : 'text-on-surface'
+                  }`}
+                >
+                  China/Alt.
+                </button>
+              </div>
+            </div>
+
             {/* Brands */}
             <div className="space-y-2">
-              <label className="block text-xs font-bold text-on-surface uppercase">Marca</label>
+              <label className="block text-xs font-bold text-on-surface uppercase">Marca / Fabricante</label>
               <div className="space-y-1 max-h-48 overflow-y-auto">
-                {OFFICIAL_BRANDS.map((b) => (
+                {ALL_PART_BRANDS.filter((b) => brandSegment === 'todos' || b.segment === 'todos' || b.segment === brandSegment).map((b) => (
                   <button
                     key={b.id}
                     onClick={() => setSelectedBrand(b.id)}
-                    className={`w-full text-left p-2 rounded-lg text-xs ${
+                    className={`w-full flex items-center justify-between p-2 rounded-lg text-xs ${
                       selectedBrand === b.id ? 'bg-secondary text-white font-bold' : 'text-on-surface hover:bg-surface-container-low'
                     }`}
                   >
-                    {b.label}
+                    <span>{b.label}</span>
+                    {b.badge && (
+                      <span className="text-[10px] bg-surface-container px-1.5 py-0.5 rounded text-outline font-bold">
+                        {b.badge}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -828,6 +961,82 @@ export const PartsCatalogView: React.FC = () => {
               >
                 Limpiar Todo
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Quick Focal Zoom Modal on Product */}
+      {zoomModalPart && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 md:p-6 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl border border-surface-container flex flex-col max-h-[90vh]">
+            <div className="p-4 md:p-5 flex items-center justify-between border-b border-surface-container bg-surface-container-low">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-cyan-600 text-lg">zoom_in</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-secondary">
+                    {zoomModalPart.brand} • SKU: {zoomModalPart.sku}
+                  </span>
+                </div>
+                <h3 className="text-sm md:text-base font-bold text-primary truncate max-w-md">
+                  {zoomModalPart.name}
+                </h3>
+              </div>
+              <button
+                onClick={() => setZoomModalPart(null)}
+                className="w-9 h-9 rounded-full bg-white hover:bg-surface-container text-outline flex items-center justify-center shadow-xs cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-5 overflow-y-auto space-y-4">
+              <FocalZoomImage
+                src={zoomModalPart.image}
+                alt={zoomModalPart.name}
+                typeHint="part"
+                categoryHint={zoomModalPart.category}
+                aspectRatioClass="h-72 sm:h-80 w-full"
+                badge={zoomModalPart.badge || (zoomModalPart.brandType === 'alternativa' ? 'Marca China / Alt.' : 'OEM Oficial')}
+                discountBadge={zoomModalPart.discount}
+              />
+
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-3 border-t border-surface-container">
+                <div>
+                  <div className="text-xs text-outline font-medium">Compatible: {zoomModalPart.compatibleVehicle}</div>
+                  <div className="text-lg font-black text-primary font-mono">
+                    S/ {zoomModalPart.priceSoles.toLocaleString()} <span className="text-xs text-outline font-normal">(${zoomModalPart.priceUsd} USD)</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <button
+                    onClick={() => {
+                      const sku = zoomModalPart.sku;
+                      setZoomModalPart(null);
+                      openPartDetail(sku);
+                    }}
+                    className="flex-1 sm:flex-none bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer min-h-[44px]"
+                  >
+                    Ver Ficha Completa
+                  </button>
+                  <button
+                    onClick={() => {
+                      addToCart({
+                        type: 'part',
+                        title: zoomModalPart.name,
+                        skuOrCode: zoomModalPart.sku,
+                        priceSoles: zoomModalPart.priceSoles,
+                        image: zoomModalPart.image,
+                        specsSubtitle: `${zoomModalPart.brand} • ${zoomModalPart.oemCode}`,
+                      });
+                      setZoomModalPart(null);
+                    }}
+                    className="flex-1 sm:flex-none bg-primary hover:bg-primary-container text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-xs cursor-pointer min-h-[44px] flex items-center justify-center gap-1.5"
+                  >
+                    <span className="material-symbols-outlined text-base">add_shopping_cart</span>
+                    <span>Agregar</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

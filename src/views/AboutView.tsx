@@ -152,8 +152,12 @@ export const AboutView: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-3">
               <img
-                src="https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=600&q=80"
+                src="https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=600&q=80"
                 alt="Alineación Láser"
+                loading="lazy"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1615906655593-ad0386982a0f?auto=format&fit=crop&w=600&q=80";
+                }}
                 className="w-full h-48 object-cover rounded-2xl bg-surface-container-low"
               />
               <h3 className="font-headline font-bold text-sm text-primary">

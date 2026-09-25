@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { SafeImage } from '../components/SafeImage';
+import { FALLBACK_IMAGES } from '../utils/imageAssets';
+import {
+  TireOffRoadIcon,
+  Equip4x4Icon,
+  LubricantOilIcon,
+  SecurityFilmIcon,
+  DetailingPPFIcon,
+  SuspensionHDIcon,
+  Showroom360Icon,
+  PlanRetomaIcon,
+} from '../components/AutoIcons';
 
 export const HomeView: React.FC = () => {
   const {
@@ -334,27 +346,30 @@ export const HomeView: React.FC = () => {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
             {[
-              { name: 'Llantas Off-Road', icon: 'tire_repair', desc: 'Mickey Thompson & BR', code: 'llantas' },
-              { name: 'Equipamiento 4x4', icon: 'shield_with_heart', desc: 'KEKO Barras & Tapas', code: 'accesorios4x4' },
-              { name: 'Aceites & Fluidos', icon: 'oil_barrel', desc: 'Mobil 1 & Delvac', code: 'lubricantes' },
-              { name: 'Láminas Seguridad', icon: 'security', desc: 'LLumar Nanocerámica', code: 'seguridad' },
-              { name: 'Detailing & PPF', icon: 'auto_fix_high', desc: '3M Ceramic Coating', code: 'detailing' },
-              { name: 'Suspensión HD', icon: 'car_repair', desc: 'TRAKKO® & KYB Lift', code: 'suspension' },
-            ].map((cat, i) => (
-              <button
-                key={i}
-                onClick={() => navigateToPartsCatalog(cat.code)}
-                className="p-4 min-h-[44px] rounded-2xl bg-surface-container-lowest border border-surface-container hover:border-primary hover:shadow-md transition-all text-center group cursor-pointer"
-              >
-                <div className="w-12 h-12 mx-auto rounded-xl bg-surface-container group-hover:bg-primary group-hover:text-white text-primary flex items-center justify-center mb-3 transition-colors">
-                  <span className="material-symbols-outlined text-2xl">{cat.icon}</span>
-                </div>
-                <div className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors">
-                  {cat.name}
-                </div>
-                <div className="text-[10px] text-outline mt-0.5 truncate">{cat.desc}</div>
-              </button>
-            ))}
+              { name: 'Llantas Off-Road', icon: TireOffRoadIcon, desc: 'Mickey Thompson & BR', code: 'llantas' },
+              { name: 'Equipamiento 4x4', icon: Equip4x4Icon, desc: 'KEKO Barras & Tapas', code: 'accesorios4x4' },
+              { name: 'Aceites & Fluidos', icon: LubricantOilIcon, desc: 'Mobil 1 & Delvac', code: 'lubricantes' },
+              { name: 'Láminas Seguridad', icon: SecurityFilmIcon, desc: 'LLumar Nanocerámica', code: 'seguridad' },
+              { name: 'Detailing & PPF', icon: DetailingPPFIcon, desc: '3M Ceramic Coating', code: 'detailing' },
+              { name: 'Suspensión HD', icon: SuspensionHDIcon, desc: 'TRAKKO® & KYB Lift', code: 'suspension' },
+            ].map((cat, i) => {
+              const IconComp = cat.icon;
+              return (
+                <button
+                  key={i}
+                  onClick={() => navigateToPartsCatalog(cat.code)}
+                  className="p-4 min-h-[44px] rounded-2xl bg-surface-container-lowest border border-surface-container hover:border-primary hover:shadow-md transition-all text-center group cursor-pointer"
+                >
+                  <div className="w-12 h-12 mx-auto rounded-xl bg-surface-container group-hover:bg-primary group-hover:text-white text-primary flex items-center justify-center mb-3 transition-colors">
+                    <IconComp size={24} />
+                  </div>
+                  <div className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors">
+                    {cat.name}
+                  </div>
+                  <div className="text-[10px] text-outline mt-0.5 truncate">{cat.desc}</div>
+                </button>
+              );
+            })}
           </div>
 
           {/* Marcas Oficiales Quick Filter Banner */}
@@ -425,8 +440,10 @@ export const HomeView: React.FC = () => {
                 >
                   {/* Photo & Badges */}
                   <div className="relative aspect-[16/10] bg-surface-container-low overflow-hidden group">
-                    <img
+                    <SafeImage
                       src={car.image}
+                      fallbackSrc={FALLBACK_IMAGES.vehicleSuv}
+                      typeHint="vehicle"
                       alt={car.name}
                       className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110 hover:scale-110 cursor-pointer"
                     />
@@ -591,8 +608,10 @@ export const HomeView: React.FC = () => {
                 className="bg-white p-3 rounded-2xl border border-surface-container hover:shadow-lg transition-all cursor-pointer group"
               >
                 <div className="overflow-hidden rounded-xl mb-2">
-                  <img
+                  <SafeImage
                     src={u.image}
+                    fallbackSrc={FALLBACK_IMAGES.vehicleSedan}
+                    typeHint="vehicle"
                     alt={u.name}
                     className="w-44 h-28 object-cover rounded-xl transition-transform duration-500 ease-out group-hover:scale-110 hover:scale-110"
                   />
@@ -647,8 +666,10 @@ export const HomeView: React.FC = () => {
 
           <div className="lg:col-span-5 z-10">
             <div className="rounded-2xl overflow-hidden shadow-2xl border border-white/20 group">
-              <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSjI_tIAIGiT6wyiJbp0Fa_bV8tFCUZH1ukGx28Esv2LM-NxulgReRQMUAHbYA3VkYAzuU_0-TlyRO_iD872KGC6R4RM4o1F-WNokWD5Q_a2RnWiF2Kr0VQ3jp5-IsvkySgMGjIrqIx-VJzpYQHiys_1cuFjbPE1s2eI_QMAudhThsULZbqgdVwD8JvlTUle2ialiatbl3Oa5tHE9M5-pE2DpsKz8dB0ufSUmmKw4NtwLKSMUAoJi_"
+              <SafeImage
+                src="https://images.unsplash.com/photo-1607860108855-64acf2078ed9?auto=format&fit=crop&w=800&q=80"
+                fallbackSrc={FALLBACK_IMAGES.serviceDetailing}
+                typeHint="service"
                 alt="Taller Nor Celis"
                 className="w-full h-64 object-cover transition-transform duration-500 ease-out group-hover:scale-110 hover:scale-110 cursor-pointer"
               />

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { SafeImage } from '../components/SafeImage';
 
 export const CartView: React.FC = () => {
   const {
@@ -119,7 +120,12 @@ export const CartView: React.FC = () => {
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex flex-col xs:flex-row items-start xs:items-center gap-4 flex-1 min-w-0">
                       <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-surface-container-low p-2 flex items-center justify-center shrink-0 overflow-hidden">
-                        <img src={item.image} alt={item.title} className="w-full h-full object-contain" />
+                        <SafeImage
+                          src={item.image}
+                          alt={item.title}
+                          typeHint={item.type === 'vehicle_reservation' ? 'vehicle' : item.type === 'service' ? 'service' : 'part'}
+                          className="w-full h-full object-contain"
+                        />
                       </div>
                       <div className="space-y-1 min-w-0 flex-1">
                         <span className="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded inline-block">

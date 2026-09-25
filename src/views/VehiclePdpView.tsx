@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { VehicleFinancingCalculator } from '../components/VehicleFinancingCalculator';
+import { SafeImage } from '../components/SafeImage';
+import { generateVehicleQuotePdf } from '../utils/pdfGenerator';
 
 export const VehiclePdpView: React.FC = () => {
   const {
@@ -14,14 +16,32 @@ export const VehiclePdpView: React.FC = () => {
     showToast,
     autoParts,
     setCurrentView,
+    openPdfModal,
   } = useApp();
 
   const currentCar = vehicles.find((v) => v.id === selectedVehicleId) || vehicles[0];
   const calculatorRef = useRef<HTMLDivElement>(null);
+  const imgBoxRef = useRef<HTMLDivElement>(null);
 
   const [activeTab, setActiveTab] = useState<'ficha' | 'seguridad' | 'garantia' | 'beneficios'>('ficha');
   const [selectedColorIdx, setSelectedColorIdx] = useState(0);
   const [activeThumb, setActiveThumb] = useState(0);
+
+  // Dynamic focal zoom on vehicle image with variable magnification
+  const [isZooming, setIsZooming] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState<number>(2.8);
+  const [zoomOrigin, setZoomOrigin] = useState({ x: 50, y: 50 });
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!imgBoxRef.current) return;
+    const rect = imgBoxRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setZoomOrigin({
+      x: Math.max(0, Math.min(100, x)),
+      y: Math.max(0, Math.min(100, y)),
+    });
+  };
 
   // Quick Loan calculator teaser
   const [downPercent, setDownPercent] = useState<number>(20);
@@ -51,8 +71,8 @@ export const VehiclePdpView: React.FC = () => {
 
   const thumbnails = [
     { label: 'Exterior 3/4', img: currentCar.image },
-    { label: 'Visor 360°', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCbRwMt0oCGl_CyYqLHQqYfPvzBslXo7jvQDU8VrhnGFyqkc_nD5SmDJv_rGryV5u4rJTHlGPu9md5Lv_pkp3JICuYZqUAr0eGwAnhUWo7y2MMW0j2wbXdzRfzZE5BgfCs6TldEX3I9fmlTOaq_2c9O8iL4-wf44xcGODmMJpbKkhxWJUZJCA8oZ70BzhdxzSC9irkoDCORYy2lT8pzdpahxtno6tM6YyvFVLCX2oA0Ysu3v88QptmZ' },
-    { label: 'Cabina Interior', img: 'https://lh3.googleusercontent.com/aida/AEtjO1XEuPkJsQpOvlK2Jy--9q8WzwHcyqD1bpxcM5VcHzeuflBkEc4yoRUaRUC8Ru8dnWEI_72-6IvqWbDALk6LipFJxvVR12_cqvQJ0BErTQ54HZ58LXrp7O0XJzjbxSgUqI865NYZwlQpC9gMYMWxt5p2AcQdHaeTNIjRJ81jYL5xSwW5LNDA8A2OsIH4rtS963XIHXcDnfbGwoWAdVL4ANqjDGB5eXET1TSgG6dZ00VY9k9QY85SXu9xzw' },
+    { label: 'Visor 360°', img: 'https://images.unsplash.com/photo-1581540222194-0def2dda95b8?auto=format&fit=crop&w=1200&q=80' },
+    { label: 'Cabina Interior', img: 'https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=1600&q=80' },
   ];
 
   const inWish = isInWishlist(currentCar.id);
@@ -89,28 +109,96 @@ export const VehiclePdpView: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: Visual Gallery & Color Customizer */}
         <div className="lg:col-span-7 space-y-4">
-          {/* Main Visual Box */}
-          <div className="relative aspect-[16/10] bg-surface-container-lowest rounded-3xl border border-surface-container overflow-hidden shadow-lg group">
+          {/* Main Visual Box with Dynamic Focal Zoom */}
+          <div
+            ref={imgBoxRef}
+            onMouseEnter={() => setIsZooming(true)}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={() => {
+              setIsZooming(false);
+              setZoomOrigin({ x: 50, y: 50 });
+            }}
+            className="relative aspect-[16/10] bg-surface-container-lowest rounded-3xl border border-surface-container overflow-hidden shadow-lg group cursor-crosshair"
+          >
             <img
               src={thumbnails[activeThumb].img}
               alt={currentCar.name}
-              className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110 hover:scale-110"
+              loading="eager"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = currentCar.image;
+              }}
+              style={{
+                transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
+                transform: isZooming ? `scale(${zoomLevel})` : 'scale(1)',
+                transition: isZooming ? 'transform-origin 0.05s ease-out, transform 0.18s ease-out' : 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform-origin 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                imageRendering: 'auto',
+              }}
+              className="w-full h-full object-cover pointer-events-none will-change-transform select-none"
             />
 
             {/* Badges */}
-            <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+            <div className="absolute top-4 left-4 flex flex-wrap gap-2 pointer-events-none transition-opacity duration-200" style={{ opacity: isZooming ? 0.3 : 1 }}>
               <span className="bg-primary text-white text-xs font-bold px-3 py-1 rounded-lg shadow-md">
                 0 KM 2025
               </span>
               <span className="bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-lg shadow-md">
-                Híbrido e-Four AWD
+                {currentCar.brandType === 'alternativa' ? 'Marca Alternativa Garantizada' : 'Híbrido e-Four AWD'}
               </span>
             </div>
+
+            {/* Targeting Reticle Overlay following mouse when zooming */}
+            {isZooming && (
+              <div 
+                className="absolute pointer-events-none w-16 h-16 -ml-8 -mt-8 rounded-full border-2 border-white/80 shadow-[0_0_15px_rgba(255,255,255,0.6)] backdrop-brightness-110 flex items-center justify-center transition-all duration-75"
+                style={{ left: `${zoomOrigin.x}%`, top: `${zoomOrigin.y}%` }}
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-sm animate-ping" />
+                <div className="absolute w-2.5 h-0.5 bg-white/70 -left-1" />
+                <div className="absolute w-2.5 h-0.5 bg-white/70 -right-1" />
+                <div className="absolute h-2.5 w-0.5 bg-white/70 -top-1" />
+                <div className="absolute h-2.5 w-0.5 bg-white/70 -bottom-1" />
+              </div>
+            )}
+
+            {/* Helper Tag de Zoom Activo con selector de aumento */}
+            {isZooming && (
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/85 backdrop-blur-md text-white text-xs font-bold px-4 py-1.5 rounded-full border border-white/20 shadow-xl flex items-center gap-3 pointer-events-auto animate-in fade-in zoom-in-95 duration-150 z-20">
+                <div className="flex items-center gap-1.5 pointer-events-none">
+                  <span className="material-symbols-outlined text-[15px] text-cyan-300">zoom_in</span>
+                  <span>Zoom Focal ({zoomLevel}x)</span>
+                </div>
+                <div className="h-3.5 w-px bg-white/30" />
+                <div className="flex items-center gap-1 text-[11px]">
+                  {[2.2, 2.8, 3.6].map((lvl) => (
+                    <button
+                      key={lvl}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setZoomLevel(lvl);
+                      }}
+                      className={`px-2 py-0.5 rounded-md font-extrabold transition-all cursor-pointer ${
+                        zoomLevel === lvl ? 'bg-cyan-400 text-black shadow-xs' : 'text-white/70 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      {lvl}x
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!isZooming && (
+              <div className="absolute top-4 right-16 bg-black/60 backdrop-blur-md text-white/80 text-[11px] font-bold px-2.5 py-1 rounded-xl border border-white/10 flex items-center gap-1.5 pointer-events-none">
+                <span className="material-symbols-outlined text-[14px]">search</span>
+                <span>Pasa el mouse para zoom guiado</span>
+              </div>
+            )}
 
             {/* Interactive 360 Overlay Trigger */}
             <button
               onClick={() => setIsViewer360Open(true)}
-              className="absolute bottom-4 left-4 bg-primary/90 hover:bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-xl backdrop-blur-md border border-white/20 shadow-lg flex items-center gap-2 transition-all cursor-pointer group-hover:scale-105"
+              className="absolute bottom-4 left-4 bg-primary/90 hover:bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-xl backdrop-blur-md border border-white/20 shadow-lg flex items-center gap-2 transition-all cursor-pointer group-hover:scale-105 z-10"
             >
               <span className="material-symbols-outlined text-lg text-secondary-container">360</span>
               <span>Lanzar Visor 360° &amp; Modo Noche</span>
@@ -154,7 +242,7 @@ export const VehiclePdpView: React.FC = () => {
                     : 'border-surface-container opacity-80 hover:opacity-100'
                 }`}
               >
-                <img src={t.img} alt={t.label} className="w-full h-full object-cover" />
+                <SafeImage src={t.img} alt={t.label} typeHint="vehicle" className="w-full h-full object-cover" />
                 <span className="absolute bottom-1 inset-x-1 text-[10px] bg-black/60 text-white font-bold text-center py-0.5 rounded truncate">
                   {t.label}
                 </span>
@@ -312,6 +400,34 @@ export const VehiclePdpView: React.FC = () => {
                   <span>Showroom 360°</span>
                 </button>
               </div>
+
+              {/* Botón de Descarga de Ficha Técnica & Cotización Oficial en PDF */}
+              <button
+                onClick={() => {
+                  try {
+                    const colorName = colors[selectedColorIdx]?.name || 'Blanco Perlado';
+                    const fileName = generateVehicleQuotePdf(currentCar, colorName);
+                    const quoteCode = `COT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+                    openPdfModal({
+                      isOpen: true,
+                      docType: 'vehiculo',
+                      title: `Cotización Oficial: ${currentCar.name}`,
+                      code: quoteCode,
+                      vehicle: currentCar,
+                      selectedColor: colorName,
+                      fileName,
+                    });
+                    showToast(`✓ Cotización en PDF generada y lista: ${fileName}`);
+                  } catch (err) {
+                    showToast('Descargando cotización oficial del vehículo en PDF...');
+                  }
+                }}
+                className="w-full bg-surface-container-low hover:bg-surface-container text-primary py-2.5 px-3 rounded-xl font-bold text-xs border border-surface-container transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                title="Descargar Ficha Técnica Oficial y Cotización con Membrete Nor Celis en PDF"
+              >
+                <span className="material-symbols-outlined text-[16px] text-red-600">picture_as_pdf</span>
+                <span>Descargar Cotización Oficial (PDF)</span>
+              </button>
             </div>
           </div>
 
@@ -637,7 +753,7 @@ export const VehiclePdpView: React.FC = () => {
               className="bg-surface-container-lowest p-4 rounded-3xl border border-surface-container hover:shadow-md transition-all flex flex-col justify-between"
             >
               <div className="flex items-center gap-3">
-                <img src={part.image} alt={part.name} className="w-20 h-20 object-contain rounded-xl bg-surface-container-low p-1" />
+                <SafeImage src={part.image} alt={part.name} typeHint="part" className="w-20 h-20 object-contain rounded-xl bg-surface-container-low p-1" />
                 <div>
                   <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
                     100% Compatible

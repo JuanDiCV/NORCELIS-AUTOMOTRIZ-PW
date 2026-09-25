@@ -43,6 +43,8 @@ export interface Vehicle {
   };
   image: string;
   colors?: { name: string; hex: string }[];
+  brandType?: 'oficial' | 'alternativa';
+  brandOrigin?: 'tradicional' | 'china';
 }
 
 export interface AutoPart {
@@ -75,6 +77,8 @@ export interface AutoPart {
   stockText: string;
   features: string[];
   image: string;
+  brandType?: 'oficial' | 'alternativa';
+  brandOrigin?: 'tradicional' | 'china';
 }
 
 export interface WorkshopService {
