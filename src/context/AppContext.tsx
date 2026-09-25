@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ViewMode, ActiveGarageVehicle, CartItem, WishlistItem, Vehicle, AutoPart, WorkshopService } from '../types';
-import { INITIAL_ACTIVE_GARAGE, INITIAL_CART_ITEMS, INITIAL_WISHLIST_DATA, VEHICLES_DATA, AUTO_PARTS_DATA, WORKSHOP_SERVICES_DATA } from '../data/mockData';
+import { INITIAL_ACTIVE_GARAGE, AVAILABLE_GARAGE_VEHICLES, INITIAL_CART_ITEMS, INITIAL_WISHLIST_DATA, VEHICLES_DATA, AUTO_PARTS_DATA, WORKSHOP_SERVICES_DATA } from '../data/mockData';
 import { PdfModalData } from '../components/PdfPreviewModal';
 
 interface AppContextType {
@@ -12,6 +12,10 @@ interface AppContextType {
   setSelectedPartSku: (sku: string) => void;
   activeGarage: ActiveGarageVehicle;
   setActiveGarage: (garage: ActiveGarageVehicle) => void;
+  garageVehicles: ActiveGarageVehicle[];
+  addGarageVehicle: (vehicle: Omit<ActiveGarageVehicle, 'id'>) => void;
+  updateGarageVehicle: (vehicleIdOrPlate: string, updatedData: Partial<ActiveGarageVehicle>) => void;
+  deleteGarageVehicle: (vehicleIdOrPlate: string) => void;
   isGarageModalOpen: boolean;
   setIsGarageModalOpen: (open: boolean) => void;
   isViewer360Open: boolean;
@@ -89,7 +93,107 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [currentView, setCurrentView] = useState<ViewMode>('home');
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>('veh-rav4-2025');
   const [selectedPartSku, setSelectedPartSku] = useState<string>('PART-TOY-BRK-01');
-  const [activeGarage, setActiveGarage] = useState<ActiveGarageVehicle>(INITIAL_ACTIVE_GARAGE);
+
+  const [garageVehicles, setGarageVehicles] = useState<ActiveGarageVehicle[]>(() => {
+    try {
+      const saved = localStorage.getItem('norcelis_garage_vehicles');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.error('Error loading garage vehicles from localStorage', e);
+    }
+    return AVAILABLE_GARAGE_VEHICLES;
+  });
+
+  const [activeGarage, setActiveGarage] = useState<ActiveGarageVehicle>(() => {
+    try {
+      const savedActive = localStorage.getItem('norcelis_active_garage');
+      if (savedActive) {
+        const parsed = JSON.parse(savedActive);
+        if (parsed && parsed.brand) return parsed;
+      }
+    } catch (e) {
+      console.error('Error loading active garage from localStorage', e);
+    }
+    return INITIAL_ACTIVE_GARAGE;
+  });
+
+  // Sync garageVehicles to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('norcelis_garage_vehicles', JSON.stringify(garageVehicles));
+    } catch (e) {
+      console.error('Error saving garage vehicles to localStorage', e);
+    }
+  }, [garageVehicles]);
+
+  // Sync activeGarage to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('norcelis_active_garage', JSON.stringify(activeGarage));
+    } catch (e) {
+      console.error('Error saving active garage to localStorage', e);
+    }
+  }, [activeGarage]);
+
+  const addGarageVehicle = (newVeh: Omit<ActiveGarageVehicle, 'id'>) => {
+    const created: ActiveGarageVehicle = {
+      ...newVeh,
+      id: `gar-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    };
+    setGarageVehicles((prev) => [created, ...prev]);
+    setActiveGarage(created);
+    showToast(`¡${created.brand} ${created.model} registrado y activado en Mi Garaje!`);
+  };
+
+  const updateGarageVehicle = (vehicleIdOrPlate: string, updatedData: Partial<ActiveGarageVehicle>) => {
+    setGarageVehicles((prev) =>
+      prev.map((v) => {
+        const matches = v.id === vehicleIdOrPlate || v.plate === vehicleIdOrPlate || v.vin === vehicleIdOrPlate;
+        if (!matches) return v;
+        const updated = { ...v, ...updatedData };
+        // If active vehicle is being updated, update activeGarage state too
+        if (activeGarage.id === v.id || activeGarage.plate === v.plate || activeGarage.vin === v.vin) {
+          setActiveGarage(updated);
+        }
+        return updated;
+      })
+    );
+    showToast(`Datos del vehículo actualizados con éxito`);
+  };
+
+  const deleteGarageVehicle = (vehicleIdOrPlate: string) => {
+    const targetVehicle = garageVehicles.find(
+      (v) => v.id === vehicleIdOrPlate || v.plate === vehicleIdOrPlate || v.vin === vehicleIdOrPlate
+    );
+
+    const remaining = garageVehicles.filter(
+      (v) => !(v.id === vehicleIdOrPlate || v.plate === vehicleIdOrPlate || v.vin === vehicleIdOrPlate)
+    );
+
+    setGarageVehicles(remaining);
+
+    // If deleted vehicle was currently active, auto-select the next available vehicle or default fallback
+    const wasActive =
+      activeGarage.id === vehicleIdOrPlate ||
+      activeGarage.plate === vehicleIdOrPlate ||
+      activeGarage.vin === vehicleIdOrPlate ||
+      (targetVehicle && activeGarage.model === targetVehicle.model && activeGarage.year === targetVehicle.year);
+
+    if (wasActive) {
+      const nextVehicle = remaining.length > 0 ? remaining[0] : INITIAL_ACTIVE_GARAGE;
+      setActiveGarage(nextVehicle);
+      showToast(
+        `Vehículo eliminado. Se activó automáticamente ${nextVehicle.brand} ${nextVehicle.model}.`
+      );
+    } else {
+      showToast(`Vehículo eliminado de Mi Garaje`);
+    }
+  };
   
   const [isGarageModalOpen, setIsGarageModalOpen] = useState(false);
   const [isViewer360Open, setIsViewer360Open] = useState(false);
@@ -307,6 +411,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSelectedPartSku,
         activeGarage,
         setActiveGarage,
+        garageVehicles,
+        addGarageVehicle,
+        updateGarageVehicle,
+        deleteGarageVehicle,
         isGarageModalOpen,
         setIsGarageModalOpen,
         isViewer360Open,

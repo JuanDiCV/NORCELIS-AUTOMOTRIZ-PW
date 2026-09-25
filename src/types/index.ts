@@ -126,6 +126,7 @@ export interface WishlistItem {
 }
 
 export interface ActiveGarageVehicle {
+  id?: string;
   brand: string;
   model: string;
   year: number;

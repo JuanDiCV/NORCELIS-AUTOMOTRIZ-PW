@@ -1,6 +1,7 @@
 import { Vehicle, AutoPart, WorkshopService, WishlistItem, ActiveGarageVehicle } from '../types';
 
 export const INITIAL_ACTIVE_GARAGE: ActiveGarageVehicle = {
+  id: 'gar-toy-rav4',
   brand: 'Toyota',
   model: 'RAV4 Hybrid',
   year: 2025,
@@ -11,6 +12,7 @@ export const INITIAL_ACTIVE_GARAGE: ActiveGarageVehicle = {
 
 export const AVAILABLE_GARAGE_VEHICLES: ActiveGarageVehicle[] = [
   {
+    id: 'gar-toy-rav4',
     brand: 'Toyota',
     model: 'RAV4 Hybrid 2025 (2.5L AWD)',
     year: 2025,
@@ -19,6 +21,7 @@ export const AVAILABLE_GARAGE_VEHICLES: ActiveGarageVehicle[] = [
     vin: '4T1B11HK5JU123456',
   },
   {
+    id: 'gar-toy-hilux',
     brand: 'Toyota',
     model: 'Hilux Revo 2023 (2.8L 4x4)',
     year: 2023,
@@ -27,6 +30,7 @@ export const AVAILABLE_GARAGE_VEHICLES: ActiveGarageVehicle[] = [
     vin: 'MR0BA3CD201984210',
   },
   {
+    id: 'gar-nis-frontier',
     brand: 'Nissan',
     model: 'Frontier Pro-4X 2024',
     year: 2024,
@@ -35,6 +39,7 @@ export const AVAILABLE_GARAGE_VEHICLES: ActiveGarageVehicle[] = [
     vin: '3N6DD23T4RK091244',
   },
   {
+    id: 'gar-hyu-tucson',
     brand: 'Hyundai',
     model: 'Tucson Limited 2024',
     year: 2024,
