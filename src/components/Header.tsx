@@ -512,25 +512,6 @@ export const Header: React.FC = () => {
             </button>
           </div>
 
-          {/* Vehículos Nav Item */}
-          <div
-            className="relative"
-            onMouseEnter={() => handleMouseEnter('vehiculos')}
-          >
-            <button
-              onClick={() => setCurrentView('cars')}
-              className={`px-3 py-2 min-h-[40px] rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer ${
-                currentView === 'cars' || currentView === 'vehicle-pdp' || activeDropdown === 'vehiculos'
-                  ? 'bg-primary/10 text-primary font-bold'
-                  : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
-              }`}
-            >
-              <VehicleIcon size={17} />
-              <span>Vehículos</span>
-              <span className="material-symbols-outlined text-xs">arrow_drop_down</span>
-            </button>
-          </div>
-
           {/* Servicios Nav Item */}
           <div
             className="relative"
@@ -546,6 +527,25 @@ export const Header: React.FC = () => {
             >
               <WorkshopServiceIcon size={17} />
               <span>Servicios</span>
+              <span className="material-symbols-outlined text-xs">arrow_drop_down</span>
+            </button>
+          </div>
+
+          {/* Vehículos Nav Item */}
+          <div
+            className="relative"
+            onMouseEnter={() => handleMouseEnter('vehiculos')}
+          >
+            <button
+              onClick={() => setCurrentView('cars')}
+              className={`px-3 py-2 min-h-[40px] rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer ${
+                currentView === 'cars' || currentView === 'vehicle-pdp' || activeDropdown === 'vehiculos'
+                  ? 'bg-primary/10 text-primary font-bold'
+                  : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
+              }`}
+            >
+              <VehicleIcon size={17} />
+              <span>Vehículos</span>
               <span className="material-symbols-outlined text-xs">arrow_drop_down</span>
             </button>
           </div>
@@ -1174,18 +1174,18 @@ export const Header: React.FC = () => {
               <span>Autopartes y Accesorios</span>
             </button>
             <button
-              onClick={() => { setCurrentView('cars'); setIsMobileNavOpen(false); }}
-              className="p-3 min-h-[46px] flex items-center gap-2 text-left bg-surface-container-low rounded-xl cursor-pointer"
-            >
-              <VehicleIcon size={18} className="text-primary" />
-              <span>Vehículos</span>
-            </button>
-            <button
               onClick={() => { setCurrentView('services'); setIsMobileNavOpen(false); }}
               className="p-3 min-h-[46px] flex items-center gap-2 text-left bg-surface-container-low rounded-xl cursor-pointer"
             >
               <WorkshopServiceIcon size={18} className="text-primary" />
               <span>Servicios</span>
+            </button>
+            <button
+              onClick={() => { setCurrentView('cars'); setIsMobileNavOpen(false); }}
+              className="p-3 min-h-[46px] flex items-center gap-2 text-left bg-surface-container-low rounded-xl cursor-pointer"
+            >
+              <VehicleIcon size={18} className="text-primary" />
+              <span>Vehículos</span>
             </button>
           </div>
 

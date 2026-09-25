@@ -1,65 +1,59 @@
-# Gestión Completa de Mi Garaje Virtual (Eliminar y Editar Vehículos)
+# Plan de Implementación: Carrusel Promocional Minimalista Estilo Falabella
 
-Permite a los usuarios gestionar su flota personal en el Garaje Virtual con capacidades completas para **eliminar vehículos obsoletos o erróneos** y **editar datos directamente** (marca, modelo, año, placa y motorización), con persistencia en tiempo real y selección automática de vehículo alternativo si se borra el vehículo activo.
-
-## Decisiones Críticas y Preferencias Confirmadas
-
-> [!IMPORTANT]
-> Confirmadas a través de la consulta previa:
-> - **Comportamiento al eliminar el vehículo activo**: El sistema seleccionará de forma automática e inteligente el siguiente vehículo disponible en la lista del garaje virtual para mantener siempre activos los filtros de compatibilidad. Si se elimina el último vehículo, se creará o restaurará el vehículo base estándar.
-> - **Gestión de corrección de errores**: Se incluye tanto el botón de **Eliminar con confirmación de seguridad** (evitando borrados accidentales) como la opción de **Editar datos del vehículo** (para corregir modelo, año o placa con 1 solo clic sin tener que reingresar todo).
+Transformaremos el carrusel principal (`PromoHeroCarousel.tsx`) para eliminar la sobrecarga de elementos, adoptando el diseño limpio, impactante y de alta legibilidad inspirado exactamente en el banner promocional de **Saga Falabella** enviado por el usuario.
 
 ---
 
-## 1. Visión General & Flujo de Usuario
+## 1. Estructura Visual del Banner (Fórmula Falabella)
 
-### Experiencia del Usuario
-1. **Pestaña "Mis Vehículos Guardados"**:
-   - Cada vehículo en la lista mostrará sus datos (marca, modelo, año, placa, motorización) junto con acciones rápidas:
-     - **Seleccionar / Activar**: Pasa a ser el vehículo de referencia para filtros de repuestos y accesorios.
-     - **Editar (Icono de Lápiz)**: Abre el editor en línea o formulario con los valores precargados para corregir errores rápidamente.
-     - **Eliminar (Icono de Papelera)**: Muestra un diálogo de confirmación ("¿Deseas eliminar este vehículo de tu garaje?").
-2. **Pestaña "Registrar / Editar Vehículo"**:
-   - Permite agregar nuevos autos o guardar cambios del auto que se está editando.
-   - Si se edita el auto activo, los filtros y compatibilidad se actualizan inmediatamente en toda la tienda (catálogos, fichas de producto y banner superior).
-3. **Persistencia**:
-   - La lista de vehículos del garaje y el vehículo activo se guardan en el estado global (`AppContext`) y se sincronizan con `localStorage` para que no se pierdan al recargar.
+Cada diapositiva contará con una composición limpia de 3 zonas equilibradas:
 
----
+1. **Zona Izquierda (Marca de Campaña & Botón de Acción)**:
+   - **Insignia de Campaña**: Badge de alto impacto (ej. `DS Día del Shopping / Día del Repuesto`) con fondo azul eléctrico y tipografía limpia.
+   - **Categoría Principal**: Título de campaña en tipografía extendida y nítida (ej. `HERRAMIENTAS & TALLER`, `FRENOS & DISCOS`, `MANTENIMIENTO`, `EQUIPAMIENTO 4X4`).
+   - **Botón de Acción Directo**: Botón pill oscuro con texto en mayúsculas `¡VER TODO!` acompañado del círculo con flecha derecha (`>`).
 
-## 2. Arquitectura de Componentes & Flujo de Datos
+2. **Zona Central / Fondo (Fotografía Nítida de Taller y Producto)**:
+   - Imagen de fondo de alta definición con fondo de taller automotriz / mecánico experto.
+   - Transición degradada suave hacia el color de campaña a la izquierda para garantizar 100% de contraste y legibilidad.
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│ AppContext (garageVehicles, activeGarage, deleteVehicle, editVehicle)  │
-│  ├─ localStorage ('norcelis_garage_vehicles', 'norcelis_active_garage')│
-└────────────────────────────────────┬───────────────────────────────────┘
-                                     │
-                 ┌───────────────────┴───────────────────┐
-                 ▼                                       ▼
-    ┌───────────────────────────┐           ┌────────────────────────────┐
-    │ GarageModal.tsx           │           │ Header & Views             │
-    │  ├─ List of Vehicles      │           │  ├─ Active Garage Pill     │
-    │  │   ├─ Active Badge      │           │  ├─ Parts Compatibility    │
-    │  │   ├─ Edit Trigger      │           │  └─ VIN Quick Check        │
-    │  │   └─ Delete Confirm    │           └────────────────────────────┘
-    │  └─ Add/Edit Form         │
-    └───────────────────────────┘
-```
+3. **Zona Derecha (Ficha de Precio de Oportunidad Única)**:
+   - Título del producto destacado (ej. `PRETUL / Maletín 104 Herramientas`, `BREMBO / Kit Pastillas Cerámicas`, `MOBIL 1 / Pack Mantenimiento Sintético`).
+   - **Caja de Precio Principal (Verde Lima / Amarillo Falabella)**:
+     - Badge de promoción exclusiva (`Oportunidad Única` / `Oferta Nor Celis`).
+     - Precio destacado en tamaño grande (ej. **S/ 99**, **S/ 280**, **S/ 189**).
+   - **Comparador de Precios**:
+     - `P. Oferta: S/ 119`
+     - `P. Normal: S/ 181.70` (tachado).
+
+4. **Navegación Inferior Minimalista**:
+   - Cápsula oscura flotante en el centro inferior con puntos minimalistas (la diapositiva activa se expande en forma de píldora blanca, las inactivas en puntos circulares sutiles).
+   - Flechas laterales flotantes sutiles con transición suave al pasar el cursor.
+   - Eliminación de barras de progreso saturadas y múltiples bloques de texto redundantes.
 
 ---
 
-## 3. Plan de Cambios Técnicos
+## 2. Diapositivas Optimizadas
 
-1. **Estado en `src/context/AppContext.tsx`**:
-   - Declarar `garageVehicles: ActiveGarageVehicle[]` inicializado desde `localStorage` o `AVAILABLE_GARAGE_VEHICLES`.
-   - Añadir métodos:
-     - `addGarageVehicle(vehicle: ActiveGarageVehicle)`
-     - `updateGarageVehicle(indexOrVin: string, updated: Partial<ActiveGarageVehicle>)`
-     - `deleteGarageVehicle(indexOrVin: string)` (con fallback inteligente para `activeGarage`).
-2. **Interfaz en `src/components/GarageModal.tsx`**:
-   - Acciones de tarjeta: botón de editar (`edit`) y eliminar (`delete_forever`).
-   - Modal de confirmación de eliminación con nombre del auto.
-   - Modo de edición con formulario reutilizable y botón "Actualizar Vehículo".
-3. **Notificaciones & Toasts**:
-   - Confirmación mediante `showToast` tras eliminar, editar o registrar.
+1. **Día del Shopping - Herramientas & Taller**:
+   - **Categoría**: `HERRAMIENTAS`
+   - **Producto**: Pretul / Juego de 104 Herramientas y Dados Mecánicos.
+   - **Precios**: S/ 99 (Oportunidad Única) | P. Oferta: S/ 119 | P. Normal: S/ 181.70.
+2. **Día del Repuesto - Frenos & Baterías OEM**:
+   - **Categoría**: `FRENOS & DISCOS`
+   - **Producto**: Brembo OEM / Pastillas Cerámicas + Líquido DOT4.
+   - **Precios**: S/ 149 (Oportunidad Única) | P. Oferta: S/ 189 | P. Normal: S/ 250.00.
+3. **Mantenimiento Express - Centro de Servicios**:
+   - **Categoría**: `MANTENIMIENTO TALLER`
+   - **Producto**: Nor Celis / Mantenimiento Preventivo 10k km + Escaneo 3D.
+   - **Precios**: S/ 280 (Oportunidad Única) | P. Oferta: S/ 320 | P. Normal: S/ 420.00.
+4. **Cyber 4x4 - Equipamiento Off-Road**:
+   - **Categoría**: `EQUIPAMIENTO 4X4`
+   - **Producto**: Keko / Barra Antivuelco & Lona Marítima Tri-Fold.
+   - **Precios**: S/ 890 (Oportunidad Única) | P. Oferta: S/ 990 | P. Normal: S/ 1,350.00.
+
+---
+
+## 3. Verificación
+- Compilación limpia con `npm run lint` y `compile_applet`.
+- Verificación de adaptabilidad responsive en desktop, tablet y móviles.

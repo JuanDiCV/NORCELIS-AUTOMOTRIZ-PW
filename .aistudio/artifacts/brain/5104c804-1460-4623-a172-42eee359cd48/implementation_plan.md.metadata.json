@@ -1,6 +1,6 @@
 {
-  "summary":  "Plan de implementación para la gestión completa de vehículos en Mi Garaje Virtual, incluyendo eliminación con confirmación modal/inline, edición directa de datos (marca, modelo, año, placa, motorización), persistencia en localStorage y cambio automático inteligente de vehículo activo.",
-  "updatedAt":  "2026-09-25T15:31:28.918266872Z",
+  "summary":  "Plan para rediseñar el carrusel de inicio con el estilo visual exacto de Saga Falabella / Día del Shopping, haciéndolo limpio, minimalista, directo y enfocado en la conversión.",
+  "updatedAt":  "2026-09-25T16:27:25.013271689Z",
   "requestFeedback":  true,
   "userFacing":  true
 }
