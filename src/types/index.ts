@@ -13,7 +13,28 @@ export type ViewMode =
   | 'account'
   | 'locations'
   | 'claims'
-  | 'about';
+  | 'about'
+  | 'admin';
+
+export interface HeroSlide {
+  id: string;
+  campaignBadge: string;
+  categoryTitle: string;
+  categorySubtitle?: string;
+  buttonText: string;
+  targetView: 'parts' | 'services' | 'cars';
+  targetCategory?: string;
+  targetBrand?: string;
+  productBrand: string;
+  productTitle: string;
+  productPrice: number;
+  offerPrice: number;
+  normalPrice: number;
+  productPng: string;
+  backgroundImage: string;
+  bgGradient: string;
+  active?: boolean;
+}
 
 export interface Vehicle {
   id: string;

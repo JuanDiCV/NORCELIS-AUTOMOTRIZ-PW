@@ -14,9 +14,10 @@ export const PartPdpView: React.FC = () => {
     isInWishlist,
     setCurrentView,
     showToast,
+    autoParts,
   } = useApp();
 
-  const part = AUTO_PARTS_DATA.find((p) => p.sku === selectedPartSku) || AUTO_PARTS_DATA[0];
+  const part = (autoParts && autoParts.length > 0 ? autoParts : AUTO_PARTS_DATA).find((p) => p.sku === selectedPartSku) || autoParts[0] || AUTO_PARTS_DATA[0];
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [includeInstallation, setIncludeInstallation] = useState(true);

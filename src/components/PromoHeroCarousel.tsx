@@ -1,136 +1,40 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
-
-interface HeroSlide {
-  id: string;
-  campaignBadge: string;
-  categoryTitle: string;
-  categorySubtitle?: string;
-  buttonText: string;
-  targetView: 'parts' | 'services' | 'cars';
-  targetCategory?: string;
-  targetBrand?: string;
-  productBrand: string;
-  productTitle: string;
-  productPrice: number;
-  offerPrice: number;
-  normalPrice: number;
-  productPng: string;
-  backgroundImage: string;
-  bgGradient: string;
-}
-
-const SLIDES: HeroSlide[] = [
-  {
-    id: 'slide-tools-parts',
-    campaignBadge: 'Día del Shopping',
-    categoryTitle: 'HERRAMIENTAS & EQUIPOS',
-    categorySubtitle: 'TALLER AUTOMOTRIZ & BRICOLAJE',
-    buttonText: '¡VER TODO!',
-    targetView: 'parts',
-    targetCategory: 'herramientas',
-    productBrand: 'PRETUL / TOPTUL PRO',
-    productTitle: 'Maletín de 104 Herramientas Mecánicas y Dados Cromo',
-    productPrice: 99,
-    offerPrice: 119,
-    normalPrice: 181.70,
-    // Transparent PNG cutout of mechanic tool set
-    productPng: 'https://images.unsplash.com/photo-1581244277943-fe4a9c777189?auto=format&fit=crop&w=700&q=80',
-    backgroundImage: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1920&q=80',
-    bgGradient: 'from-[#65a30d]/90 via-[#4d7c0f]/80 to-[#1e3a8a]/70',
-  },
-  {
-    id: 'slide-brakes-oem',
-    campaignBadge: 'Día del Repuesto',
-    categoryTitle: 'FRENOS & DISCOS OEM',
-    categorySubtitle: 'MÁXIMA SEGURIDAD Y FRENADO',
-    buttonText: '¡VER TODO!',
-    targetView: 'parts',
-    targetCategory: 'frenos',
-    productBrand: 'BREMBO RACING',
-    productTitle: 'Juego de Discos Ventilados + Pastillas Cerámicas',
-    productPrice: 295,
-    offerPrice: 340,
-    normalPrice: 420,
-    productPng: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBm2ZVyPDgaG_gT5Wlg5rKy4I0y0Y_fr6zB51Ec6gRO9a7UFdIO1N0ljWWg_U6h2wgDrYr2yed5l2g6yIoSBO0O3rK22XateCDgT6pxwfz8tPd8N8z5MZqE5Q_qtDqThCSeAz5RnI3Zxa1HZvziVUiK0IaPbFuspln3dVL-Bdmgt2mDj1rbqvT1S1UrNC8kr6JdBPLRstTEB7C10Ni__fvF0uRzB1pc-VBBtjEZmy1nTX_wD-VBIBJc',
-    backgroundImage: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=1920&q=80',
-    bgGradient: 'from-[#84cc16]/90 via-[#65a30d]/80 to-[#0f172a]/75',
-  },
-  {
-    id: 'slide-workshop-maintenance',
-    campaignBadge: 'Día del Taller',
-    categoryTitle: 'MANTENIMIENTO PRO',
-    categorySubtitle: 'PAQUETES 10K / 20K / 40K',
-    buttonText: '¡VER TODO!',
-    targetView: 'services',
-    productBrand: 'NOR CELIS SERVICE',
-    productTitle: 'Mantenimiento Preventivo 10,000 km + Escaneo 3D',
-    productPrice: 280,
-    offerPrice: 350,
-    normalPrice: 450,
-    productPng: 'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=700&q=80',
-    backgroundImage: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1920&q=80',
-    bgGradient: 'from-[#0284c7]/90 via-[#0369a1]/80 to-[#0f172a]/75',
-  },
-  {
-    id: 'slide-4x4-accessories',
-    campaignBadge: 'Cyber 4x4 Off-Road',
-    categoryTitle: 'EQUIPAMIENTO 4X4',
-    categorySubtitle: 'EXPEDICIÓN & SUSPENSIÓN',
-    buttonText: '¡VER TODO!',
-    targetView: 'parts',
-    targetCategory: 'accesorios4x4',
-    productBrand: 'KEKO / IRONMAN 4X4',
-    productTitle: 'Barra Antivuelco K3 Heavy Duty + Winche 12000 lbs',
-    productPrice: 1450,
-    offerPrice: 1720,
-    normalPrice: 1980,
-    productPng: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBdfVk_uYU8eyl8B4OWkZBEHTgEzsPGkIncWquDyZZjMrwZFQQJKU56rlYaGlskvXDCkuAzLoEgwFmTBOx7MpraATJaeBjdVy72h8TGgX_9kyc6zinSO3C2W8zat5rg0JLFAwbtKUOqE-cEYvsfgnBBYaBBrY36BEYRMbRJUloNvSFA7u82WjHQ7p2fRNUZm_ilig0UZpRPV6VE-xoDtcZI8UvbupdMs4YqOPtxDElx2yFMOzPAoh1T',
-    backgroundImage: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1920&q=80',
-    bgGradient: 'from-[#84cc16]/90 via-[#4d7c0f]/80 to-[#1e293b]/75',
-  },
-  {
-    id: 'slide-oem-filters-oil',
-    campaignBadge: 'Promo Especial',
-    categoryTitle: 'ACEITES & FILTROS',
-    categorySubtitle: '100% SINTÉTICO CERTIFICADO',
-    buttonText: '¡VER TODO!',
-    targetView: 'parts',
-    targetCategory: 'lubricantes',
-    productBrand: 'MOBIL 1 FULL SYNTHETIC',
-    productTitle: 'Galón 5W-30 Dexos1 Gen3 + Filtro de Aceite OEM',
-    productPrice: 165,
-    offerPrice: 195,
-    normalPrice: 240,
-    productPng: 'https://images.unsplash.com/photo-1615906655593-ad0386982a0f?auto=format&fit=crop&w=700&q=80',
-    backgroundImage: 'https://images.unsplash.com/photo-1600705722908-bab1e61c0b4d?auto=format&fit=crop&w=1920&q=80',
-    bgGradient: 'from-[#059669]/90 via-[#047857]/80 to-[#0f172a]/75',
-  },
-];
+import { HeroSlide } from '../types';
+import { INITIAL_HERO_SLIDES } from '../data/mockData';
 
 export const PromoHeroCarousel: React.FC = () => {
-  const { setCurrentView, navigateToPartsCatalog, showToast } = useApp();
+  const { setCurrentView, navigateToPartsCatalog, showToast, promoSlides } = useApp();
+  const slides = (promoSlides && promoSlides.length > 0 ? promoSlides : INITIAL_HERO_SLIDES).filter((s) => s.active !== false);
+
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const touchStartXRef = useRef<number | null>(null);
 
   // Auto slide progression
   useEffect(() => {
-    if (isHovered) return;
+    if (isHovered || slides.length <= 1) return;
     const timer = setInterval(() => {
-      setCurrentSlideIndex((prev) => (prev + 1) % SLIDES.length);
+      setCurrentSlideIndex((prev) => (prev + 1) % slides.length);
     }, 5500);
     return () => clearInterval(timer);
-  }, [isHovered]);
+  }, [isHovered, slides.length]);
+
+  // Ensure index stays valid if slides array length changes
+  useEffect(() => {
+    if (currentSlideIndex >= slides.length) {
+      setCurrentSlideIndex(0);
+    }
+  }, [slides.length, currentSlideIndex]);
 
   const handlePrev = (e?: React.MouseEvent) => {
     e?.stopPropagation();
-    setCurrentSlideIndex((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
+    setCurrentSlideIndex((prev) => (prev - 1 + slides.length) % slides.length);
   };
 
   const handleNext = (e?: React.MouseEvent) => {
     e?.stopPropagation();
-    setCurrentSlideIndex((prev) => (prev + 1) % SLIDES.length);
+    setCurrentSlideIndex((prev) => (prev + 1) % slides.length);
   };
 
   const handleSlideClick = (slide: HeroSlide) => {
@@ -161,7 +65,8 @@ export const PromoHeroCarousel: React.FC = () => {
     touchStartXRef.current = null;
   };
 
-  const activeSlide = SLIDES[currentSlideIndex];
+  const activeSlide = slides[currentSlideIndex] || slides[0];
+  if (!activeSlide) return null;
 
   return (
     <section className="px-0 sm:px-gutter">
@@ -283,7 +188,7 @@ export const PromoHeroCarousel: React.FC = () => {
 
         {/* Minimalist Bottom Center Dot Indicators (Falabella style) */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-black/60 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 shadow-lg">
-          {SLIDES.map((_, idx) => {
+          {slides.map((_, idx) => {
             const isActive = idx === currentSlideIndex;
             return (
               <button

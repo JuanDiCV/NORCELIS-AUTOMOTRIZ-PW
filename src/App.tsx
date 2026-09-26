@@ -22,9 +22,22 @@ import { AccountView } from './views/AccountView';
 import { LocationsView } from './views/LocationsView';
 import { ClaimsBookView } from './views/ClaimsBookView';
 import { AboutView } from './views/AboutView';
+import { AdminDashboardView } from './views/AdminDashboardView';
+import { AdminPinModal } from './components/admin/AdminPinModal';
 
 const MainContent: React.FC = () => {
-  const { currentView, toastMessage, pdfModalData, closePdfModal, showToast } = useApp();
+  const {
+    currentView,
+    setCurrentView,
+    toastMessage,
+    pdfModalData,
+    closePdfModal,
+    showToast,
+    isAdminPinModalOpen,
+    setIsAdminPinModalOpen,
+    adminPin,
+    setIsAdminUnlocked,
+  } = useApp();
 
   // Scroll to top whenever current view changes
   useEffect(() => {
@@ -34,7 +47,7 @@ const MainContent: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background text-on-surface antialiased selection:bg-secondary-container selection:text-white">
       {/* Sticky Header with active garage and search */}
-      <Header />
+      {currentView !== 'admin' && <Header />}
 
       {/* Main Body Routing */}
       <main className="flex-1">
@@ -53,16 +66,28 @@ const MainContent: React.FC = () => {
         {currentView === 'locations' && <LocationsView />}
         {currentView === 'claims' && <ClaimsBookView />}
         {currentView === 'about' && <AboutView />}
+        {currentView === 'admin' && <AdminDashboardView />}
       </main>
 
       {/* Dealership Footer */}
-      <Footer />
+      {currentView !== 'admin' && <Footer />}
 
       {/* Modals & Dialogs */}
       <GarageModal />
       <TestDriveModal />
       <Viewer360Modal />
       <PdfPreviewModal data={pdfModalData} onClose={closePdfModal} onShowToast={showToast} />
+      <AdminPinModal
+        isOpen={isAdminPinModalOpen}
+        onClose={() => setIsAdminPinModalOpen(false)}
+        onSuccess={() => {
+          setIsAdminUnlocked(true);
+          setIsAdminPinModalOpen(false);
+          setCurrentView('admin');
+          showToast('Acceso administrativo concedido');
+        }}
+        currentPin={adminPin}
+      />
 
       {/* Floating Automotive Advisor Chatbox & WhatsApp */}
       <AdvisorChatbox />

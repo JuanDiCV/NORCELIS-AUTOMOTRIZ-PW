@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { ViewMode, ActiveGarageVehicle, CartItem, WishlistItem, Vehicle, AutoPart, WorkshopService } from '../types';
-import { INITIAL_ACTIVE_GARAGE, AVAILABLE_GARAGE_VEHICLES, INITIAL_CART_ITEMS, INITIAL_WISHLIST_DATA, VEHICLES_DATA, AUTO_PARTS_DATA, WORKSHOP_SERVICES_DATA } from '../data/mockData';
+import { ViewMode, ActiveGarageVehicle, CartItem, WishlistItem, Vehicle, AutoPart, WorkshopService, HeroSlide } from '../types';
+import { INITIAL_ACTIVE_GARAGE, AVAILABLE_GARAGE_VEHICLES, INITIAL_CART_ITEMS, INITIAL_WISHLIST_DATA, VEHICLES_DATA, AUTO_PARTS_DATA, WORKSHOP_SERVICES_DATA, INITIAL_HERO_SLIDES } from '../data/mockData';
 import { PdfModalData } from '../components/PdfPreviewModal';
 
 interface AppContextType {
@@ -67,8 +67,30 @@ interface AppContextType {
   showToast: (msg: string) => void;
 
   vehicles: Vehicle[];
+  addVehicle: (vehicle: Omit<Vehicle, 'id'>) => void;
+  updateVehicle: (id: string, updated: Partial<Vehicle>) => void;
+  deleteVehicle: (id: string) => void;
+
+  promoSlides: HeroSlide[];
+  addPromoSlide: (slide: Omit<HeroSlide, 'id'>) => void;
+  updatePromoSlide: (id: string, updated: Partial<HeroSlide>) => void;
+  deletePromoSlide: (id: string) => void;
+  reorderPromoSlides: (slides: HeroSlide[]) => void;
+
   autoParts: AutoPart[];
+  addAutoPart: (part: Omit<AutoPart, 'id'>) => void;
+  updateAutoPart: (id: string, updated: Partial<AutoPart>) => void;
+  deleteAutoPart: (id: string) => void;
+
   services: WorkshopService[];
+
+  adminPin: string;
+  setAdminPin: (pin: string) => void;
+  isAdminUnlocked: boolean;
+  setIsAdminUnlocked: (val: boolean) => void;
+  isAdminPinModalOpen: boolean;
+  setIsAdminPinModalOpen: (open: boolean) => void;
+  resetToDefaultData: () => void;
 
   user: {
     name: string;
@@ -228,6 +250,174 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (brand !== undefined) setCatalogBrandFilter(brand);
     if (search !== undefined) setCatalogSearchQuery(search);
     setCurrentView('parts');
+  };
+
+  // Vehicles dynamic state
+  const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
+    try {
+      const saved = localStorage.getItem('norcelis_custom_vehicles');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error('Error loading vehicles from localStorage', e);
+    }
+    return VEHICLES_DATA;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('norcelis_custom_vehicles', JSON.stringify(vehicles));
+    } catch (e) {
+      console.error('Error saving vehicles to localStorage', e);
+    }
+  }, [vehicles]);
+
+  const addVehicle = (newVeh: Omit<Vehicle, 'id'>) => {
+    const created: Vehicle = {
+      ...newVeh,
+      id: `veh-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    };
+    setVehicles((prev) => [created, ...prev]);
+    showToast(`Vehículo ${created.brand} ${created.name} publicado`);
+  };
+
+  const updateVehicle = (id: string, updatedData: Partial<Vehicle>) => {
+    setVehicles((prev) =>
+      prev.map((v) => (v.id === id ? { ...v, ...updatedData } : v))
+    );
+    showToast(`Vehículo actualizado correctamente`);
+  };
+
+  const deleteVehicle = (id: string) => {
+    setVehicles((prev) => prev.filter((v) => v.id !== id));
+    showToast(`Vehículo retirado del catálogo`);
+  };
+
+  // Promo Slides dynamic state
+  const [promoSlides, setPromoSlides] = useState<HeroSlide[]>(() => {
+    try {
+      const saved = localStorage.getItem('norcelis_promo_slides');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error('Error loading promo slides from localStorage', e);
+    }
+    return INITIAL_HERO_SLIDES;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('norcelis_promo_slides', JSON.stringify(promoSlides));
+    } catch (e) {
+      console.error('Error saving promo slides to localStorage', e);
+    }
+  }, [promoSlides]);
+
+  const addPromoSlide = (newSlide: Omit<HeroSlide, 'id'>) => {
+    const created: HeroSlide = {
+      ...newSlide,
+      id: `slide-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    };
+    setPromoSlides((prev) => [created, ...prev]);
+    showToast(`Banner publicitario añadido exitosamente`);
+  };
+
+  const updatePromoSlide = (id: string, updatedData: Partial<HeroSlide>) => {
+    setPromoSlides((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, ...updatedData } : s))
+    );
+    showToast(`Banner publicitario actualizado`);
+  };
+
+  const deletePromoSlide = (id: string) => {
+    setPromoSlides((prev) => prev.filter((s) => s.id !== id));
+    showToast(`Banner eliminado de la rotación`);
+  };
+
+  const reorderPromoSlides = (newSlides: HeroSlide[]) => {
+    setPromoSlides(newSlides);
+    showToast(`Orden de banners actualizado`);
+  };
+
+  // Admin PIN & Security state
+  const [adminPin, setAdminPinState] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('norcelis_admin_pin');
+      if (saved && saved.length === 4) return saved;
+    } catch (e) {}
+    return '1234';
+  });
+
+  const setAdminPin = (pin: string) => {
+    setAdminPinState(pin);
+    try {
+      localStorage.setItem('norcelis_admin_pin', pin);
+    } catch (e) {}
+    showToast('PIN de administrador actualizado exitosamente');
+  };
+
+  const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
+  const [isAdminPinModalOpen, setIsAdminPinModalOpen] = useState(false);
+
+  // Auto Parts dynamic state
+  const [autoParts, setAutoParts] = useState<AutoPart[]>(() => {
+    try {
+      const saved = localStorage.getItem('norcelis_custom_parts');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error('Error loading auto parts from localStorage', e);
+    }
+    return AUTO_PARTS_DATA;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('norcelis_custom_parts', JSON.stringify(autoParts));
+    } catch (e) {
+      console.error('Error saving auto parts to localStorage', e);
+    }
+  }, [autoParts]);
+
+  const addAutoPart = (newPart: Omit<AutoPart, 'id'>) => {
+    const created: AutoPart = {
+      ...newPart,
+      id: `part-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    };
+    setAutoParts((prev) => [created, ...prev]);
+    showToast(`Repuesto "${created.name}" publicado en catálogo`);
+  };
+
+  const updateAutoPart = (id: string, updatedData: Partial<AutoPart>) => {
+    setAutoParts((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, ...updatedData } : p))
+    );
+    showToast(`Repuesto actualizado correctamente`);
+  };
+
+  const deleteAutoPart = (id: string) => {
+    setAutoParts((prev) => prev.filter((p) => p.id !== id));
+    showToast(`Repuesto retirado del catálogo`);
+  };
+
+  const resetToDefaultData = () => {
+    setVehicles(VEHICLES_DATA);
+    setPromoSlides(INITIAL_HERO_SLIDES);
+    setAutoParts(AUTO_PARTS_DATA);
+    setAdminPinState('1234');
+    try {
+      localStorage.removeItem('norcelis_custom_vehicles');
+      localStorage.removeItem('norcelis_promo_slides');
+      localStorage.removeItem('norcelis_custom_parts');
+      localStorage.removeItem('norcelis_admin_pin');
+    } catch (e) {}
+    showToast('Catálogo, repuestos y banners restablecidos a valores originales');
   };
 
   const showToast = (msg: string) => {
@@ -440,8 +630,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         wishlistTotalCount: wishlistItems.length,
         toastMessage,
         showToast,
-        vehicles: VEHICLES_DATA,
-        autoParts: AUTO_PARTS_DATA,
+        vehicles,
+        addVehicle,
+        updateVehicle,
+        deleteVehicle,
+        promoSlides,
+        addPromoSlide,
+        updatePromoSlide,
+        deletePromoSlide,
+        reorderPromoSlides,
+        adminPin,
+        setAdminPin,
+        isAdminUnlocked,
+        setIsAdminUnlocked,
+        isAdminPinModalOpen,
+        setIsAdminPinModalOpen,
+        resetToDefaultData,
+        autoParts,
+        addAutoPart,
+        updateAutoPart,
+        deleteAutoPart,
         services: WORKSHOP_SERVICES_DATA,
         user,
         loginUser,

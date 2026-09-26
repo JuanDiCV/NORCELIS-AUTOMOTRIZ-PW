@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { NorCelisLogo } from './NorCelisLogo';
 
 export const Footer: React.FC = () => {
-  const { setCurrentView, setSelectedPartSku, showToast } = useApp();
+  const { setCurrentView, setSelectedPartSku, showToast, setIsAdminPinModalOpen } = useApp();
 
   return (
     <footer className="bg-primary text-surface-container-highest border-t border-primary-container mt-16">
@@ -298,6 +298,16 @@ export const Footer: React.FC = () => {
             <span className="hidden sm:inline">•</span>
             <button onClick={() => setCurrentView('about')} className="min-h-[44px] inline-flex items-center px-1.5 underline hover:text-white font-semibold cursor-pointer">
               Sobre Nosotros &amp; Garantías
+            </button>
+            <span className="hidden sm:inline">•</span>
+            <button
+              type="button"
+              onClick={() => setIsAdminPinModalOpen(true)}
+              className="min-h-[44px] inline-flex items-center gap-1 px-1.5 opacity-60 hover:opacity-100 hover:text-white font-medium cursor-pointer transition-opacity text-[11px]"
+              title="Acceso restringido para administración"
+            >
+              <span className="material-symbols-outlined text-[13px]">lock</span>
+              <span>Administración</span>
             </button>
           </div>
 
