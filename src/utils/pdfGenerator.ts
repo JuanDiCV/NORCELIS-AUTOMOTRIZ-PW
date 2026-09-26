@@ -320,26 +320,41 @@ export function generateVehicleQuotePdf(vehicle: Vehicle, selectedColorName = 'B
 
   y += 40;
 
-  // Commercial Notes & Official Seal
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(100, 116, 139);
-  doc.text('1. Esta cotización incluye I.G.V. (18%), trámites de tarjeta de propiedad, placas y entrega técnica.', 14, y);
-  doc.text('2. Cuentas Corrientes BCP para transferencias de reserva: BCP Soles 191-2894102-0-45 / CCI 002-19100289410204551.', 14, y + 4.5);
-  doc.text('3. Entregas en Sede Cajamarca (Av. Vía de Evitamiento Sur 6003) o despacho en grúa cerrada a domicilio.', 14, y + 9);
-
-  // Stamped Signature Box
-  doc.setDrawColor(BRAND.borderGrey[0], BRAND.borderGrey[1], BRAND.borderGrey[2]);
-  doc.rect(pageWidth - 70, y - 2, 56, 24, 'S');
+  // Commercial Notes & Official Bank Accounts & Seal
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
   doc.setTextColor(BRAND.primaryColor[0], BRAND.primaryColor[1], BRAND.primaryColor[2]);
-  doc.text('NOR CELIS AUTOMOTRIZ S.A.C.', pageWidth - 42, y + 13, { align: 'center' });
+  doc.text('A TOMAR EN CUENTA:', 14, y);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(71, 85, 105);
+  doc.text('• La presente cotización tiene validez por 7 días, los productos tienen un stock limitado.', 14, y + 4);
+  doc.text('• Los precios pueden variar según diagnóstico final del vehículo o disponibilidad de repuestos al momento de confirmación.', 14, y + 8);
+  doc.text('• Gracias por confiar en NORCELIS AUTOMOTRIZ especialistas en autopartes, accesorios y servicios automotrices.', 14, y + 12);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  doc.setTextColor(BRAND.secondaryColor[0], BRAND.secondaryColor[1], BRAND.secondaryColor[2]);
+  doc.text('CUENTAS CORRIENTES OFICIALES (NOR CELIS AUTOMOTRIZ S.A.C. - RUC 20608754129):', 14, y + 17);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(6.5);
+  doc.setTextColor(51, 65, 85);
+  doc.text('Soles: BCP 245-9966172-0-49 (CCI 002-245-00996617204992) • BBVA 0011-0248-0100034831 • Scotiabank 000-4949476', 14, y + 21);
+  doc.text('Dólares: BCP 245-9964344-1-94 (CCI 002-245-00996434419494) • BBVA 0011-0248-0100034874 | Detracciones BN: 00-772-001053', 14, y + 25);
+
+  // Stamped Signature Box
+  doc.setDrawColor(BRAND.borderGrey[0], BRAND.borderGrey[1], BRAND.borderGrey[2]);
+  doc.rect(pageWidth - 65, y, 51, 26, 'S');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  doc.setTextColor(BRAND.primaryColor[0], BRAND.primaryColor[1], BRAND.primaryColor[2]);
+  doc.text('NOR CELIS AUTOMOTRIZ S.A.C.', pageWidth - 39.5, y + 13, { align: 'center' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6);
   doc.setTextColor(100, 116, 139);
-  doc.text('GERENCIA COMERCIAL & VENTAS', pageWidth - 42, y + 17, { align: 'center' });
-  doc.text('Firma y Sello Autorizado', pageWidth - 42, y + 21, { align: 'center' });
+  doc.text('GERENCIA COMERCIAL & VENTAS', pageWidth - 39.5, y + 17, { align: 'center' });
+  doc.text('Firma y Sello Autorizado', pageWidth - 39.5, y + 21, { align: 'center' });
 
   drawFooter(doc, 1, 1);
 
@@ -605,6 +620,31 @@ export function generateWishlistQuotePdf(items: WishlistItem[], customerName = '
   doc.setTextColor(BRAND.secondaryColor[0], BRAND.secondaryColor[1], BRAND.secondaryColor[2]);
   doc.text('TOTAL A PAGAR:', pageWidth - 80, y + 19);
   doc.text(`S/ ${totalSoles.toLocaleString()}`, pageWidth - 20, y + 19, { align: 'right' });
+
+  y += 28;
+
+  // Notes & Official Accounts
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(BRAND.primaryColor[0], BRAND.primaryColor[1], BRAND.primaryColor[2]);
+  doc.text('A TOMAR EN CUENTA:', 14, y);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(71, 85, 105);
+  doc.text('• La presente cotización tiene validez por 7 días, los productos tienen un stock limitado.', 14, y + 4);
+  doc.text('• Los precios pueden variar según diagnóstico final del vehículo o disponibilidad de repuestos al momento de la confirmación.', 14, y + 8);
+  doc.text('• Gracias por confiar en NORCELIS AUTOMOTRIZ especialistas en autopartes, accesorios y servicios automotrices.', 14, y + 12);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  doc.setTextColor(BRAND.secondaryColor[0], BRAND.secondaryColor[1], BRAND.secondaryColor[2]);
+  doc.text('CUENTAS CORRIENTES OFICIALES (NOR CELIS AUTOMOTRIZ S.A.C. - RUC 20608754129):', 14, y + 17);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6.5);
+  doc.setTextColor(51, 65, 85);
+  doc.text('Soles: BCP 245-9966172-0-49 (CCI 002-245-00996617204992) • BBVA 0011-0248-0100034831 • Scotiabank 000-4949476', 14, y + 21);
+  doc.text('Dólares: BCP 245-9964344-1-94 (CCI 002-245-00996434419494) • BBVA 0011-0248-0100034874 | Detracciones BN: 00-772-001053', 14, y + 25);
 
   drawFooter(doc, 1, 1);
 

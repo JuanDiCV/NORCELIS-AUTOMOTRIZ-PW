@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { SafeImage } from '../components/SafeImage';
+import { SHALOM_DESTINATIONS } from '../data/bankAccountsData';
+import { CulqiPaymentModal } from '../components/checkout/CulqiPaymentModal';
+import { BankAccountsList } from '../components/checkout/BankAccountsList';
 
 export const CartView: React.FC = () => {
   const {
@@ -16,14 +19,32 @@ export const CartView: React.FC = () => {
   } = useApp();
 
   const [deliveryMethod, setDeliveryMethod] = useState<'shipping' | 'pickup'>('shipping');
+  const [selectedShalomDestination, setSelectedShalomDestination] = useState<string>('cajamarca-local');
+  const [shalomDeliveryType, setShalomDeliveryType] = useState<'domicilio' | 'agencia'>('domicilio');
+  const [customerAddress, setCustomerAddress] = useState<string>('Jr. Dos de Mayo 450, Cajamarca');
+  const [customerDniRuc, setCustomerDniRuc] = useState<string>('45892147');
+
   const [couponCode, setCouponCode] = useState('NORCELIS5');
   const [couponApplied, setCouponApplied] = useState(true);
-  const [selectedPayment, setSelectedPayment] = useState<'yape' | 'card' | 'transfer'>('card');
+  const [selectedPayment, setSelectedPayment] = useState<'culqi' | 'transfer' | 'yape'>('culqi');
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [isCulqiModalOpen, setIsCulqiModalOpen] = useState(false);
+
+  const [completedOrder, setCompletedOrder] = useState<{
+    orderNumber: string;
+    shalomGuide?: string;
+    paymentMethod: string;
+    amount: number;
+    destinationLabel: string;
+    estimatedDelivery: string;
+  } | null>(null);
+
+  // Dynamic Shalom Shipping Cost calculation
+  const selectedDestObj = SHALOM_DESTINATIONS.find((d) => d.id === selectedShalomDestination) || SHALOM_DESTINATIONS[0];
+  const shippingCost = deliveryMethod === 'shipping' ? selectedDestObj.cost : 0;
 
   // Discount calculation
   const discountAmount = couponApplied ? Math.round(cartSubtotalSoles * 0.05) : 0;
-  const shippingCost = deliveryMethod === 'shipping' ? 0 : 0; // Free promo
   const finalTotalSoles = cartSubtotalSoles - discountAmount + shippingCost;
   const finalTotalUsd = Math.round(finalTotalSoles / 3.75);
 
@@ -38,11 +59,45 @@ export const CartView: React.FC = () => {
   };
 
   const handleCheckout = () => {
+    if (selectedPayment === 'culqi') {
+      setIsCulqiModalOpen(true);
+      return;
+    }
+
     setIsCheckingOut(true);
     setTimeout(() => {
       setIsCheckingOut(false);
-      showToast('¡Orden generada con éxito! N° Pedido: NC-2025-9941. Hemos enviado los detalles a tu WhatsApp.');
-    }, 1200);
+      const generatedOrder = `NC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const generatedGuide = deliveryMethod === 'shipping' ? `SHA-CAJ-${Math.floor(100000 + Math.random() * 900000)}` : undefined;
+
+      setCompletedOrder({
+        orderNumber: generatedOrder,
+        shalomGuide: generatedGuide,
+        paymentMethod: selectedPayment === 'transfer' ? 'Transferencia Bancaria Oficial' : 'Yape / Plin Directo',
+        amount: finalTotalSoles,
+        destinationLabel: deliveryMethod === 'shipping' ? `${selectedDestObj.label} (${shalomDeliveryType === 'domicilio' ? 'A Domicilio' : 'Agencia Shalom'})` : 'Retiro en Concesionario Cajamarca',
+        estimatedDelivery: deliveryMethod === 'shipping' ? selectedDestObj.estimatedTime : 'Inmediato en Sede',
+      });
+
+      showToast(`¡Pedido ${generatedOrder} confirmado! Hemos registrado tu solicitud.`);
+    }, 1000);
+  };
+
+  const handleCulqiSuccess = (details: { method: string; transactionId: string; amount: number }) => {
+    setIsCulqiModalOpen(false);
+    const generatedOrder = `NC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const generatedGuide = deliveryMethod === 'shipping' ? `SHA-CAJ-${Math.floor(100000 + Math.random() * 900000)}` : undefined;
+
+    setCompletedOrder({
+      orderNumber: generatedOrder,
+      shalomGuide: generatedGuide,
+      paymentMethod: details.method,
+      amount: details.amount,
+      destinationLabel: deliveryMethod === 'shipping' ? `${selectedDestObj.label} (${shalomDeliveryType === 'domicilio' ? 'A Domicilio' : 'Agencia Shalom'})` : 'Retiro en Concesionario Cajamarca',
+      estimatedDelivery: deliveryMethod === 'shipping' ? selectedDestObj.estimatedTime : 'Inmediato en Sede',
+    });
+
+    showToast(`¡Pago con Culqi exitoso! Pedido ${generatedOrder} confirmado con guía Shalom.`);
   };
 
   return (
@@ -271,31 +326,114 @@ export const CartView: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Column: Checkout Summary (Screen 8 spec) */}
+          {/* Right Column: Checkout Summary & Logistics */}
           <div className="lg:col-span-4 space-y-4">
             {/* Fulfillment selector */}
             <div className="bg-surface-container-lowest p-5 rounded-3xl border border-surface-container shadow-sm space-y-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-outline block">
-                Método de Entrega
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-outline block">
+                  Método de Entrega
+                </span>
+                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-900 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-xs">local_shipping</span>
+                  Shalom Express
+                </span>
+              </div>
+
               <div className="space-y-2">
                 <label
                   onClick={() => setDeliveryMethod('shipping')}
-                  className={`flex items-center justify-between p-3.5 min-h-[44px] rounded-xl border cursor-pointer transition-all ${
+                  className={`flex items-start justify-between p-3.5 min-h-[44px] rounded-xl border cursor-pointer transition-all ${
                     deliveryMethod === 'shipping'
                       ? 'border-primary bg-surface-container-low ring-1 ring-primary'
                       : 'border-surface-container'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <span className="material-symbols-outlined text-primary text-xl">local_shipping</span>
+                  <div className="flex items-start gap-2.5">
+                    <span className="material-symbols-outlined text-[#F07F00] text-xl mt-0.5">local_shipping</span>
                     <div>
-                      <div className="text-xs font-bold text-on-surface">Envío Express a Domicilio</div>
-                      <div className="text-[11px] text-outline">Cajamarca y Provincias (Entrega Rápida)</div>
+                      <div className="text-xs font-bold text-on-surface flex items-center gap-1.5">
+                        <span>Envío Express a Domicilio / Agencia</span>
+                      </div>
+                      <div className="text-[11px] text-outline">
+                        Operado por <strong>Shalom Express</strong> (Nacional)
+                      </div>
                     </div>
                   </div>
-                  <span className="text-xs font-bold text-emerald-700">GRATIS</span>
+                  <span className="text-xs font-bold text-emerald-700 shrink-0">
+                    {selectedDestObj.cost === 0 ? 'GRATIS' : `S/ ${selectedDestObj.cost}`}
+                  </span>
                 </label>
+
+                {/* Expanded Shalom Delivery Configuration */}
+                {deliveryMethod === 'shipping' && (
+                  <div className="p-3.5 bg-gray-50 rounded-2xl border border-gray-200 space-y-3 animate-in fade-in duration-150">
+                    <div>
+                      <label className="text-[11px] font-bold text-[#212955] block mb-1 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-sm text-[#F07F00]">pin_drop</span>
+                        Destino de Envío Shalom:
+                      </label>
+                      <select
+                        value={selectedShalomDestination}
+                        onChange={(e) => setSelectedShalomDestination(e.target.value)}
+                        className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs font-semibold text-gray-800 focus:outline-none focus:border-primary"
+                      >
+                        {SHALOM_DESTINATIONS.map((dest) => (
+                          <option key={dest.id} value={dest.id}>
+                            {dest.label} — {dest.cost === 0 ? 'Gratis' : `S/ ${dest.cost}`} ({dest.estimatedTime})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setShalomDeliveryType('domicilio')}
+                        className={`p-2 rounded-xl border text-center transition-all cursor-pointer font-bold ${
+                          shalomDeliveryType === 'domicilio'
+                            ? 'bg-[#212955] text-white border-[#212955] shadow-xs'
+                            : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
+                        }`}
+                      >
+                        A Domicilio
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShalomDeliveryType('agencia')}
+                        className={`p-2 rounded-xl border text-center transition-all cursor-pointer font-bold ${
+                          shalomDeliveryType === 'agencia'
+                            ? 'bg-[#212955] text-white border-[#212955] shadow-xs'
+                            : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
+                        }`}
+                      >
+                        Agencia Shalom
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        value={customerAddress}
+                        onChange={(e) => setCustomerAddress(e.target.value)}
+                        placeholder={shalomDeliveryType === 'domicilio' ? 'Dirección exacta de entrega' : 'Nombre o referencia de Agencia Shalom'}
+                        className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-primary"
+                      />
+                      <input
+                        type="text"
+                        value={customerDniRuc}
+                        onChange={(e) => setCustomerDniRuc(e.target.value)}
+                        placeholder="DNI o RUC del consignatario para la guía"
+                        className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs font-mono text-gray-800 placeholder-gray-400 focus:outline-none focus:border-primary"
+                      />
+                    </div>
+
+                    <div className="text-[10px] text-gray-500 bg-white p-2 rounded-xl border border-gray-200 flex items-center justify-between">
+                      <span>Plazo Estimado: <strong>{selectedDestObj.estimatedTime}</strong></span>
+                      <span className="font-bold text-[#F07F00]">Guía Shalom Incluida</span>
+                    </div>
+                  </div>
+                )}
 
                 <label
                   onClick={() => setDeliveryMethod('pickup')}
@@ -350,7 +488,7 @@ export const CartView: React.FC = () => {
               {/* Breakdown */}
               <div className="space-y-2 text-xs border-t border-surface-container-low pt-3">
                 <div className="flex justify-between text-outline">
-                  <span>Subtotal:</span>
+                  <span>Subtotal repuestos / servicios:</span>
                   <span className="font-mono text-on-surface font-semibold">S/ {cartSubtotalSoles.toLocaleString()}</span>
                 </div>
 
@@ -362,8 +500,10 @@ export const CartView: React.FC = () => {
                 )}
 
                 <div className="flex justify-between text-outline">
-                  <span>Despacho a Domicilio:</span>
-                  <span className="text-emerald-700 font-bold">Gratis</span>
+                  <span>Envío Shalom Express ({deliveryMethod === 'shipping' ? selectedDestObj.label : 'Retiro en Sede'}):</span>
+                  <span className={`font-mono font-bold ${shippingCost === 0 ? 'text-emerald-700' : 'text-on-surface'}`}>
+                    {shippingCost === 0 ? 'Gratis' : `S/ ${shippingCost}`}
+                  </span>
                 </div>
 
                 <div className="border-t border-surface-container pt-3 flex justify-between items-baseline">
@@ -380,55 +520,100 @@ export const CartView: React.FC = () => {
               {/* Payment Methods */}
               <div className="space-y-2 pt-2">
                 <span className="text-[10px] uppercase font-bold text-outline block">
-                  Método de Pago Preferido:
+                  Selecciona tu Método de Pago:
                 </span>
                 <div className="grid grid-cols-3 gap-2 text-xs font-semibold">
                   <button
-                    onClick={() => setSelectedPayment('card')}
-                    className={`min-h-[44px] py-2.5 px-2 rounded-xl border text-center transition-all cursor-pointer flex items-center justify-center ${
-                      selectedPayment === 'card'
-                        ? 'border-primary bg-primary text-white shadow-sm'
+                    type="button"
+                    onClick={() => setSelectedPayment('culqi')}
+                    className={`min-h-[44px] py-2.5 px-2 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
+                      selectedPayment === 'culqi'
+                        ? 'border-[#002A8F] bg-[#002A8F] text-white shadow-sm'
                         : 'border-surface-container bg-surface-container-low text-on-surface hover:bg-surface-container'
                     }`}
                   >
-                    Tarjetas
+                    <span className="font-extrabold">Culqi</span>
+                    <span className="text-[9px] opacity-80">Tarjetas / POS</span>
                   </button>
                   <button
-                    onClick={() => setSelectedPayment('yape')}
-                    className={`min-h-[44px] py-2.5 px-2 rounded-xl border text-center transition-all cursor-pointer flex items-center justify-center ${
-                      selectedPayment === 'yape'
-                        ? 'border-primary bg-primary text-white shadow-sm'
-                        : 'border-surface-container bg-surface-container-low text-on-surface hover:bg-surface-container'
-                    }`}
-                  >
-                    Yape / Plin
-                  </button>
-                  <button
+                    type="button"
                     onClick={() => setSelectedPayment('transfer')}
-                    className={`min-h-[44px] py-2.5 px-2 rounded-xl border text-center transition-all cursor-pointer flex items-center justify-center ${
+                    className={`min-h-[44px] py-2.5 px-2 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
                       selectedPayment === 'transfer'
                         ? 'border-primary bg-primary text-white shadow-sm'
                         : 'border-surface-container bg-surface-container-low text-on-surface hover:bg-surface-container'
                     }`}
                   >
-                    BCP / BBVA
+                    <span className="font-extrabold">Transferencia</span>
+                    <span className="text-[9px] opacity-80">BCP / BBVA</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPayment('yape')}
+                    className={`min-h-[44px] py-2.5 px-2 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
+                      selectedPayment === 'yape'
+                        ? 'border-[#742284] bg-[#742284] text-white shadow-sm'
+                        : 'border-surface-container bg-surface-container-low text-on-surface hover:bg-surface-container'
+                    }`}
+                  >
+                    <span className="font-extrabold">Yape</span>
+                    <span className="text-[9px] opacity-80">Directo</span>
                   </button>
                 </div>
               </div>
 
+              {/* Bank Accounts Accordion / Preview when Transfer is chosen */}
+              {selectedPayment === 'transfer' && (
+                <div className="pt-2 animate-in fade-in duration-150 w-full max-w-full overflow-hidden">
+                  <BankAccountsList
+                    compact={true}
+                    onCopySuccess={(msg) => showToast(msg)}
+                  />
+                </div>
+              )}
+
+              {/* Yape preview when direct Yape is chosen */}
+              {selectedPayment === 'yape' && (
+                <div className="p-3 bg-[#742284]/10 rounded-2xl border border-[#742284]/20 space-y-1 text-xs animate-in fade-in duration-150">
+                  <div className="flex items-center gap-2 text-[#742284] font-bold">
+                    <span className="material-symbols-outlined text-base">qr_code_2</span>
+                    <span>Yape Directo Concesionario</span>
+                  </div>
+                  <p className="text-[11px] text-gray-700">
+                    Número Oficial: <strong>987 654 321</strong> (NOR CELIS AUTOMOTRIZ S.A.C.)
+                  </p>
+                  <span className="text-[10px] text-gray-500 block">
+                    Al confirmar el pedido se registrará tu solicitud y podrás adjuntar tu captura de Yape por WhatsApp.
+                  </span>
+                </div>
+              )}
+
               {/* Checkout CTA */}
-              <div className="pt-2">
+              <div className="pt-2 space-y-2">
                 <button
+                  type="button"
                   onClick={handleCheckout}
                   disabled={isCheckingOut}
-                  className="w-full min-h-[48px] bg-secondary-container hover:bg-secondary text-white py-3.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider shadow-md hover:shadow-orange-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer text-center leading-tight"
+                  className={`w-full min-h-[48px] py-3.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer text-center leading-tight ${
+                    selectedPayment === 'culqi'
+                      ? 'bg-[#002A8F] hover:bg-[#001f66] text-white'
+                      : 'bg-secondary-container hover:bg-secondary text-white hover:shadow-orange-500/25'
+                  }`}
                 >
                   {isCheckingOut ? (
-                    <span>Procesando Pago Seguro...</span>
+                    <span>Procesando Pedido...</span>
                   ) : (
                     <>
-                      <span className="material-symbols-outlined text-[18px] shrink-0">lock</span>
-                      <span className="break-words">Proceder al Pago Seguro (S/ {finalTotalSoles.toLocaleString()})</span>
+                      <span className="material-symbols-outlined text-[18px] shrink-0">
+                        {selectedPayment === 'culqi' ? 'credit_card' : 'lock'}
+                      </span>
+                      <span className="break-words">
+                        {selectedPayment === 'culqi'
+                          ? `Pagar con Culqi (S/ ${finalTotalSoles.toLocaleString()})`
+                          : selectedPayment === 'transfer'
+                          ? `Confirmar Pedido & Transferir (S/ ${finalTotalSoles.toLocaleString()})`
+                          : `Confirmar Pedido por Yape (S/ ${finalTotalSoles.toLocaleString()})`}
+                      </span>
                     </>
                   )}
                 </button>
@@ -436,7 +621,124 @@ export const CartView: React.FC = () => {
 
               <div className="text-center text-[10px] text-outline flex items-center justify-center gap-2">
                 <span className="material-symbols-outlined text-[14px] text-emerald-600">verified_user</span>
-                <span>Transacción encriptada SSL 256-bit certificada por Niubiz</span>
+                <span>Transacción segura y protegida por Culqi &amp; Nor Celis Automotriz</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Culqi Checkout Modal */}
+      <CulqiPaymentModal
+        isOpen={isCulqiModalOpen}
+        onClose={() => setIsCulqiModalOpen(false)}
+        onPaymentSuccess={handleCulqiSuccess}
+        totalAmountSoles={finalTotalSoles}
+        orderNumber={`NC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`}
+      />
+
+      {/* Order Completed Modal */}
+      {completedOrder && (
+        <div className="fixed inset-0 z-50 bg-[#0f172a]/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150">
+          <div
+            className="bg-white rounded-3xl max-w-lg w-full border border-gray-200 shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="bg-[#212955] p-5 text-white flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-2xl">check_circle</span>
+                </div>
+                <div>
+                  <h3 className="font-headline font-bold text-base">¡Pedido Confirmado con Éxito!</h3>
+                  <p className="text-xs text-blue-200">Nor Celis Automotriz • Sede Cajamarca</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCompletedOrder(null)}
+                className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-base">close</span>
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-4 text-xs">
+              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200 space-y-2">
+                <div className="flex justify-between items-center border-b pb-2">
+                  <span className="text-gray-500">Número de Pedido:</span>
+                  <span className="font-mono font-bold text-[#212955] text-sm">{completedOrder.orderNumber}</span>
+                </div>
+                {completedOrder.shalomGuide && (
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <span className="text-gray-500 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm text-[#F07F00]">local_shipping</span>
+                      Guía Shalom Express:
+                    </span>
+                    <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                      {completedOrder.shalomGuide}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center border-b pb-2">
+                  <span className="text-gray-500">Método de Pago:</span>
+                  <span className="font-bold text-[#212955]">{completedOrder.paymentMethod}</span>
+                </div>
+                <div className="flex justify-between items-center border-b pb-2">
+                  <span className="text-gray-500">Destino / Entrega:</span>
+                  <span className="font-semibold text-gray-800 text-right max-w-[240px] truncate">
+                    {completedOrder.destinationLabel}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center border-b pb-2">
+                  <span className="text-gray-500">Tiempo Estimado:</span>
+                  <span className="font-bold text-gray-800">{completedOrder.estimatedDelivery}</span>
+                </div>
+                <div className="flex justify-between items-center pt-1">
+                  <span className="font-bold text-gray-700">Total Pagado:</span>
+                  <span className="font-black text-base text-[#F07F00]">
+                    S/ {completedOrder.amount.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Shalom Tracking Status Card */}
+              {completedOrder.shalomGuide && (
+                <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-amber-900">
+                    <span className="flex items-center gap-1">
+                      <span className="material-symbols-outlined text-base text-[#F07F00]">schedule</span>
+                      Estado de Envío Shalom Express
+                    </span>
+                    <span className="bg-amber-200/80 px-2 py-0.5 rounded text-[10px]">En Preparación</span>
+                  </div>
+                  <p className="text-[11px] text-amber-800 leading-snug">
+                    Tu guía <strong>{completedOrder.shalomGuide}</strong> ha sido pre-registrada en el sistema de Shalom. Te notificaremos por WhatsApp cuando el paquete sea admitido en agencia.
+                  </p>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="space-y-2 pt-2">
+                <a
+                  href={`https://wa.me/51987654321?text=Hola%20Nor%20Celis,%20adjunto%20mi%20pedido%20${completedOrder.orderNumber}%20con%20guía%20Shalom%20${completedOrder.shalomGuide || 'retiro'}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3 bg-[#25D366] hover:bg-[#20ba59] text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-base">chat</span>
+                  <span>Contactar a un Asesor por WhatsApp</span>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => setCompletedOrder(null)}
+                  className="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold transition-colors cursor-pointer"
+                >
+                  Continuar Explorando
+                </button>
               </div>
             </div>
           </div>

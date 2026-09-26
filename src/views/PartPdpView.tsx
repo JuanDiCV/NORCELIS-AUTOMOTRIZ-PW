@@ -289,6 +289,33 @@ export const PartPdpView: React.FC = () => {
                   Consultar por WhatsApp
                 </a>
               </div>
+
+              {/* Shalom Express & Culqi Trust Badges */}
+              <div className="pt-3 border-t border-surface-container-low grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-[11px]">
+                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/80 text-amber-950">
+                  <span className="material-symbols-outlined text-[#F07F00] text-lg shrink-0">local_shipping</span>
+                  <div>
+                    <span className="font-bold block leading-tight">Shalom Express</span>
+                    <span className="text-[10px] text-amber-800">Despacho 24-48h nacional</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-blue-50/80 border border-blue-200/80 text-blue-950">
+                  <span className="material-symbols-outlined text-[#002A8F] text-lg shrink-0">credit_card</span>
+                  <div>
+                    <span className="font-bold block leading-tight">Culqi Pasarela &amp; POS</span>
+                    <span className="text-[10px] text-blue-800">Tarjetas, Yape &amp; POS</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-50/80 border border-emerald-200/80 text-emerald-950">
+                  <span className="material-symbols-outlined text-emerald-700 text-lg shrink-0">account_balance</span>
+                  <div>
+                    <span className="font-bold block leading-tight">Cuentas BCP / BBVA</span>
+                    <span className="text-[10px] text-emerald-800">Detracciones BN Oficial</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

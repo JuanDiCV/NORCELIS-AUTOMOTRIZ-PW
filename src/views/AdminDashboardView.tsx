@@ -2,8 +2,10 @@ import React, { useState, useMemo, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { HeroSlide, Vehicle, AutoPart } from '../types';
 import { ImageUploadField } from '../components/admin/ImageUploadField';
+import { AccountingExportCenter } from '../components/admin/AccountingExportCenter';
+import { generateVehiclesCsv, generateAutoPartsCsv, downloadCsvFile } from '../utils/csvExportService';
 
-type AdminTab = 'banners' | 'cars' | 'autoparts' | 'offers' | 'security';
+type AdminTab = 'banners' | 'cars' | 'autoparts' | 'offers' | 'reports' | 'security';
 type ViewModeDisplay = 'grid' | 'table';
 
 interface CustomOffer {
@@ -500,18 +502,9 @@ export const AdminDashboardView: React.FC = () => {
   };
 
   const handleExportPartsCsv = () => {
-    let csvContent = 'ID,Nombre,Marca,Categoría,SKU,Código_OEM,Precio_Soles,Precio_USD,Compatibilidad,Stock\n';
-    autoParts.forEach((p) => {
-      csvContent += `"${p.id}","${p.name.replace(/"/g, '""')}","${p.brand}","${p.category}","${p.sku}","${p.oemCode}","${p.priceSoles}","${p.priceUsd}","${(p.compatibleVehicle || '').replace(/"/g, '""')}","${p.stockText}"\n`;
-    });
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `norcelis_autopartes_${new Date().toISOString().slice(0, 10)}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
-    showToast('Catálogo de autopartes exportado a CSV');
+    const { csvString, rowCount, filename } = generateAutoPartsCsv(autoParts);
+    downloadCsvFile(csvString, filename);
+    showToast(`Catálogo de autopartes exportado a CSV (${rowCount} registros con UTF-8 BOM)`);
   };
 
   // --- EXPORT & BACKUP HANDLERS ---
@@ -574,18 +567,9 @@ export const AdminDashboardView: React.FC = () => {
   };
 
   const handleExportCsv = () => {
-    let csvContent = 'ID,Marca,Modelo,Año,Condición,Carrocería,Precio_USD,Precio_Soles,Disponibilidad,Garantía\n';
-    vehicles.forEach((v) => {
-      csvContent += `"${v.id}","${v.brand}","${v.name.replace(/"/g, '""')}","${v.year}","${v.condition}","${v.bodyType}","${v.priceUsd}","${v.priceSoles}","${v.availability}","${v.warranty || ''}"\n`;
-    });
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `norcelis_inventario_${new Date().toISOString().slice(0, 10)}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
-    showToast('Inventario exportado a CSV (Excel)');
+    const { csvString, rowCount, filename } = generateVehiclesCsv(vehicles);
+    downloadCsvFile(csvString, filename);
+    showToast(`Inventario de vehículos exportado a CSV (${rowCount} autos con UTF-8 BOM)`);
   };
 
   // --- PIN CHANGE HANDLER ---
@@ -715,6 +699,19 @@ export const AdminDashboardView: React.FC = () => {
           >
             <span className="material-symbols-outlined text-lg text-[#F07F00]">local_offer</span>
             <span>Ofertas Destacadas ({offersList.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('reports')}
+            className={`min-h-[46px] px-4 py-2.5 text-xs font-bold transition-all border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+              activeTab === 'reports'
+                ? 'border-[#F07F00] text-[#212955] bg-[#F07F00]/5'
+                : 'border-transparent text-gray-500 hover:text-[#212955]'
+            }`}
+          >
+            <span className="material-symbols-outlined text-lg text-emerald-600">receipt_long</span>
+            <span>Reportes &amp; Contabilidad CSV</span>
           </button>
 
           <button
@@ -2749,7 +2746,12 @@ export const AdminDashboardView: React.FC = () => {
         )}
 
         {/* ============================================================== */}
-        {/* TAB 4: SEGURIDAD & RESPALDOS                                   */}
+        {/* TAB 5: REPORTES & CONTABILIDAD CSV                             */}
+        {/* ============================================================== */}
+        {activeTab === 'reports' && <AccountingExportCenter />}
+
+        {/* ============================================================== */}
+        {/* TAB 6: SEGURIDAD & RESPALDOS                                   */}
         {/* ============================================================== */}
         {activeTab === 'security' && (
           <div className="space-y-6 animate-in fade-in duration-150">

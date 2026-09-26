@@ -309,19 +309,81 @@ export const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({ data, onClose,
               </div>
             )}
 
-            {/* Terms and Authorized Stamp */}
-            <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-6">
-              <div className="text-[11px] text-slate-500 space-y-1 flex-1">
-                <p>1. Precios expresados en Moneda Nacional (Soles) e incluyen el 18% de I.G.V.</p>
-                <p>2. Cuentas Oficiales BCP: Cta Cte Soles 191-2894102-0-45 / CCI 002-19100289410204551.</p>
-                <p>3. Despacho nacional asegurado a domicilio o entrega en Sede Cajamarca (Av. Vía Evitamiento Sur 6003).</p>
+            {/* Official Bank Accounts & Legal Terms (A Tomar en Cuenta) */}
+            <div className="pt-4 border-t border-slate-200 space-y-4">
+              {/* Official Bank Accounts Box */}
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                  <span className="font-bold text-xs text-primary uppercase tracking-wide flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-sm text-[#F07F00]">account_balance</span>
+                    Cuentas Bancarias Oficiales - NOR CELIS AUTOMOTRIZ S.A.C. (RUC: 20608754129)
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-semibold">Titular Oficial</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  {/* Cuentas Soles */}
+                  <div className="space-y-1.5 p-2.5 bg-white rounded-lg border border-slate-200">
+                    <span className="font-bold text-[11px] text-primary block border-b pb-1">
+                      CUENTAS CORRIENTES - SOLES (PEN):
+                    </span>
+                    <div className="space-y-1 text-[11px]">
+                      <div>
+                        <strong>BCP:</strong> N° <span className="font-mono font-bold">245-9966172-0-49</span>
+                        <div className="text-[10px] text-slate-500 font-mono">CCI: 002-245-00996617204992</div>
+                      </div>
+                      <div>
+                        <strong>BBVA:</strong> N° <span className="font-mono font-bold">0011-0248-0100034831</span>
+                        <div className="text-[10px] text-slate-500 font-mono">CCI: 011-248-000-100034831-26</div>
+                      </div>
+                      <div>
+                        <strong>Scotiabank:</strong> N° <span className="font-mono font-bold">000-4949476</span>
+                        <div className="text-[10px] text-slate-500 font-mono">CCI: 00963200000494947000</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Cuentas Dólares y Detracciones */}
+                  <div className="space-y-2">
+                    <div className="p-2.5 bg-white rounded-lg border border-slate-200 space-y-1 text-[11px]">
+                      <span className="font-bold text-[11px] text-emerald-800 block border-b pb-1">
+                        CUENTAS CORRIENTES - DÓLARES (USD):
+                      </span>
+                      <div>
+                        <strong>BCP:</strong> N° <span className="font-mono font-bold">245-9964344-1-94</span>
+                        <div className="text-[10px] text-slate-500 font-mono">CCI: 002-245-00996434419494</div>
+                      </div>
+                      <div>
+                        <strong>BBVA:</strong> N° <span className="font-mono font-bold">0011-0248-0100034874</span>
+                        <div className="text-[10px] text-slate-500 font-mono">CCI: 011-248-000100034874-26</div>
+                      </div>
+                    </div>
+
+                    <div className="p-2 bg-amber-50 rounded-lg border border-amber-200 text-[11px]">
+                      <strong className="text-amber-900 block">CUENTA DE DETRACCIONES - BANCO DE LA NACIÓN:</strong>
+                      <span className="font-mono font-bold text-amber-950">N° 00-772-001053</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="w-52 p-3 border-2 border-dashed border-slate-300 rounded-xl text-center shrink-0 bg-slate-50/50">
-                <span className="material-symbols-outlined text-3xl text-primary">verified</span>
-                <div className="font-bold text-slate-800 text-[11px]">NOR CELIS AUTOMOTRIZ S.A.C.</div>
-                <div className="text-[10px] text-slate-500 uppercase">Gerencia Comercial & Ventas</div>
-                <div className="text-[9px] text-emerald-700 font-bold mt-1">✓ Sello y Firma Digital Autorizada</div>
+              {/* Terms and Authorized Stamp */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pt-2">
+                <div className="text-[11px] text-slate-600 space-y-1.5 flex-1 bg-slate-50/70 p-3 rounded-xl border border-slate-200">
+                  <span className="font-bold text-slate-800 uppercase tracking-wide block text-[10px]">
+                    A TOMAR EN CUENTA:
+                  </span>
+                  <p>• La presente cotización tiene validez por 7 días, los productos tienen un stock limitado.</p>
+                  <p>• Los precios pueden variar según diagnóstico final del vehículo o disponibilidad de repuestos al momento de la confirmación del vehículo.</p>
+                  <p className="font-semibold text-primary pt-0.5">• Gracias por confiar en NORCELIS AUTOMOTRIZ especialistas en autopartes, accesorios y servicios automotrices.</p>
+                </div>
+
+                <div className="w-52 p-3 border-2 border-dashed border-slate-300 rounded-xl text-center shrink-0 bg-slate-50/50">
+                  <span className="material-symbols-outlined text-3xl text-primary">verified</span>
+                  <div className="font-bold text-slate-800 text-[11px]">NOR CELIS AUTOMOTRIZ S.A.C.</div>
+                  <div className="text-[10px] text-slate-500 uppercase">Gerencia Comercial &amp; Ventas</div>
+                  <div className="text-[9px] text-emerald-700 font-bold mt-1">✓ Sello y Firma Digital Autorizada</div>
+                </div>
               </div>
             </div>
 

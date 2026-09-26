@@ -14,12 +14,14 @@ export interface ChatMessage {
 }
 
 const INITIAL_SUGGESTIONS = [
+  'Cuentas bancarias oficiales de la empresa',
+  'Tarifas y cobertura de Shalom Express',
+  'Métodos de pago Culqi y POS',
   '¿Cómo funciona el Plan Retoma?',
-  '¿Qué llantas Mickey Thompson M/T tienen?',
   'Simular cuotas de un 0 KM 2025',
-  'Láminas de seguridad LLumar para mi auto',
-  '¿Tienen aceites sintéticos Mobil 1?',
-  'Agendar mantenimiento preventivo de taller',
+  'Llantas Mickey Thompson M/T',
+  'Agendar mantenimiento preventivo en taller',
+  'Libro de Reclamaciones e INDECOPI',
 ];
 
 export const AdvisorChatbox: React.FC = () => {
@@ -35,7 +37,7 @@ export const AdvisorChatbox: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [showWelcomeTooltip, setShowWelcomeTooltip] = useState(true);
-  const [selectedModel, setSelectedModel] = useState<'gemini-3.5-flash' | 'gemini-3.1-flash-lite'>('gemini-3.5-flash');
+  const [selectedModel, setSelectedModel] = useState<'gemini-3.8-flash' | 'gemini-3.1-flash-lite'>('gemini-3.8-flash');
   
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -46,15 +48,49 @@ export const AdvisorChatbox: React.FC = () => {
     role: 'model',
     content: `¡Hola! Soy **Don Celis**, tu Asesor Especializado de **Automotriz Nor Celis**.
 
-Estoy aquí para ayudarte en tiempo real con:
-• **Vehículos Nuevos 2025 y Seminuevos Certificados** (Toyota, Nissan, Hyundai, BMW, Ford).
-• **Plan Retoma:** Valora tu auto usado y llévate un **Bono de hasta S/ 7,500**.
-• **Simulación de Financiamiento:** Cuotas a tu medida con BCP, BBVA y Santander.
-• **Repuestos Oficiales:** Mickey Thompson (M/T), LLumar, Mobil 1, Keko, Black Rhino, 3M y Trakko.
-• **Citas de Taller Mecánico:** Mantenimientos oficiales y scanner computarizado.
+Estoy listo para orientarte en toda nuestra plataforma web:
+• **Vehículos 0 KM 2025 & Seminuevos Certificados:** Toyota, Nissan, Hyundai, BMW y Ford.
+• **Despachos Nacionales:** Envíos express a domicilio y agencias con **Shalom Express**.
+• **Métodos de Pago:** Pasarela **Culqi** (tarjetas y Yape), POS inalámbrico y **Cuentas Bancarias Oficiales** (BCP, BBVA, Scotiabank).
+• **Plan Retoma:** Tasación en 30 minutos y **Bono Exclusivo de hasta S/ 7,500**.
+• **Repuestos Originales:** Mickey Thompson (M/T), LLumar, Mobil 1, Keko, Black Rhino, 3M y Trakko.
+• **Taller Mecánico & Citas:** Mantenimiento preventivo, scanner computarizado y alineación 3D.
+• **Garantías & Libro de Reclamaciones:** Cobertura de 5 años en nuevos y atención según INDECOPI.
 
-¿En qué puedo orientarte hoy?`,
+¿En qué puedo orientarte hoy? Puedes elegir una sugerencia rápida o escribir tu consulta.`,
     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    suggestedActions: [
+      {
+        label: 'Catálogo de Autos 2025',
+        action: () => setCurrentView('cars'),
+        icon: 'directions_car',
+      },
+      {
+        label: 'Repuestos Oficiales',
+        action: () => setCurrentView('parts'),
+        icon: 'shopping_bag',
+      },
+      {
+        label: 'Cuentas y Pagos',
+        action: () => setCurrentView('cart'),
+        icon: 'account_balance',
+      },
+      {
+        label: 'Despacho Shalom Express',
+        action: () => setCurrentView('cart'),
+        icon: 'local_shipping',
+      },
+      {
+        label: 'Cita en Taller',
+        action: () => setCurrentView('services'),
+        icon: 'engineering',
+      },
+      {
+        label: 'Plan Retoma (Bono)',
+        action: () => setCurrentView('trade-in'),
+        icon: 'published_with_changes',
+      },
+    ],
   };
 
   const [messages, setMessages] = useState<ChatMessage[]>([initialGreeting]);
@@ -151,7 +187,7 @@ Estoy aquí para ayudarte en tiempo real con:
       const fallbackMsg: ChatMessage = {
         id: `bot-err-${Date.now()}`,
         role: 'model',
-        content: `Disculpa la interrupción. Si necesitas atención inmediata, puedes contactar a nuestro equipo de ventas y taller por **WhatsApp al +51 987 654 321** o explorar directamente nuestras secciones de vehículos y repuestos.`,
+        content: `Disculpa la interrupción. Si necesitas atención inmediata, puedes contactar a nuestro equipo de ventas y taller por **WhatsApp al +51 987 654 321** o explorar directamente nuestras secciones de vehículos, repuestos o métodos de pago.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         suggestedActions: [
           {
@@ -163,6 +199,11 @@ Estoy aquí para ayudarte en tiempo real con:
             label: 'Repuestos Oficiales',
             action: () => setCurrentView('parts'),
             icon: 'build',
+          },
+          {
+            label: 'Cuentas Bancarias',
+            action: () => setCurrentView('cart'),
+            icon: 'account_balance',
           },
           {
             label: 'Contactar por WhatsApp',
@@ -181,7 +222,35 @@ Estoy aquí para ayudarte en tiempo real con:
     const actions: { label: string; action: () => void; icon?: string }[] = [];
     const lower = text.toLowerCase();
 
-    if (lower.includes('retoma') || lower.includes('tasación') || lower.includes('parte de pago') || lower.includes('bono de s/ 7,500') || lower.includes('bono')) {
+    // 1. Cuentas Bancarias & Detracciones
+    if (lower.includes('cuenta') || lower.includes('banco') || lower.includes('cci') || lower.includes('detracción') || lower.includes('detraccion') || lower.includes('transferencia')) {
+      actions.push({
+        label: 'Ver Cuentas Oficiales',
+        action: () => setCurrentView('cart'),
+        icon: 'account_balance',
+      });
+    }
+
+    // 2. Shalom Express
+    if (lower.includes('shalom') || lower.includes('envío') || lower.includes('envio') || lower.includes('despacho') || lower.includes('flete') || lower.includes('guía') || lower.includes('guia')) {
+      actions.push({
+        label: 'Ver Despacho Shalom Express',
+        action: () => setCurrentView('cart'),
+        icon: 'local_shipping',
+      });
+    }
+
+    // 3. Culqi y POS
+    if (lower.includes('culqi') || lower.includes('pos') || lower.includes('tarjeta') || lower.includes('yape') || lower.includes('pasarela')) {
+      actions.push({
+        label: 'Pasarela Culqi y POS',
+        action: () => setCurrentView('cart'),
+        icon: 'contactless',
+      });
+    }
+
+    // 4. Plan Retoma
+    if (lower.includes('retoma') || lower.includes('tasación') || lower.includes('tasacion') || lower.includes('parte de pago') || lower.includes('bono de s/ 7,500') || lower.includes('bono')) {
       actions.push({
         label: 'Ver Plan Retoma (Bono S/ 7,500)',
         action: () => setCurrentView('trade-in'),
@@ -189,7 +258,8 @@ Estoy aquí para ayudarte en tiempo real con:
       });
     }
 
-    if (lower.includes('financiam') || lower.includes('cuota') || lower.includes('bcp') || lower.includes('bbva') || lower.includes('inicial')) {
+    // 5. Financiamiento
+    if (lower.includes('financiam') || lower.includes('cuota') || lower.includes('bcp') || lower.includes('bbva') || lower.includes('santander') || lower.includes('inicial')) {
       actions.push({
         label: 'Simular Financiamiento',
         action: () => setCurrentView('financing'),
@@ -197,7 +267,8 @@ Estoy aquí para ayudarte en tiempo real con:
       });
     }
 
-    if (lower.includes('mickey thompson') || lower.includes('keko') || lower.includes('mobil') || lower.includes('llumar') || lower.includes('black rhino') || lower.includes('repuesto') || lower.includes('llanta') || lower.includes('trakko') || lower.includes('freno')) {
+    // 6. Repuestos y Accesorios Oficiales
+    if (lower.includes('mickey thompson') || lower.includes('keko') || lower.includes('mobil') || lower.includes('llumar') || lower.includes('black rhino') || lower.includes('repuesto') || lower.includes('llanta') || lower.includes('trakko') || lower.includes('freno') || lower.includes('3m')) {
       actions.push({
         label: 'Ver Repuestos Oficiales',
         action: () => setCurrentView('parts'),
@@ -205,7 +276,8 @@ Estoy aquí para ayudarte en tiempo real con:
       });
     }
 
-    if (lower.includes('taller') || lower.includes('mantenimiento') || lower.includes('scanner') || lower.includes('alineación') || lower.includes('cita')) {
+    // 7. Citas de Taller & Scanner
+    if (lower.includes('taller') || lower.includes('mantenimiento') || lower.includes('scanner') || lower.includes('alineación') || lower.includes('alineacion') || lower.includes('cita')) {
       actions.push({
         label: 'Agendar Cita en Taller',
         action: () => setCurrentView('services'),
@@ -213,6 +285,7 @@ Estoy aquí para ayudarte en tiempo real con:
       });
     }
 
+    // 8. Test Drive
     if (lower.includes('test drive') || lower.includes('prueba de manejo')) {
       actions.push({
         label: 'Solicitar Test Drive',
@@ -221,7 +294,26 @@ Estoy aquí para ayudarte en tiempo real con:
       });
     }
 
-    if (lower.includes('rav4') || lower.includes('frontier') || lower.includes('tucson') || lower.includes('seminuevo') || lower.includes('0 km') || lower.includes('catálogo')) {
+    // 9. Libro de Reclamaciones
+    if (lower.includes('reclamación') || lower.includes('reclamacion') || lower.includes('reclamo') || lower.includes('queja') || lower.includes('libro') || lower.includes('indecopi')) {
+      actions.push({
+        label: 'Libro de Reclamaciones',
+        action: () => setCurrentView('claims'),
+        icon: 'menu_book',
+      });
+    }
+
+    // 10. Sedes y Horarios
+    if (lower.includes('sede') || lower.includes('ubicación') || lower.includes('ubicacion') || lower.includes('dirección') || lower.includes('direccion') || lower.includes('horario') || lower.includes('cajamarca') || lower.includes('lima')) {
+      actions.push({
+        label: 'Ver Sedes y Horarios',
+        action: () => setCurrentView('locations'),
+        icon: 'location_on',
+      });
+    }
+
+    // 11. Vehículos 0 KM y Seminuevos
+    if (lower.includes('rav4') || lower.includes('frontier') || lower.includes('tucson') || lower.includes('seminuevo') || lower.includes('0 km') || lower.includes('catálogo') || lower.includes('catalogo')) {
       actions.push({
         label: 'Explorar Catálogo de Autos',
         action: () => setCurrentView('cars'),
@@ -229,7 +321,25 @@ Estoy aquí para ayudarte en tiempo real con:
       });
     }
 
-    return actions.slice(0, 3);
+    // 12. Políticas y Garantías
+    if (lower.includes('garantía') || lower.includes('garantia') || lower.includes('política') || lower.includes('politica') || lower.includes('términos') || lower.includes('terminos')) {
+      actions.push({
+        label: 'Garantías y Políticas',
+        action: () => setCurrentView('about'),
+        icon: 'verified',
+      });
+    }
+
+    // WhatsApp Direct option if customer needs assistance
+    if (actions.length < 2) {
+      actions.push({
+        label: 'Asesor Humano WhatsApp',
+        action: () => window.open('https://wa.me/51987654321?text=Hola%20Nor%20Celis,%20deseo%20asesoria', '_blank'),
+        icon: 'chat',
+      });
+    }
+
+    return actions.slice(0, 4);
   };
 
   const handleClearHistory = () => {
@@ -449,13 +559,13 @@ Estoy aquí para ayudarte en tiempo real con:
                 {/* Model switcher */}
                 <div className="flex items-center gap-1 bg-surface rounded-lg p-0.5 border border-surface-container">
                   <button
-                    onClick={() => setSelectedModel('gemini-3.5-flash')}
+                    onClick={() => setSelectedModel('gemini-3.8-flash')}
                     className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${
-                      selectedModel === 'gemini-3.5-flash'
+                      selectedModel === 'gemini-3.8-flash'
                         ? 'bg-primary text-white'
                         : 'text-on-surface-variant hover:text-primary'
                     }`}
-                    title="Modelo Gemini 3.5 Flash: Especialista integral automotriz"
+                    title="Modelo Gemini 3.8 Flash: Especialista integral automotriz"
                   >
                     Integral
                   </button>
