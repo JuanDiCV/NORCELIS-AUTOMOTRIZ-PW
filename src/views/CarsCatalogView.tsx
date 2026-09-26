@@ -22,6 +22,10 @@ export const CarsCatalogView: React.FC = () => {
   const [bodyTypeFilter, setBodyTypeFilter] = useState<string>('all');
   const [brandFilter, setBrandFilter] = useState<string>('all');
   const [brandSegment, setBrandSegment] = useState<'all' | 'oficial' | 'alternativa'>('all');
+  const [modelFilter, setModelFilter] = useState<string>('all');
+  const [transmissionFilter, setTransmissionFilter] = useState<string>('all');
+  const [tractionFilter, setTractionFilter] = useState<string>('all');
+  const [fuelFilter, setFuelFilter] = useState<string>('all');
 
   // 1. Rango de precio (Soles)
   const MIN_POSSIBLE_PRICE = 60000;
@@ -101,6 +105,26 @@ export const CarsCatalogView: React.FC = () => {
     return Array.from(yearsSet).sort((a, b) => b - a);
   }, [vehicles]);
 
+  // Lista de marcas disponibles
+  const availableBrands = useMemo(() => {
+    const brandsSet = new Set<string>();
+    vehicles.forEach((v) => brandsSet.add(v.brand));
+    return Array.from(brandsSet).sort();
+  }, [vehicles]);
+
+  // Lista de modelos disponibles (filtrados por marca si aplica)
+  const availableModels = useMemo(() => {
+    const list = brandFilter === 'all'
+      ? vehicles
+      : vehicles.filter((v) => v.brand === brandFilter);
+    const modelsSet = new Set<string>();
+    list.forEach((v) => {
+      const cleanName = v.name.replace(new RegExp(`^${v.brand}\\s*`, 'i'), '').trim();
+      modelsSet.add(cleanName || v.name);
+    });
+    return Array.from(modelsSet).sort();
+  }, [vehicles, brandFilter]);
+
   // Reset total de filtros
   const handleResetFilters = () => {
     setSearchQuery('');
@@ -108,6 +132,10 @@ export const CarsCatalogView: React.FC = () => {
     setBodyTypeFilter('all');
     setBrandFilter('all');
     setBrandSegment('all');
+    setModelFilter('all');
+    setTransmissionFilter('all');
+    setTractionFilter('all');
+    setFuelFilter('all');
     setMinPrice(MIN_POSSIBLE_PRICE);
     setMaxPrice(MAX_POSSIBLE_PRICE);
     setMaxMileage(MAX_POSSIBLE_MILEAGE);
@@ -127,6 +155,10 @@ export const CarsCatalogView: React.FC = () => {
     if (bodyTypeFilter !== 'all') count++;
     if (brandFilter !== 'all') count++;
     if (brandSegment !== 'all') count++;
+    if (modelFilter !== 'all') count++;
+    if (transmissionFilter !== 'all') count++;
+    if (tractionFilter !== 'all') count++;
+    if (fuelFilter !== 'all') count++;
     if (minPrice > MIN_POSSIBLE_PRICE || maxPrice < MAX_POSSIBLE_PRICE) count++;
     if (maxMileage < MAX_POSSIBLE_MILEAGE || onlyZeroKm) count++;
     if (minYear > MIN_POSSIBLE_YEAR || maxYear < MAX_POSSIBLE_YEAR) count++;
@@ -138,6 +170,10 @@ export const CarsCatalogView: React.FC = () => {
     bodyTypeFilter,
     brandFilter,
     brandSegment,
+    modelFilter,
+    transmissionFilter,
+    tractionFilter,
+    fuelFilter,
     minPrice,
     maxPrice,
     maxMileage,
@@ -174,6 +210,34 @@ export const CarsCatalogView: React.FC = () => {
         // Marca
         if (brandFilter !== 'all' && v.brand !== brandFilter) return false;
 
+        // Modelo
+        if (modelFilter !== 'all') {
+          const cleanName = v.name.replace(new RegExp(`^${v.brand}\\s*`, 'i'), '').trim();
+          if (cleanName !== modelFilter && !v.name.toLowerCase().includes(modelFilter.toLowerCase())) {
+            return false;
+          }
+        }
+
+        // Transmisión
+        if (transmissionFilter !== 'all') {
+          const t = (v.specs.transmission || '').toLowerCase();
+          if (transmissionFilter === 'automatica' && !t.includes('auto') && !t.includes('dct') && !t.includes('steptronic') && !t.includes('zf') && !t.includes('sec')) return false;
+          if (transmissionFilter === 'manual' && !t.includes('manual') && !t.includes('mecán')) return false;
+          if (transmissionFilter === 'cvt' && !t.includes('cvt') && !t.includes('direct drive') && !t.includes('dht') && !t.includes('eléctric')) return false;
+        }
+
+        // Tracción
+        if (tractionFilter !== 'all') {
+          const tr = (v.specs.traction || '').toLowerCase();
+          if (tractionFilter === '4x4' && !tr.includes('4x4') && !tr.includes('awd') && !tr.includes('quattro') && !tr.includes('htrac')) return false;
+          if (tractionFilter === '4x2' && !tr.includes('fwd') && !tr.includes('delantera') && !tr.includes('4x2')) return false;
+          if (tractionFilter === 'trasera' && !tr.includes('rwd') && !tr.includes('trasera')) return false;
+        }
+
+        // Combustible (vía select o selectedFuels)
+        if (fuelFilter !== 'all' && v.fuelType !== fuelFilter) return false;
+        if (selectedFuels.length > 0 && !selectedFuels.includes(v.fuelType)) return false;
+
         // Rango de precio
         if (v.priceSoles < minPrice || v.priceSoles > maxPrice) return false;
 
@@ -184,9 +248,6 @@ export const CarsCatalogView: React.FC = () => {
 
         // Año de fabricación
         if (v.year < minYear || v.year > maxYear) return false;
-
-        // Tipo de combustible
-        if (selectedFuels.length > 0 && !selectedFuels.includes(v.fuelType)) return false;
 
         return true;
       })
@@ -204,6 +265,11 @@ export const CarsCatalogView: React.FC = () => {
     conditionFilter,
     bodyTypeFilter,
     brandFilter,
+    brandSegment,
+    modelFilter,
+    transmissionFilter,
+    tractionFilter,
+    fuelFilter,
     minPrice,
     maxPrice,
     maxMileage,
@@ -214,548 +280,397 @@ export const CarsCatalogView: React.FC = () => {
     sortBy,
   ]);
 
-  // Contenido de filtros reutilizable en sidebar de escritorio y drawer móvil
+  // Handler para botón de buscar vehículos
+  const handleSearchVehiclesClick = () => {
+    const el = document.getElementById('catalog-results-grid');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+    showToast(`Mostrando ${filteredVehicles.length} vehículos encontrados`);
+    setIsMobileFiltersOpen(false);
+  };
+
+  // Contenido de filtros estructurado exactamente como la imagen de referencia con agregados
   const renderFilterControls = () => (
-    <div className="space-y-6">
-      {/* 1. RANGO DE PRECIO */}
-      <div className="space-y-3 pb-5 border-b border-surface-container">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[16px] text-secondary">payments</span>
-            Rango de Precio
-          </label>
-          {(minPrice > MIN_POSSIBLE_PRICE || maxPrice < MAX_POSSIBLE_PRICE) && (
+    <div className="space-y-4 text-left">
+      {/* AGREGADO 1: Switch de Condición & Reset Rápido */}
+      <div className="pb-3 border-b border-slate-200">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#212955]">
+            Condición del Vehículo
+          </span>
+          {activeFiltersCount > 0 && (
             <button
-              onClick={() => {
-                setMinPrice(MIN_POSSIBLE_PRICE);
-                setMaxPrice(MAX_POSSIBLE_PRICE);
-              }}
-              className="text-[11px] text-secondary hover:underline font-semibold"
+              type="button"
+              onClick={handleResetFilters}
+              className="text-[11px] text-[#F07F00] hover:underline font-bold flex items-center gap-0.5 cursor-pointer"
             >
-              Resetear
+              <span className="material-symbols-outlined text-[13px]">restart_alt</span>
+              Limpiar ({activeFiltersCount})
             </button>
           )}
         </div>
-
-        {/* Inputs numéricos con formato */}
-        <div className="grid grid-cols-2 gap-2">
-          <div className="bg-surface-container-low p-2 rounded-xl border border-surface-container">
-            <span className="text-[10px] text-outline font-semibold block uppercase">Mínimo</span>
-            <div className="flex items-center text-xs font-bold text-primary">
-              <span>S/</span>
-              <input
-                type="number"
-                min={MIN_POSSIBLE_PRICE}
-                max={maxPrice}
-                step={5000}
-                value={minPrice}
-                onChange={(e) => setMinPrice(Math.min(Number(e.target.value), maxPrice - 5000))}
-                className="w-full bg-transparent pl-1 font-mono focus:outline-none"
-              />
-            </div>
-          </div>
-          <div className="bg-surface-container-low p-2 rounded-xl border border-surface-container">
-            <span className="text-[10px] text-outline font-semibold block uppercase">Máximo</span>
-            <div className="flex items-center text-xs font-bold text-primary">
-              <span>S/</span>
-              <input
-                type="number"
-                min={minPrice}
-                max={MAX_POSSIBLE_PRICE}
-                step={5000}
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(Math.max(Number(e.target.value), minPrice + 5000))}
-                className="w-full bg-transparent pl-1 font-mono focus:outline-none"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Slider visual de precio máximo */}
-        <div>
-          <div className="flex justify-between text-[11px] font-semibold text-outline mb-1">
-            <span>Tope presupuestal:</span>
-            <span className="font-bold text-primary font-mono">Hasta S/ {maxPrice.toLocaleString()}</span>
-          </div>
-          <input
-            type="range"
-            min={MIN_POSSIBLE_PRICE}
-            max={MAX_POSSIBLE_PRICE}
-            step={5000}
-            value={maxPrice}
-            onChange={(e) => setMaxPrice(Number(e.target.value))}
-            className="w-full accent-primary cursor-pointer h-1.5 bg-surface-container rounded-lg"
-          />
-          <div className="flex justify-between text-[10px] text-outline font-mono mt-1">
-            <span>S/ 60k</span>
-            <span>S/ 150k</span>
-            <span>S/ 250k+</span>
-          </div>
-        </div>
-
-        {/* Presets rápidos de precio */}
-        <div className="grid grid-cols-3 gap-1.5 text-[10px] font-bold">
+        <div className="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-lg text-xs font-bold">
           <button
-            onClick={() => {
-              setMinPrice(MIN_POSSIBLE_PRICE);
-              setMaxPrice(95000);
-            }}
-            className={`py-1.5 px-1 rounded-lg border text-center transition-all ${
-              maxPrice <= 95000 && minPrice === MIN_POSSIBLE_PRICE
-                ? 'bg-primary text-white border-primary'
-                : 'bg-surface-container-low border-surface-container text-on-surface hover:bg-surface-container'
+            type="button"
+            onClick={() => setConditionFilter('all')}
+            className={`py-1.5 px-1 rounded-md text-center transition-all cursor-pointer ${
+              conditionFilter === 'all'
+                ? 'bg-white text-[#212955] shadow-xs'
+                : 'text-slate-500 hover:text-slate-900'
             }`}
           >
-            &lt; S/ 95k
+            TODOS
           </button>
           <button
-            onClick={() => {
-              setMinPrice(95000);
-              setMaxPrice(140000);
-            }}
-            className={`py-1.5 px-1 rounded-lg border text-center transition-all ${
-              minPrice === 95000 && maxPrice === 140000
-                ? 'bg-primary text-white border-primary'
-                : 'bg-surface-container-low border-surface-container text-on-surface hover:bg-surface-container'
+            type="button"
+            onClick={() => setConditionFilter('nuevo')}
+            className={`py-1.5 px-1 rounded-md text-center transition-all cursor-pointer ${
+              conditionFilter === 'nuevo'
+                ? 'bg-white text-[#212955] shadow-xs'
+                : 'text-slate-500 hover:text-slate-900'
             }`}
           >
-            95k - 140k
+            0 KM
           </button>
           <button
-            onClick={() => {
-              setMinPrice(140000);
-              setMaxPrice(MAX_POSSIBLE_PRICE);
-            }}
-            className={`py-1.5 px-1 rounded-lg border text-center transition-all ${
-              minPrice === 140000 && maxPrice === MAX_POSSIBLE_PRICE
-                ? 'bg-primary text-white border-primary'
-                : 'bg-surface-container-low border-surface-container text-on-surface hover:bg-surface-container'
+            type="button"
+            onClick={() => setConditionFilter('seminuevo')}
+            className={`py-1.5 px-1 rounded-md text-center transition-all cursor-pointer ${
+              conditionFilter === 'seminuevo'
+                ? 'bg-white text-[#212955] shadow-xs'
+                : 'text-slate-500 hover:text-slate-900'
             }`}
           >
-            &gt; S/ 140k
+            SEMINUEVO
           </button>
         </div>
       </div>
 
-      {/* 2. KILOMETRAJE */}
-      <div className="space-y-3 pb-5 border-b border-surface-container">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[16px] text-secondary">speed</span>
-            Kilometraje (Km)
-          </label>
-          {(maxMileage < MAX_POSSIBLE_MILEAGE || onlyZeroKm) && (
-            <button
-              onClick={() => {
-                setMaxMileage(MAX_POSSIBLE_MILEAGE);
-                setOnlyZeroKm(false);
-              }}
-              className="text-[11px] text-secondary hover:underline font-semibold"
-            >
-              Resetear
-            </button>
-          )}
-        </div>
-
-        {/* Checkbox Solo 0 km */}
-        <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer bg-surface-container-low p-2.5 rounded-xl border border-surface-container hover:bg-surface-container transition-colors">
-          <input
-            type="checkbox"
-            checked={onlyZeroKm}
-            onChange={(e) => {
-              setOnlyZeroKm(e.target.checked);
-              if (e.target.checked) {
-                setMaxMileage(0);
-              } else {
-                setMaxMileage(MAX_POSSIBLE_MILEAGE);
-              }
-            }}
-            className="w-4 h-4 rounded accent-primary text-primary focus:ring-0 cursor-pointer"
-          />
-          <div className="flex-1 flex items-center justify-between">
-            <span className="text-primary font-bold">Solo Cero Kilómetros (0 km)</span>
-            <span className="bg-primary/10 text-primary text-[10px] font-extrabold px-1.5 py-0.5 rounded">
-              {vehicles.filter((v) => getCarMileage(v) === 0).length}
-            </span>
-          </div>
+      {/* 1. MARCA */}
+      <div>
+        <label className="block text-center text-xs font-bold text-[#212955] mb-1.5">
+          Marca
         </label>
-
-        {!onlyZeroKm && (
-          <div className="space-y-2">
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-outline">Máximo recorrido:</span>
-              <span className="font-bold text-primary font-mono">
-                {maxMileage >= MAX_POSSIBLE_MILEAGE ? 'Sin límite' : `Hasta ${maxMileage.toLocaleString()} km`}
-              </span>
-            </div>
-            <input
-              type="range"
-              min={0}
-              max={MAX_POSSIBLE_MILEAGE}
-              step={5000}
-              value={maxMileage}
-              onChange={(e) => setMaxMileage(Number(e.target.value))}
-              className="w-full accent-primary cursor-pointer h-1.5 bg-surface-container rounded-lg"
-            />
-            <div className="flex justify-between text-[10px] text-outline font-mono">
-              <span>0 km</span>
-              <span>30k km</span>
-              <span>60k km</span>
-              <span>80k+ km</span>
-            </div>
-
-            {/* Presets de kilometraje */}
-            <div className="grid grid-cols-3 gap-1.5 text-[10px] font-bold pt-1">
-              <button
-                onClick={() => {
-                  setOnlyZeroKm(false);
-                  setMaxMileage(25000);
-                }}
-                className={`py-1.5 px-1 rounded-lg border text-center transition-all ${
-                  maxMileage === 25000 && !onlyZeroKm
-                    ? 'bg-primary text-white border-primary'
-                    : 'bg-surface-container-low border-surface-container text-on-surface hover:bg-surface-container'
-                }`}
-              >
-                &lt; 25,000 km
-              </button>
-              <button
-                onClick={() => {
-                  setOnlyZeroKm(false);
-                  setMaxMileage(45000);
-                }}
-                className={`py-1.5 px-1 rounded-lg border text-center transition-all ${
-                  maxMileage === 45000 && !onlyZeroKm
-                    ? 'bg-primary text-white border-primary'
-                    : 'bg-surface-container-low border-surface-container text-on-surface hover:bg-surface-container'
-                }`}
-              >
-                &lt; 45,000 km
-              </button>
-              <button
-                onClick={() => {
-                  setOnlyZeroKm(false);
-                  setMaxMileage(MAX_POSSIBLE_MILEAGE);
-                }}
-                className={`py-1.5 px-1 rounded-lg border text-center transition-all ${
-                  maxMileage === MAX_POSSIBLE_MILEAGE && !onlyZeroKm
-                    ? 'bg-primary text-white border-primary'
-                    : 'bg-surface-container-low border-surface-container text-on-surface hover:bg-surface-container'
-                }`}
-              >
-                Cualquiera
-              </button>
-            </div>
-          </div>
-        )}
+        <select
+          value={brandFilter}
+          onChange={(e) => {
+            setBrandFilter(e.target.value);
+            setModelFilter('all');
+          }}
+          className="w-full bg-white border border-slate-300 rounded-lg py-2.5 px-3 text-xs font-bold text-center text-slate-700 uppercase focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/20 transition-all cursor-pointer shadow-2xs"
+        >
+          <option value="all">TODOS</option>
+          {availableBrands.map((brand) => (
+            <option key={brand} value={brand}>
+              {brand} ({vehicles.filter((v) => v.brand === brand).length})
+            </option>
+          ))}
+        </select>
       </div>
 
-      {/* 3. AÑO DE FABRICACIÓN */}
-      <div className="space-y-3 pb-5 border-b border-surface-container">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[16px] text-secondary">calendar_month</span>
-            Año de Fabricación
-          </label>
-          {(minYear > MIN_POSSIBLE_YEAR || maxYear < MAX_POSSIBLE_YEAR) && (
-            <button
-              onClick={() => {
-                setMinYear(MIN_POSSIBLE_YEAR);
-                setMaxYear(MAX_POSSIBLE_YEAR);
-              }}
-              className="text-[11px] text-secondary hover:underline font-semibold"
-            >
-              Resetear
-            </button>
-          )}
-        </div>
+      {/* 2. MODELO */}
+      <div>
+        <label className="block text-center text-xs font-bold text-[#212955] mb-1.5">
+          Modelo
+        </label>
+        <select
+          value={modelFilter}
+          onChange={(e) => setModelFilter(e.target.value)}
+          className="w-full bg-white border border-slate-300 rounded-lg py-2.5 px-3 text-xs font-bold text-center text-slate-700 uppercase focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/20 transition-all cursor-pointer shadow-2xs"
+        >
+          <option value="all">TODOS</option>
+          {availableModels.map((m) => (
+            <option key={m} value={m}>
+              {m}
+            </option>
+          ))}
+        </select>
+      </div>
 
-        {/* Desplegables Desde / Hasta */}
-        <div className="grid grid-cols-2 gap-2">
-          <div className="bg-surface-container-low p-2 rounded-xl border border-surface-container">
-            <label className="text-[10px] text-outline font-semibold block uppercase">Desde</label>
-            <select
-              value={minYear}
-              onChange={(e) => {
-                const val = Number(e.target.value);
-                setMinYear(val);
-                if (val > maxYear) setMaxYear(val);
+      {/* 3. TRANSMISIÓN */}
+      <div>
+        <label className="block text-center text-xs font-bold text-[#212955] mb-1.5">
+          Transmisión
+        </label>
+        <select
+          value={transmissionFilter}
+          onChange={(e) => setTransmissionFilter(e.target.value)}
+          className="w-full bg-white border border-slate-300 rounded-lg py-2.5 px-3 text-xs font-bold text-center text-slate-700 uppercase focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/20 transition-all cursor-pointer shadow-2xs"
+        >
+          <option value="all">TODAS</option>
+          <option value="automatica">AUTOMÁTICA / SECUENCIAL</option>
+          <option value="manual">MANUAL / MECÁNICA</option>
+          <option value="cvt">CVT / E-CVT / ELÉCTRICA</option>
+        </select>
+      </div>
+
+      {/* 4. TRACCIÓN */}
+      <div>
+        <label className="block text-center text-xs font-bold text-[#212955] mb-1.5">
+          Tracción
+        </label>
+        <select
+          value={tractionFilter}
+          onChange={(e) => setTractionFilter(e.target.value)}
+          className="w-full bg-white border border-slate-300 rounded-lg py-2.5 px-3 text-xs font-bold text-center text-slate-700 uppercase focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/20 transition-all cursor-pointer shadow-2xs"
+        >
+          <option value="all">TODAS</option>
+          <option value="4x4">4X4 / AWD (TRACCIÓN TOTAL)</option>
+          <option value="4x2">4X2 / FWD (DELANTERA)</option>
+          <option value="trasera">TRASERA / RWD</option>
+        </select>
+      </div>
+
+      {/* 5. COMBUSTIBLE */}
+      <div>
+        <label className="block text-center text-xs font-bold text-[#212955] mb-1.5">
+          Combustible
+        </label>
+        <select
+          value={fuelFilter}
+          onChange={(e) => setFuelFilter(e.target.value)}
+          className="w-full bg-white border border-slate-300 rounded-lg py-2.5 px-3 text-xs font-bold text-center text-slate-700 uppercase focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/20 transition-all cursor-pointer shadow-2xs"
+        >
+          <option value="all">TODOS</option>
+          <option value="Híbrido">HÍBRIDO AUTORRECARGABLE ({fuelCounts['Híbrido'] || 0})</option>
+          <option value="Gasolina">GASOLINA DIRECT-SHIFT ({fuelCounts['Gasolina'] || 0})</option>
+          <option value="100% Eléctrico">100% ELÉCTRICO EV ({fuelCounts['100% Eléctrico'] || 0})</option>
+          <option value="Diésel">TURBO DIÉSEL ({fuelCounts['Diésel'] || 0})</option>
+        </select>
+      </div>
+
+      {/* 6. TIPO DE VEHÍCULO */}
+      <div>
+        <label className="block text-center text-xs font-bold text-[#212955] mb-1.5">
+          Tipo de vehículo
+        </label>
+        <select
+          value={bodyTypeFilter}
+          onChange={(e) => setBodyTypeFilter(e.target.value)}
+          className="w-full bg-white border border-slate-300 rounded-lg py-2.5 px-3 text-xs font-bold text-center text-slate-700 uppercase focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/20 transition-all cursor-pointer shadow-2xs"
+        >
+          <option value="all">TODOS</option>
+          <option value="SUV">SUV ({vehicles.filter((v) => v.bodyType === 'SUV').length})</option>
+          <option value="Sedán">SEDÁN ({vehicles.filter((v) => v.bodyType === 'Sedán').length})</option>
+          <option value="Pick-Up">PICK-UP ({vehicles.filter((v) => v.bodyType === 'Pick-Up').length})</option>
+          <option value="Hatchback">HATCHBACK ({vehicles.filter((v) => v.bodyType === 'Hatchback').length})</option>
+        </select>
+      </div>
+
+      {/* 7. AÑO (DESDE) - AÑO (HASTA) */}
+      <div className="pt-2">
+        <label className="block text-center text-xs font-bold text-[#212955] mb-1">
+          Año (Desde) - Año (Hasta)
+        </label>
+        <div className="text-center text-xs font-mono font-bold text-slate-700 mb-2">
+          {minYear} - {maxYear}
+        </div>
+        
+        {/* Barra de Rango Visual idéntica a la imagen */}
+        <div className="px-1 py-1">
+          <div className="h-2 bg-[#475569] rounded-full relative">
+            <div
+              className="absolute h-full bg-[#212955] rounded-full"
+              style={{
+                left: `${((minYear - MIN_POSSIBLE_YEAR) / (MAX_POSSIBLE_YEAR - MIN_POSSIBLE_YEAR)) * 100}%`,
+                right: `${100 - ((maxYear - MIN_POSSIBLE_YEAR) / (MAX_POSSIBLE_YEAR - MIN_POSSIBLE_YEAR)) * 100}%`,
               }}
-              className="w-full bg-transparent text-xs font-bold text-primary focus:outline-none cursor-pointer mt-0.5"
-            >
-              {availableYears
-                .slice()
-                .reverse()
-                .map((yr) => (
+            />
+            {/* Knob Izquierdo */}
+            <div
+              className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-[#212955] border-2 border-white rounded-xs shadow-md"
+              style={{
+                left: `calc(${((minYear - MIN_POSSIBLE_YEAR) / (MAX_POSSIBLE_YEAR - MIN_POSSIBLE_YEAR)) * 100}% - 7px)`,
+              }}
+            />
+            {/* Knob Derecho */}
+            <div
+              className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-[#212955] border-2 border-white rounded-xs shadow-md"
+              style={{
+                left: `calc(${((maxYear - MIN_POSSIBLE_YEAR) / (MAX_POSSIBLE_YEAR - MIN_POSSIBLE_YEAR)) * 100}% - 7px)`,
+              }}
+            />
+          </div>
+
+          {/* Selectores Rápidos Desde / Hasta */}
+          <div className="grid grid-cols-2 gap-2 mt-3">
+            <div className="bg-slate-50 border border-slate-300 rounded-md p-1.5 flex items-center justify-between">
+              <span className="text-[10px] text-slate-500 font-bold uppercase">Desde</span>
+              <select
+                value={minYear}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setMinYear(val);
+                  if (val > maxYear) setMaxYear(val);
+                }}
+                className="bg-transparent text-xs font-bold text-[#212955] focus:outline-none cursor-pointer"
+              >
+                {availableYears.slice().reverse().map((yr) => (
                   <option key={yr} value={yr}>
-                    Año {yr}
+                    {yr}
                   </option>
                 ))}
-            </select>
-          </div>
-
-          <div className="bg-surface-container-low p-2 rounded-xl border border-surface-container">
-            <label className="text-[10px] text-outline font-semibold block uppercase">Hasta</label>
-            <select
-              value={maxYear}
-              onChange={(e) => {
-                const val = Number(e.target.value);
-                setMaxYear(val);
-                if (val < minYear) setMinYear(val);
-              }}
-              className="w-full bg-transparent text-xs font-bold text-primary focus:outline-none cursor-pointer mt-0.5"
-            >
-              {availableYears.map((yr) => (
-                <option key={yr} value={yr}>
-                  Año {yr}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Chips de Años Individuales */}
-        <div className="flex flex-wrap gap-1.5 pt-1">
-          {availableYears.map((yr) => {
-            const isSelected = minYear <= yr && yr <= maxYear;
-            const count = vehicles.filter((v) => v.year === yr).length;
-            return (
-              <button
-                key={yr}
-                onClick={() => {
-                  // Si hace clic en un año individual, fijamos el rango a ese año
-                  if (minYear === yr && maxYear === yr) {
-                    setMinYear(MIN_POSSIBLE_YEAR);
-                    setMaxYear(MAX_POSSIBLE_YEAR);
-                  } else {
-                    setMinYear(yr);
-                    setMaxYear(yr);
-                  }
+              </select>
+            </div>
+            <div className="bg-slate-50 border border-slate-300 rounded-md p-1.5 flex items-center justify-between">
+              <span className="text-[10px] text-slate-500 font-bold uppercase">Hasta</span>
+              <select
+                value={maxYear}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setMaxYear(val);
+                  if (val < minYear) setMinYear(val);
                 }}
-                className={`text-xs px-2.5 py-1.5 rounded-lg border font-semibold flex items-center gap-1 transition-all ${
-                  minYear === yr && maxYear === yr
-                    ? 'bg-primary text-white border-primary shadow-sm font-bold'
-                    : isSelected
-                    ? 'bg-primary/10 text-primary border-primary/30 font-medium'
-                    : 'bg-surface-container-low border-surface-container text-outline hover:text-on-surface'
-                }`}
-                title={`Ver vehículos año ${yr}`}
+                className="bg-transparent text-xs font-bold text-[#212955] focus:outline-none cursor-pointer"
               >
-                <span>{yr}</span>
-                <span className="text-[10px] opacity-75">({count})</span>
-              </button>
-            );
-          })}
+                {availableYears.map((yr) => (
+                  <option key={yr} value={yr}>
+                    {yr}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* 4. TIPO DE COMBUSTIBLE */}
-      <div className="space-y-3 pb-5 border-b border-surface-container">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[16px] text-secondary">local_gas_station</span>
-            Tipo de Combustible
-          </label>
-          {selectedFuels.length > 0 && (
-            <button
-              onClick={() => setSelectedFuels([])}
-              className="text-[11px] text-secondary hover:underline font-semibold"
-            >
-              Todos
-            </button>
-          )}
-        </div>
-
-        <div className="space-y-2 text-xs">
-          {[
-            {
-              id: 'Híbrido',
-              label: 'Híbrido Autorrecargable',
-              sub: 'Gasolina + Motor Eléctrico',
-              icon: 'bolt',
-              color: 'text-emerald-700',
-              badgeColor: 'bg-emerald-100 text-emerald-800',
-            },
-            {
-              id: '100% Eléctrico',
-              label: '100% Eléctrico (EV)',
-              sub: 'Cero Emisiones / Batería',
-              icon: 'electric_car',
-              color: 'text-cyan-700',
-              badgeColor: 'bg-cyan-100 text-cyan-800',
-            },
-            {
-              id: 'Gasolina',
-              label: 'Gasolina Direct-Shift',
-              sub: 'Aspirado o Turbo MPI',
-              icon: 'local_gas_station',
-              color: 'text-amber-700',
-              badgeColor: 'bg-amber-100 text-amber-800',
-            },
-            {
-              id: 'Diésel',
-              label: 'Turbo Diésel Intercooler',
-              sub: 'Alto Torque / Carga pesada',
-              icon: 'oil_barrel',
-              color: 'text-slate-700',
-              badgeColor: 'bg-slate-100 text-slate-800',
-            },
-          ].map((fuel) => {
-            const isChecked = selectedFuels.includes(fuel.id);
-            const count = fuelCounts[fuel.id] || 0;
-            return (
-              <label
-                key={fuel.id}
-                className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all ${
-                  isChecked
-                    ? 'bg-primary/5 border-primary shadow-xs'
-                    : 'bg-surface-container-low border-surface-container hover:bg-surface-container'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <input
-                    type="checkbox"
-                    checked={isChecked}
-                    onChange={() => handleToggleFuel(fuel.id)}
-                    className="w-4 h-4 rounded accent-primary cursor-pointer"
-                  />
-                  <div>
-                    <div className="font-bold text-on-surface flex items-center gap-1.5">
-                      <span className={`material-symbols-outlined text-[15px] ${fuel.color}`}>
-                        {fuel.icon}
-                      </span>
-                      <span>{fuel.label}</span>
-                    </div>
-                    <span className="text-[10px] text-outline block">{fuel.sub}</span>
-                  </div>
-                </div>
-                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${fuel.badgeColor}`}>
-                  {count}
-                </span>
-              </label>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Marca & Segmento de Fabricante */}
-      <div className="space-y-3">
-        <label className="block text-xs font-bold text-primary uppercase tracking-wider flex items-center justify-between">
-          <span className="flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[16px] text-secondary">verified</span>
-            Marcas & Fabricantes
-          </span>
-          <span className="text-[10px] text-outline font-medium">Oficiales & Alternativas</span>
+      {/* 8. RANGO DE PRECIOS */}
+      <div className="pt-2">
+        <label className="block text-center text-xs font-bold text-[#212955] mb-1">
+          Rango de precios
         </label>
-
-        {/* Selector de Segmento: Oficial vs China / Alternativa */}
-        <div className="grid grid-cols-3 gap-1 bg-surface-container-low p-1 rounded-xl text-[11px] font-bold">
-          <button
-            type="button"
-            onClick={() => {
-              setBrandSegment('all');
-              setBrandFilter('all');
-            }}
-            className={`py-1.5 px-2 rounded-lg transition-all text-center cursor-pointer ${
-              brandSegment === 'all'
-                ? 'bg-primary text-white shadow-xs'
-                : 'text-outline hover:text-on-surface'
-            }`}
-          >
-            Todas
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setBrandSegment('oficial');
-              if (['Geely', 'Haval', 'Chery', 'Changan', 'Jetour', 'BYD', 'GWM'].includes(brandFilter)) {
-                setBrandFilter('all');
-              }
-            }}
-            className={`py-1.5 px-2 rounded-lg transition-all text-center cursor-pointer ${
-              brandSegment === 'oficial'
-                ? 'bg-primary text-white shadow-xs'
-                : 'text-outline hover:text-on-surface'
-            }`}
-          >
-            Oficiales
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setBrandSegment('alternativa');
-              if (['Toyota', 'Nissan', 'Hyundai', 'Volvo', 'BMW', 'Audi', 'Kia'].includes(brandFilter)) {
-                setBrandFilter('all');
-              }
-            }}
-            className={`py-1.5 px-2 rounded-lg transition-all text-center cursor-pointer ${
-              brandSegment === 'alternativa'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'text-outline hover:text-on-surface'
-            }`}
-          >
-            Chinas / Alt.
-          </button>
+        <div className="text-center text-xs font-mono font-bold text-slate-700 mb-0.5">
+          S/ {minPrice.toLocaleString()} - S/ {maxPrice.toLocaleString()}
+        </div>
+        <div className="text-center text-[10px] text-slate-500 mb-2">
+          (~${Math.round(minPrice / 3.75).toLocaleString()} - ${Math.round(maxPrice / 3.75).toLocaleString()} USD)
         </div>
 
-        {/* Marcas Oficiales */}
-        {(brandSegment === 'all' || brandSegment === 'oficial') && (
-          <div className="space-y-1.5">
-            <span className="text-[10px] font-bold text-outline uppercase tracking-wider block">
-              Marcas Oficiales Tradicionales:
-            </span>
-            <div className="flex flex-wrap gap-1 text-xs">
-              {['Toyota', 'Nissan', 'Hyundai', 'Volvo', 'BMW', 'Audi', 'Kia'].map((brand) => {
-                const count = vehicles.filter((v) => v.brand === brand).length;
-                return (
-                  <button
-                    key={brand}
-                    type="button"
-                    onClick={() => setBrandFilter(brandFilter === brand ? 'all' : brand)}
-                    className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
-                      brandFilter === brand
-                        ? 'bg-primary text-white font-bold shadow-xs'
-                        : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'
-                    }`}
-                  >
-                    <span>{brand}</span>
-                    <span className="text-[10px] opacity-70">({count})</span>
-                  </button>
-                );
-              })}
-            </div>
+        {/* Barra de Rango Visual idéntica a la imagen */}
+        <div className="px-1 py-1">
+          <div className="h-2 bg-[#475569] rounded-full relative">
+            <div
+              className="absolute h-full bg-[#212955] rounded-full"
+              style={{
+                left: `${((minPrice - MIN_POSSIBLE_PRICE) / (MAX_POSSIBLE_PRICE - MIN_POSSIBLE_PRICE)) * 100}%`,
+                right: `${100 - ((maxPrice - MIN_POSSIBLE_PRICE) / (MAX_POSSIBLE_PRICE - MIN_POSSIBLE_PRICE)) * 100}%`,
+              }}
+            />
+            {/* Knob Izquierdo */}
+            <div
+              className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-[#212955] border-2 border-white rounded-xs shadow-md"
+              style={{
+                left: `calc(${((minPrice - MIN_POSSIBLE_PRICE) / (MAX_POSSIBLE_PRICE - MIN_POSSIBLE_PRICE)) * 100}% - 7px)`,
+              }}
+            />
+            {/* Knob Derecho */}
+            <div
+              className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-[#212955] border-2 border-white rounded-xs shadow-md"
+              style={{
+                left: `calc(${((maxPrice - MIN_POSSIBLE_PRICE) / (MAX_POSSIBLE_PRICE - MIN_POSSIBLE_PRICE)) * 100}% - 7px)`,
+              }}
+            />
           </div>
-        )}
 
-        {/* Marcas Alternativas & Chinas */}
-        {(brandSegment === 'all' || brandSegment === 'alternativa') && (
-          <div className="space-y-1.5 pt-1">
-            <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
-              <span className="material-symbols-outlined text-[13px]">stars</span>
-              Marcas Alternativas & Chinas Garantizadas:
-            </span>
-            <div className="flex flex-wrap gap-1 text-xs">
-              {['Geely', 'Haval', 'Chery', 'Changan', 'Jetour', 'BYD', 'GWM'].map((brand) => {
-                const count = vehicles.filter((v) => v.brand === brand).length;
-                return (
-                  <button
-                    key={brand}
-                    type="button"
-                    onClick={() => setBrandFilter(brandFilter === brand ? 'all' : brand)}
-                    className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
-                      brandFilter === brand
-                        ? 'bg-amber-600 text-white font-bold shadow-xs'
-                        : 'bg-amber-500/10 text-amber-900 dark:text-amber-300 border border-amber-500/20 hover:bg-amber-500/20'
-                    }`}
-                  >
-                    <span>{brand}</span>
-                    <span className="text-[10px] opacity-80">({count})</span>
-                  </button>
-                );
-              })}
+          {/* Selectores Rápidos Min / Max */}
+          <div className="grid grid-cols-2 gap-2 mt-3">
+            <div className="bg-slate-50 border border-slate-300 rounded-md p-1.5 flex items-center justify-between">
+              <span className="text-[10px] text-slate-500 font-bold uppercase">Min</span>
+              <select
+                value={minPrice}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setMinPrice(val);
+                  if (val > maxPrice) setMaxPrice(val);
+                }}
+                className="bg-transparent text-xs font-bold text-[#212955] focus:outline-none cursor-pointer"
+              >
+                {[60000, 80000, 100000, 120000, 150000, 180000].map((p) => (
+                  <option key={p} value={p}>
+                    S/ {p / 1000}k
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="bg-slate-50 border border-slate-300 rounded-md p-1.5 flex items-center justify-between">
+              <span className="text-[10px] text-slate-500 font-bold uppercase">Max</span>
+              <select
+                value={maxPrice}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setMaxPrice(val);
+                  if (val < minPrice) setMinPrice(val);
+                }}
+                className="bg-transparent text-xs font-bold text-[#212955] focus:outline-none cursor-pointer"
+              >
+                {[100000, 120000, 150000, 180000, 220000, 250000].map((p) => (
+                  <option key={p} value={p}>
+                    S/ {p / 1000}k
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
-        )}
+
+          {/* Presets Rápidos */}
+          <div className="grid grid-cols-3 gap-1 pt-2 text-[10px] font-bold">
+            <button
+              type="button"
+              onClick={() => {
+                setMinPrice(MIN_POSSIBLE_PRICE);
+                setMaxPrice(95000);
+              }}
+              className={`py-1 rounded border text-center transition-all cursor-pointer ${
+                maxPrice <= 95000 && minPrice === MIN_POSSIBLE_PRICE
+                  ? 'bg-[#212955] text-white border-[#212955]'
+                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+              }`}
+            >
+              &lt; S/ 95k
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMinPrice(95000);
+                setMaxPrice(150000);
+              }}
+              className={`py-1 rounded border text-center transition-all cursor-pointer ${
+                minPrice === 95000 && maxPrice === 150000
+                  ? 'bg-[#212955] text-white border-[#212955]'
+                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+              }`}
+            >
+              95k - 150k
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMinPrice(150000);
+                setMaxPrice(MAX_POSSIBLE_PRICE);
+              }}
+              className={`py-1 rounded border text-center transition-all cursor-pointer ${
+                minPrice === 150000 && maxPrice === MAX_POSSIBLE_PRICE
+                  ? 'bg-[#212955] text-white border-[#212955]'
+                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+              }`}
+            >
+              &gt; S/ 150k
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 9. BOTÓN BUSCAR VEHÍCULOS IDÉNTICO A LA IMAGEN */}
+      <div className="pt-3">
+        <button
+          type="button"
+          onClick={handleSearchVehiclesClick}
+          className="w-full bg-[#212955] hover:bg-[#191f42] text-white py-3.5 px-4 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all active:scale-[0.99] cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-[18px]">search</span>
+          <span>BUSCAR VEHÍCULOS ({filteredVehicles.length})</span>
+        </button>
       </div>
     </div>
   );
@@ -1103,8 +1018,8 @@ export const CarsCatalogView: React.FC = () => {
       {/* Main Grid: Faceted Sidebar + Vehicle Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Sidebar Filters para Pantallas Medianas / Grandes */}
-        <aside className="hidden lg:block lg:col-span-3 space-y-4">
-          <div className="bg-surface-container-lowest p-5 rounded-3xl border border-surface-container shadow-xs space-y-6 sticky top-24">
+        <aside className="filter-panel-container hidden lg:block lg:col-span-3 space-y-4 max-h-[calc(100vh-2rem)] overflow-y-auto scrollbar-thin pr-1 pb-6">
+          <div className="bg-surface-container-lowest p-5 rounded-3xl border border-surface-container shadow-xs space-y-6">
             <div className="flex items-center justify-between border-b border-surface-container pb-3">
               <h3 className="font-headline font-bold text-sm text-primary flex items-center gap-2">
                 <span className="material-symbols-outlined text-[18px] text-secondary">tune</span>

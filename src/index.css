@@ -156,7 +156,7 @@
 .font-label-md { font-family: var(--font-body); font-size: 0.75rem; line-height: 1rem; font-weight: 600; }
 .font-label-sm { font-family: var(--font-body); font-size: 0.6875rem; line-height: 0.875rem; font-weight: 700; }
 
-/* Custom scrollbar hiding */
+/* Custom scrollbar hiding and thin scrollbars */
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
@@ -164,3 +164,30 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #9D9D9C #f3f4f6;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 5px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 9999px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #9D9D9C;
+  border-radius: 9999px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #F07F00;
+}
+
+/* Filter sidebar container sticky positioning */
+.filter-panel-container {
+  position: sticky;
+  top: 1rem;
+  align-self: flex-start;
+}
+

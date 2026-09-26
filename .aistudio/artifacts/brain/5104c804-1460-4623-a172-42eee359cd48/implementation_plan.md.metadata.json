@@ -1,6 +1,6 @@
 {
-  "summary":  "Plan para rediseñar el carrusel de inicio con el estilo visual exacto de Saga Falabella / Día del Shopping, haciéndolo limpio, minimalista, directo y enfocado en la conversión.",
-  "updatedAt":  "2026-09-25T16:27:25.013271689Z",
+  "summary":  "Plan de implementación para rediseñar el panel de filtros estilo Falabella con acordeones colapsables, multi-selección con buscador integrado para marcas y categorías, y módulos destacados superiores para validación VIN y compatibilidad vehicular garantizada, aplicando la paleta corporativa (#212955, #F07F00, #9D9D9C, #FFFFFF).",
+  "updatedAt":  "2026-09-26T04:06:32.728330222Z",
   "requestFeedback":  true,
   "userFacing":  true
 }

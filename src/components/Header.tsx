@@ -33,27 +33,9 @@ export const Header: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
-  const [isMenuDropdownOpen, setIsMenuDropdownOpen] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<NavDropdownType>('none');
   const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const menuDropdownRef = useRef<HTMLDivElement | null>(null);
-
-  // Click outside to close Menu dropdown
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        menuDropdownRef.current &&
-        !menuDropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsMenuDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   const handleMouseEnter = (type: NavDropdownType) => {
     if (dropdownTimeoutRef.current) {
@@ -125,11 +107,13 @@ export const Header: React.FC = () => {
           {/* Logo & Brand */}
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}
+              onClick={() => setIsMegaMenuOpen(!isMegaMenuOpen)}
               className="md:hidden min-w-[44px] min-h-[44px] flex items-center justify-center p-2.5 rounded-xl hover:bg-surface-container text-on-surface cursor-pointer"
-              aria-label="Abrir menú de navegación"
+              aria-label="Abrir mega menú de navegación"
             >
-              <span className="material-symbols-outlined text-2xl">menu</span>
+              <span className="material-symbols-outlined text-2xl">
+                {isMegaMenuOpen ? 'close' : 'menu'}
+              </span>
             </button>
 
             <button
@@ -146,235 +130,29 @@ export const Header: React.FC = () => {
             </button>
           </div>
 
-          {/* Master Menu Button with Attached Dropdown */}
-          <div className="relative hidden lg:block" ref={menuDropdownRef}>
+          {/* Botón Menú Estilo Falabella con colores corporativos */}
+          <div className="relative hidden lg:block">
             <button
-              onClick={() => setIsMenuDropdownOpen((prev) => !prev)}
-              className={`flex items-center gap-2.5 bg-primary hover:bg-primary/90 text-white font-bold text-sm px-4 py-2.5 min-h-[44px] rounded-xl shadow-xs transition-all cursor-pointer ring-1 ring-primary/20 group ${
-                isMenuDropdownOpen ? 'bg-primary/95 ring-2 ring-secondary' : ''
+              onClick={() => setIsMegaMenuOpen((prev) => !prev)}
+              className={`flex items-center gap-2.5 font-bold text-sm px-4 py-2.5 min-h-[44px] rounded-xl shadow-xs transition-all cursor-pointer ring-1 group ${
+                isMegaMenuOpen
+                  ? 'bg-[#212955] text-white ring-2 ring-[#F07F00]'
+                  : 'bg-[#212955] hover:bg-[#181e40] text-white ring-[#212955]/30'
               }`}
-              title="Abrir Menú de Navegación y Departamentos"
-              aria-expanded={isMenuDropdownOpen}
+              title="Abrir Menú de Departamentos y Repuestos (Estilo Falabella)"
+              aria-expanded={isMegaMenuOpen}
             >
-              <div className="w-5 h-5 rounded-md bg-white/20 flex items-center justify-center group-hover:rotate-90 transition-transform">
-                <MasterCatalogIcon size={14} className="text-secondary-fixed" />
+              <div className="w-5 h-5 rounded-md bg-white/15 flex items-center justify-center group-hover:scale-110 transition-transform">
+                {isMegaMenuOpen ? (
+                  <span className="material-symbols-outlined text-base text-[#F07F00]">close</span>
+                ) : (
+                  <MasterCatalogIcon size={14} className="text-[#F07F00]" />
+                )}
               </div>
-              <span>Menú</span>
+              <span className={isMegaMenuOpen ? 'text-[#F07F00]' : 'text-white'}>
+                {isMegaMenuOpen ? '✕ Menú' : 'Menú'}
+              </span>
             </button>
-
-            {/* Interactive Attached Dropdown */}
-            {isMenuDropdownOpen && (
-              <div className="absolute top-full mt-2 left-0 w-[580px] bg-white rounded-2xl shadow-2xl border border-surface-container z-50 p-5 animate-in fade-in zoom-in-95 duration-150">
-                <div className="flex items-center justify-between border-b border-surface-container pb-3 mb-4">
-                  <div className="flex items-center gap-2 text-primary font-bold text-sm">
-                    <MasterCatalogIcon size={18} className="text-secondary" />
-                    <span>Explorador de Departamentos &amp; Servicios</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Columna 1: Vehículos & Compra */}
-                  <div className="space-y-1.5">
-                    <div className="text-[10px] font-extrabold uppercase tracking-wider text-outline px-2 mb-1">
-                      Vehículos &amp; Financiamiento
-                    </div>
-                    <button
-                      onClick={() => {
-                        setCurrentView('cars');
-                        setIsMenuDropdownOpen(false);
-                      }}
-                      className="w-full flex items-start gap-3 p-2.5 rounded-xl hover:bg-surface-container-low transition-colors text-left group cursor-pointer"
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
-                        <VehicleIcon size={20} />
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-on-surface group-hover:text-primary">
-                          Vehículos 2025 0 KM
-                        </div>
-                        <div className="text-[11px] text-outline">
-                          SUVs 4x4, Pickups, Híbridos y Seminuevos
-                        </div>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setCurrentView('trade-in');
-                        setIsMenuDropdownOpen(false);
-                      }}
-                      className="w-full flex items-start gap-3 p-2.5 rounded-xl hover:bg-surface-container-low transition-colors text-left group cursor-pointer"
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                        <PlanRetomaIcon size={20} />
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-emerald-900 group-hover:text-emerald-700 flex items-center gap-1.5">
-                          <span>Plan Retoma</span>
-                          <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-extrabold">
-                            +S/ 7.5K
-                          </span>
-                        </div>
-                        <div className="text-[11px] text-outline">
-                          Tasación en 30 min como parte de pago
-                        </div>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setCurrentView('financing');
-                        setIsMenuDropdownOpen(false);
-                      }}
-                      className="w-full flex items-start gap-3 p-2.5 rounded-xl hover:bg-surface-container-low transition-colors text-left group cursor-pointer"
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-secondary-container/10 text-secondary flex items-center justify-center shrink-0 group-hover:bg-secondary-container group-hover:text-white transition-colors">
-                        <span className="material-symbols-outlined text-lg">calculate</span>
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-on-surface group-hover:text-primary">
-                          Simulador de Financiamiento
-                        </div>
-                        <div className="text-[11px] text-outline">
-                          Cuotas BCP, BBVA, Santander
-                        </div>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setIsViewer360Open(true);
-                        setIsMenuDropdownOpen(false);
-                      }}
-                      className="w-full flex items-start gap-3 p-2.5 rounded-xl hover:bg-surface-container-low transition-colors text-left group cursor-pointer"
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
-                        <Showroom360Icon size={20} />
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-on-surface group-hover:text-primary">
-                          Showroom Interactivo 360°
-                        </div>
-                        <div className="text-[11px] text-outline">
-                          Inspección 3D y telemetría en vivo
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-
-                  {/* Columna 2: Repuestos, Taller & Servicios */}
-                  <div className="space-y-1.5">
-                    <div className="text-[10px] font-extrabold uppercase tracking-wider text-outline px-2 mb-1">
-                      Repuestos &amp; Postventa
-                    </div>
-                    <button
-                      onClick={() => {
-                        navigateToPartsCatalog('todos');
-                        setIsMenuDropdownOpen(false);
-                      }}
-                      className="w-full flex items-start gap-3 p-2.5 rounded-xl hover:bg-surface-container-low transition-colors text-left group cursor-pointer"
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
-                        <AutoPartsIcon size={20} />
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-on-surface group-hover:text-primary">
-                          Repuestos por Marca Oficial
-                        </div>
-                        <div className="text-[11px] text-outline">
-                          Mickey Thompson, Keko, Mobil, 3M, LLumar
-                        </div>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setCurrentView('services');
-                        setIsMenuDropdownOpen(false);
-                      }}
-                      className="w-full flex items-start gap-3 p-2.5 rounded-xl hover:bg-surface-container-low transition-colors text-left group cursor-pointer"
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
-                        <WorkshopServiceIcon size={20} />
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-on-surface group-hover:text-primary">
-                          Taller Mecánico &amp; Detailing
-                        </div>
-                        <div className="text-[11px] text-outline">
-                          Citas online prioritarias y diagnóstico 3D
-                        </div>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setIsGarageModalOpen(true);
-                        setIsMenuDropdownOpen(false);
-                      }}
-                      className="w-full flex items-start gap-3 p-2.5 rounded-xl hover:bg-surface-container-low transition-colors text-left group cursor-pointer"
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 group-hover:bg-amber-600 group-hover:text-white transition-colors">
-                        <GarageLiftIcon size={20} />
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-on-surface group-hover:text-primary">
-                          Mi Garaje Virtual
-                        </div>
-                        <div className="text-[11px] text-outline">
-                          Compatibilidad garantizada por VIN
-                        </div>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setCurrentView('locations');
-                        setIsMenuDropdownOpen(false);
-                      }}
-                      className="w-full flex items-start gap-3 p-2.5 rounded-xl hover:bg-surface-container-low transition-colors text-left group cursor-pointer"
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
-                        <DealershipPinIcon size={20} />
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-on-surface group-hover:text-primary">
-                          Sedes &amp; Concesionario
-                        </div>
-                        <div className="text-[11px] text-outline">
-                          Av. Vía de Evitamiento Sur 6003
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Footer del dropdown */}
-                <div className="mt-4 pt-3 border-t border-surface-container flex items-center justify-between text-xs">
-                  <button
-                    onClick={() => {
-                      setCurrentView('claims');
-                      setIsMenuDropdownOpen(false);
-                    }}
-                    className="text-outline hover:text-primary flex items-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-sm">menu_book</span>
-                    <span>Libro de Reclamaciones</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setCurrentView('about');
-                      setIsMenuDropdownOpen(false);
-                    }}
-                    className="text-outline hover:text-primary flex items-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-sm">info</span>
-                    <span>Garantías &amp; Empresa</span>
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Search bar con UNA SOLA lupa */}

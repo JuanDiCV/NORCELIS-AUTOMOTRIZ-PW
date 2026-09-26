@@ -18,8 +18,11 @@ export const HomeView: React.FC = () => {
   const {
     setCurrentView,
     setSelectedVehicleId,
+    setSelectedPartSku,
     setIsViewer360Open,
     vehicles,
+    autoParts,
+    addToCart,
     toggleWishlist,
     isInWishlist,
     showToast,
@@ -31,15 +34,21 @@ export const HomeView: React.FC = () => {
   const [filterBrand, setFilterBrand] = useState('Toyota');
   const [filterModel, setFilterModel] = useState('RAV4 Hybrid');
   const [filterPlate, setFilterPlate] = useState('');
+  const [partsShowcaseCategory, setPartsShowcaseCategory] = useState<string>('todos');
 
   const newCars = vehicles.filter((v) => v.condition === 'nuevo');
   const usedCars = vehicles.filter((v) => v.condition === 'seminuevo');
+
+  // Filter parts for the homepage showcase
+  const displayedParts = partsShowcaseCategory === 'todos'
+    ? autoParts.slice(0, 8)
+    : autoParts.filter((p) => p.category === partsShowcaseCategory).slice(0, 8);
 
   const handleHeroSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (heroTab === 'parts') {
       showToast(`Filtrando repuestos compatibles con ${filterBrand} ${filterModel} (${filterYear})`);
-      setCurrentView('parts');
+      navigateToPartsCatalog('todos', filterBrand);
     } else if (heroTab === 'workshop') {
       showToast('Redirigiendo a reserva de citas en taller...');
       setCurrentView('services');
@@ -49,14 +58,29 @@ export const HomeView: React.FC = () => {
     }
   };
 
+  const handleAddToCart = (part: typeof autoParts[0], withInstallation: boolean = false) => {
+    addToCart({
+      type: 'part',
+      title: part.name,
+      skuOrCode: part.sku,
+      priceSoles: part.priceSoles,
+      image: part.image,
+      specsSubtitle: `${part.brand} • ${part.category}`,
+      hasWorkshopInstallation: withInstallation,
+      installationFeeSoles: withInstallation ? 45 : 0,
+      quantity: 1,
+    });
+    showToast(`${part.name} agregado al carrito`);
+  };
+
   return (
     <div className="space-y-12 pb-12">
-      {/* 1. Hero Promo Showcase Carousel (Saga Falabella Style Banner with Progress & Quick Tabs) */}
+      {/* 1. Hero Promo Showcase Carousel (Saga Falabella Clean Style) */}
       <section className="w-full">
         <PromoHeroCarousel />
       </section>
 
-      {/* 2. Quick Vehicle & Compatibility Finder (Reallocated below the Carousel) */}
+      {/* 2. Quick Compatibility & Auto Parts Finder */}
       <section className="px-gutter -mt-4">
         <div className="max-w-7xl mx-auto">
           <div className="bg-surface-container-lowest text-on-surface rounded-3xl shadow-xl border border-surface-container overflow-hidden">
@@ -246,7 +270,7 @@ export const HomeView: React.FC = () => {
         </div>
       </section>
 
-      {/* Retail Trust Strip */}
+      {/* Trust Strip */}
       <section className="px-gutter">
         <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="p-4 rounded-2xl bg-surface-container-low border border-surface-container flex items-center gap-3.5 shadow-sm">
@@ -254,8 +278,8 @@ export const HomeView: React.FC = () => {
               <span className="material-symbols-outlined text-2xl">verified</span>
             </div>
             <div>
-              <div className="text-xs font-bold text-primary">Garantía Mecánica 1 Año</div>
-              <div className="text-[11px] text-outline">En seminuevos certificados</div>
+              <div className="text-xs font-bold text-primary">Autopartes 100% Originales</div>
+              <div className="text-[11px] text-outline">Garantía oficial de fábrica y boleta/factura</div>
             </div>
           </div>
 
@@ -264,12 +288,12 @@ export const HomeView: React.FC = () => {
               <span className="material-symbols-outlined text-2xl">precision_manufacturing</span>
             </div>
             <div>
-              <div className="text-xs font-bold text-primary">Compatibilidad 100%</div>
-              <div className="text-[11px] text-outline">Verificada por catálogo OEM</div>
+              <div className="text-xs font-bold text-primary">Compatibilidad Verificada</div>
+              <div className="text-[11px] text-outline">Por catálogo técnico OEM y chasis VIN</div>
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-surface-container-low border border-surface-center flex items-center gap-3.5 shadow-sm">
+          <div className="p-4 rounded-2xl bg-surface-container-low border border-surface-container flex items-center gap-3.5 shadow-sm">
             <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-800 flex items-center justify-center">
               <span className="material-symbols-outlined text-2xl">local_shipping</span>
             </div>
@@ -281,33 +305,33 @@ export const HomeView: React.FC = () => {
 
           <div className="p-4 rounded-2xl bg-surface-container-low border border-surface-container flex items-center gap-3.5 shadow-sm">
             <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-800 flex items-center justify-center">
-              <span className="material-symbols-outlined text-2xl">payments</span>
+              <span className="material-symbols-outlined text-2xl">build</span>
             </div>
             <div>
-              <div className="text-xs font-bold text-primary">Financiamiento Inmediato</div>
-              <div className="text-[11px] text-outline">Pre-evaluación en 15 minutos</div>
+              <div className="text-xs font-bold text-primary">Instalación Opcional en Taller</div>
+              <div className="text-[11px] text-outline">Mano de obra certificada e inspección</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Categorías Populares de Repuestos & Equipamiento */}
+      {/* 3. CATEGORÍAS POPULARES DE AUTOPARTES & MARCAS */}
       <section className="px-gutter">
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-2 border-b border-surface-container pb-4">
             <div>
               <span className="text-xs font-bold text-secondary uppercase tracking-wider">
-                Autopartes &amp; Accesorios Oficiales
+                Líneas Especializadas Nor Celis
               </span>
               <h2 className="font-headline font-bold text-2xl text-on-surface">
-                Categorías Destacadas Nor Celis
+                Categorías de Autopartes &amp; Repuestos
               </h2>
             </div>
             <button
               onClick={() => navigateToPartsCatalog('todos')}
               className="min-h-[44px] px-3 py-2 text-xs font-bold text-primary hover:text-secondary-container rounded-xl hover:bg-surface-container-low flex items-center gap-1 transition-colors cursor-pointer"
             >
-              <span>Ver todas las autopartes</span>
+              <span>Ver todas las autopartes ({autoParts.length})</span>
               <span className="material-symbols-outlined text-[16px]">chevron_right</span>
             </button>
           </div>
@@ -317,7 +341,7 @@ export const HomeView: React.FC = () => {
               { name: 'Llantas Off-Road', icon: TireOffRoadIcon, desc: 'Mickey Thompson & BR', code: 'llantas' },
               { name: 'Equipamiento 4x4', icon: Equip4x4Icon, desc: 'KEKO Barras & Tapas', code: 'accesorios4x4' },
               { name: 'Aceites & Fluidos', icon: LubricantOilIcon, desc: 'Mobil 1 & Delvac', code: 'lubricantes' },
-              { name: 'Láminas Seguridad', icon: SecurityFilmIcon, desc: 'LLumar Nanocerámica', code: 'seguridad' },
+              { name: 'Frenos & Pastillas', icon: WorkshopServiceIcon, desc: 'Brembo & Toyota OEM', code: 'frenos' },
               { name: 'Detailing & PPF', icon: DetailingPPFIcon, desc: '3M Ceramic Coating', code: 'detailing' },
               { name: 'Suspensión HD', icon: SuspensionHDIcon, desc: 'TRAKKO® & KYB Lift', code: 'suspension' },
             ].map((cat, i) => {
@@ -377,7 +401,184 @@ export const HomeView: React.FC = () => {
         </div>
       </section>
 
-      {/* 3. WORKSHOP & DETAILING SERVICES SECTION (Placed BEFORE Vehicles) */}
+      {/* 4. MAIN SPOTLIGHT: AUTOPARTES & REPUESTOS MÁS VENDIDOS (PRIORIDAD PRINCIPAL) */}
+      <section className="px-gutter">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 border-b border-surface-container pb-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container/15 text-secondary text-xs font-extrabold uppercase tracking-wider mb-1">
+                <span className="material-symbols-outlined text-sm">local_fire_department</span>
+                Alta Demanda &amp; Stock Inmediato
+              </div>
+              <h2 className="font-headline font-black text-2xl sm:text-3xl text-on-surface">
+                Autopartes &amp; Repuestos Originales
+              </h2>
+              <p className="text-xs sm:text-sm text-outline mt-0.5">
+                Componentes OEM certificados con garantía oficial y servicio de instalación opcional en taller.
+              </p>
+            </div>
+
+            <button
+              onClick={() => navigateToPartsCatalog('todos')}
+              className="min-h-[44px] px-4 py-2.5 bg-primary hover:bg-primary-container text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer shrink-0"
+            >
+              <span>Explorar Todo el Catálogo de Repuestos</span>
+              <span className="material-symbols-outlined text-base">arrow_forward</span>
+            </button>
+          </div>
+
+          {/* Interactive Category Filter Pills for Autoparts */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin">
+            {[
+              { id: 'todos', label: 'Todos los Repuestos' },
+              { id: 'frenos', label: 'Frenos & Discos' },
+              { id: 'lubricantes', label: 'Aceites & Filtros' },
+              { id: 'suspension', label: 'Suspensión & Lift' },
+              { id: 'accesorios4x4', label: 'Equipamiento 4x4' },
+              { id: 'llantas', label: 'Llantas & Aros' },
+              { id: 'baterias', label: 'Baterías AGM' },
+              { id: 'seguridad', label: 'Láminas de Seguridad' },
+            ].map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setPartsShowcaseCategory(cat.id)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer min-h-[38px] ${
+                  partsShowcaseCategory === cat.id
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'bg-surface-container-low text-on-surface hover:bg-surface-container border border-surface-container'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Autoparts Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {displayedParts.map((part) => {
+              const inWish = isInWishlist(part.sku);
+              return (
+                <div
+                  key={part.sku}
+                  className="bg-surface-container-lowest rounded-2xl border border-surface-container hover:border-primary/40 hover:shadow-xl transition-all overflow-hidden flex flex-col justify-between group"
+                >
+                  {/* Image and Badges */}
+                  <div className="relative aspect-[4/3] bg-surface-container-low p-4 flex items-center justify-center overflow-hidden">
+                    <img
+                      src={part.image}
+                      alt={part.name}
+                      className="max-h-full max-w-full object-contain transition-transform duration-500 ease-out group-hover:scale-110"
+                    />
+
+                    {/* Brand Badge */}
+                    <div className="absolute top-3 left-3">
+                      <span className="bg-primary/90 backdrop-blur-xs text-white text-[10px] font-extrabold px-2.5 py-1 rounded-lg uppercase tracking-wider shadow-sm">
+                        {part.brand}
+                      </span>
+                    </div>
+
+                    {/* Wishlist Button */}
+                    <button
+                      onClick={() =>
+                        toggleWishlist({
+                          id: part.sku,
+                          type: 'part',
+                          title: part.name,
+                          subtitle: `${part.brand} • SKU: ${part.sku}`,
+                          sku: part.sku,
+                          priceSoles: part.priceSoles,
+                          oldPriceSoles: part.oldPriceSoles,
+                          image: part.image,
+                          categoryBadge: part.category,
+                        })
+                      }
+                      className={`absolute top-3 right-3 w-8 h-8 rounded-lg flex items-center justify-center transition-colors shadow-sm cursor-pointer ${
+                        inWish ? 'bg-secondary-container text-white' : 'bg-white/90 hover:bg-white text-on-surface'
+                      }`}
+                      aria-label="Favorito"
+                    >
+                      <span className="material-symbols-outlined text-base">
+                        {inWish ? 'favorite' : 'favorite_border'}
+                      </span>
+                    </button>
+
+                    {part.stockText && (
+                      <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between text-[10px] bg-white/90 backdrop-blur-xs px-2 py-0.5 rounded-md text-emerald-800 font-bold border border-emerald-200">
+                        <span className="flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          {part.stockText}
+                        </span>
+                        <span className="font-mono text-outline">SKU: {part.sku}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Body Info */}
+                  <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                    <div>
+                      <div className="text-[10px] font-bold text-secondary uppercase tracking-wider">
+                        {part.category.toUpperCase()}
+                      </div>
+                      <h3
+                        onClick={() => {
+                          setSelectedPartSku(part.sku);
+                          setCurrentView('part-pdp');
+                        }}
+                        className="font-headline font-bold text-xs sm:text-sm text-on-surface group-hover:text-primary transition-colors cursor-pointer line-clamp-2 mt-0.5"
+                      >
+                        {part.name}
+                      </h3>
+                      <p className="text-[11px] text-outline line-clamp-1 mt-1">
+                        {part.compatibleVehicle || (part.features && part.features[0]) || 'Garantía oficial'}
+                      </p>
+                    </div>
+
+                    {/* Price and Add to Cart Action */}
+                    <div className="pt-2 border-t border-surface-container space-y-2.5">
+                      <div className="flex items-baseline justify-between">
+                        <div>
+                          {part.oldPriceSoles && (
+                            <span className="text-[11px] text-outline line-through block">
+                              S/ {part.oldPriceSoles.toLocaleString()}
+                            </span>
+                          )}
+                          <span className="font-headline font-black text-lg text-primary">
+                            S/ {part.priceSoles.toLocaleString()}
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-secondary font-bold bg-secondary-container/10 px-2 py-0.5 rounded-md">
+                          Instalación +S/ 45
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedPartSku(part.sku);
+                            setCurrentView('part-pdp');
+                          }}
+                          className="min-h-[38px] px-2.5 py-1.5 bg-surface-container-low hover:bg-surface-container text-on-surface rounded-xl text-xs font-bold transition-colors cursor-pointer text-center"
+                        >
+                          Ficha Técnica
+                        </button>
+                        <button
+                          onClick={() => handleAddToCart(part, false)}
+                          className="min-h-[38px] px-2.5 py-1.5 bg-primary hover:bg-primary-container text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer shadow-xs"
+                        >
+                          <span className="material-symbols-outlined text-sm">shopping_cart</span>
+                          <span>Comprar</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* 5. WORKSHOP & DETAILING SERVICES SECTION */}
       <section className="px-gutter">
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-2 border-b border-surface-container pb-4">
@@ -532,29 +733,33 @@ export const HomeView: React.FC = () => {
         </div>
       </section>
 
-      {/* 4. VEHICLES 0 KM 2025 (Placed AFTER Services) */}
+      {/* 6. VEHICLES COMPACT SHOWCASE (REDUCIDO A 3 DESTACADOS PARA PRIORIZAR AUTOPARTES) */}
       <section className="px-gutter">
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-2 border-b border-surface-container pb-4">
             <div>
               <span className="text-xs font-bold text-secondary uppercase tracking-wider">
-                Concesionario Oficial 2025
+                Concesionario Multimarca 2025
               </span>
               <h2 className="font-headline font-bold text-2xl text-on-surface">
-                Vehículos 0 km con Bonos Exclusivos
+                Vehículos 0 km con Bonos Especiales
               </h2>
+              <p className="text-xs text-outline mt-0.5">
+                Modelos seleccionados listos para entrega inmediata con financiamiento y retoma.
+              </p>
             </div>
             <button
               onClick={() => setCurrentView('cars')}
-              className="min-h-[44px] px-3 py-2 text-xs font-bold text-primary hover:text-secondary-container rounded-xl hover:bg-surface-container-low flex items-center gap-1 transition-colors cursor-pointer"
+              className="min-h-[44px] px-4 py-2 text-xs font-bold text-primary hover:text-secondary-container rounded-xl hover:bg-surface-container-low flex items-center gap-1 transition-colors cursor-pointer"
             >
-              <span>Ver catálogo completo (26 unidades)</span>
+              <span>Ver catálogo completo de autos ({vehicles.length})</span>
               <span className="material-symbols-outlined text-[16px]">chevron_right</span>
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {newCars.map((car) => {
+          {/* Compact 3-car showcase */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {newCars.slice(0, 3).map((car) => {
               const inWish = isInWishlist(car.id);
               return (
                 <div
@@ -596,61 +801,50 @@ export const HomeView: React.FC = () => {
                           categoryBadge: 'Vehículo Nuevo 2025',
                         })
                       }
-                      className={`absolute top-3 right-3 min-w-[44px] min-h-[44px] rounded-xl flex items-center justify-center transition-colors shadow-md cursor-pointer ${
+                      className={`absolute top-3 right-3 min-w-[38px] min-h-[38px] rounded-xl flex items-center justify-center transition-colors shadow-md cursor-pointer ${
                         inWish ? 'bg-secondary-container text-white' : 'bg-white/90 hover:bg-white text-on-surface'
                       }`}
                       aria-label="Guardar en lista de deseos"
                     >
-                      <span className="material-symbols-outlined text-xl">
+                      <span className="material-symbols-outlined text-lg">
                         {inWish ? 'favorite' : 'favorite_border'}
                       </span>
                     </button>
                   </div>
 
                   {/* Body Info */}
-                  <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                  <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
                     <div>
-                      <div className="text-[11px] font-bold uppercase text-outline flex items-center gap-1.5">
+                      <div className="text-[10px] font-bold uppercase text-outline flex items-center gap-1.5">
                         <span>{car.brand}</span>
                         <span>•</span>
                         <span>{car.bodyType}</span>
                         <span>•</span>
                         <span className="text-emerald-700">{car.fuelType}</span>
                       </div>
-                      <h3 className="font-headline font-bold text-base text-on-surface group-hover:text-primary transition-colors mt-0.5">
+                      <h3 className="font-headline font-bold text-sm text-on-surface group-hover:text-primary transition-colors mt-0.5">
                         {car.name}
                       </h3>
-                      <p className="text-xs text-outline line-clamp-1 mt-1">
+                      <p className="text-xs text-outline line-clamp-1 mt-0.5">
                         {car.subtitle}
                       </p>
-
-                      {/* Specs tags */}
-                      <div className="flex flex-wrap gap-2 mt-3 text-[11px] text-on-surface-variant font-medium">
-                        <span className="bg-surface-container px-2.5 py-1 rounded-lg">
-                          {car.specs.engine}
-                        </span>
-                        <span className="bg-surface-container px-2.5 py-1 rounded-lg">
-                          {car.specs.transmission}
-                        </span>
-                        <span className="bg-surface-container px-2.5 py-1 rounded-lg">
-                          {car.specs.traction}
-                        </span>
-                      </div>
                     </div>
 
                     {/* Price & Actions */}
                     <div className="border-t border-surface-container pt-3">
                       <div className="flex items-baseline justify-between">
                         <div>
-                          <div className="text-xs text-outline line-through">
-                            {car.oldPriceSoles ? `S/ ${car.oldPriceSoles.toLocaleString()}` : ''}
-                          </div>
-                          <div className="font-headline font-extrabold text-xl text-primary">
+                          {car.oldPriceSoles && (
+                            <span className="text-[11px] text-outline line-through block">
+                              S/ {car.oldPriceSoles.toLocaleString()}
+                            </span>
+                          )}
+                          <div className="font-headline font-extrabold text-lg text-primary">
                             S/ {car.priceSoles.toLocaleString()}
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-[11px] text-outline font-mono">
+                          <div className="text-[10px] text-outline font-mono">
                             ~${car.priceUsd.toLocaleString()} USD
                           </div>
                           <div className="text-xs font-bold text-secondary">
@@ -665,7 +859,7 @@ export const HomeView: React.FC = () => {
                             setSelectedVehicleId(car.id);
                             setCurrentView('vehicle-pdp');
                           }}
-                          className="min-h-[44px] px-3 py-2.5 bg-primary hover:bg-primary-container text-white rounded-xl text-xs font-bold transition-colors cursor-pointer text-center flex items-center justify-center"
+                          className="min-h-[38px] px-3 py-2 bg-primary hover:bg-primary-container text-white rounded-xl text-xs font-bold transition-colors cursor-pointer text-center flex items-center justify-center"
                         >
                           Ficha Técnica
                         </button>
@@ -674,7 +868,7 @@ export const HomeView: React.FC = () => {
                             setSelectedVehicleId(car.id);
                             setIsViewer360Open(true);
                           }}
-                          className="min-h-[44px] px-3 py-2.5 bg-surface-container hover:bg-surface-container-high text-primary rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                          className="min-h-[38px] px-3 py-2 bg-surface-container hover:bg-surface-container-high text-primary rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer"
                         >
                           <span className="material-symbols-outlined text-sm">360</span>
                           <span>Visor 360°</span>
@@ -689,7 +883,7 @@ export const HomeView: React.FC = () => {
         </div>
       </section>
 
-      {/* 5. SEMINUEVOS CERTIFICADOS BANNER */}
+      {/* 7. SEMINUEVOS CERTIFICADOS BANNER */}
       <section className="px-gutter">
         <div className="max-w-7xl mx-auto bg-gradient-to-r from-surface-container-high via-surface-container-low to-surface-container rounded-3xl p-6 sm:p-10 border border-surface-container flex flex-col lg:flex-row items-center justify-between gap-8">
           <div className="space-y-3 max-w-xl">

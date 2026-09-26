@@ -29,34 +29,74 @@ export const PartsCatalogView: React.FC = () => {
     setCurrentView('part-pdp');
   };
 
-  // Synchronize with context filters if set
-  const [selectedCategory, setSelectedCategory] = useState<string>(catalogCategoryFilter || 'todos');
-  const [selectedBrand, setSelectedBrand] = useState<string>(catalogBrandFilter || 'todos');
+  // State for multi-selection filters
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(() => {
+    if (catalogCategoryFilter && catalogCategoryFilter !== 'todos') {
+      return [catalogCategoryFilter];
+    }
+    return [];
+  });
+
+  const [selectedBrands, setSelectedBrands] = useState<string[]>(() => {
+    if (catalogBrandFilter && catalogBrandFilter !== 'todos') {
+      return [catalogBrandFilter];
+    }
+    return [];
+  });
+
   const [searchFilter, setSearchFilter] = useState<string>(catalogSearchQuery || '');
+  const [brandSearchTerm, setBrandSearchTerm] = useState<string>('');
+  const [brandSegment, setBrandSegment] = useState<'todos' | 'oficial' | 'alternativa'>('todos');
   const [onlyCompatible, setOnlyCompatible] = useState<boolean>(false);
   const [onlyOffers, setOnlyOffers] = useState<boolean>(false);
   const [priceMax, setPriceMax] = useState<number>(3500);
   const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'rating-desc' | 'name-asc'>('featured');
   const [vinInput, setVinInput] = useState('');
+  const [vinValidated, setVinValidated] = useState(false);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [zoomModalPart, setZoomModalPart] = useState<AutoPart | null>(null);
 
-  // Sync when context changes (e.g. user clicked from mega menu)
+  // Accordion open/close state (Falabella style)
+  const [openSections, setOpenSections] = useState<{ [key: string]: boolean }>({
+    categories: true,
+    brands: true,
+    price: true,
+    offers: true,
+    compatibility: false,
+  });
+
+  const toggleSection = (sectionKey: string) => {
+    setOpenSections((prev) => ({
+      ...prev,
+      [sectionKey]: !prev[sectionKey],
+    }));
+  };
+
+  // Sync when context changes (e.g. user clicked from mega menu or header)
   useEffect(() => {
-    if (catalogCategoryFilter) setSelectedCategory(catalogCategoryFilter);
+    if (catalogCategoryFilter && catalogCategoryFilter !== 'todos') {
+      setSelectedCategories([catalogCategoryFilter]);
+    } else if (catalogCategoryFilter === 'todos') {
+      setSelectedCategories([]);
+    }
   }, [catalogCategoryFilter]);
 
   useEffect(() => {
-    if (catalogBrandFilter) setSelectedBrand(catalogBrandFilter);
+    if (catalogBrandFilter && catalogBrandFilter !== 'todos') {
+      setSelectedBrands([catalogBrandFilter]);
+    } else if (catalogBrandFilter === 'todos') {
+      setSelectedBrands([]);
+    }
   }, [catalogBrandFilter]);
 
   useEffect(() => {
-    if (catalogSearchQuery) setSearchFilter(catalogSearchQuery);
+    if (catalogSearchQuery) {
+      setSearchFilter(catalogSearchQuery);
+    }
   }, [catalogSearchQuery]);
 
   // Categories config
   const CATEGORIES = [
-    { id: 'todos', label: 'Todos los Repuestos & Accesorios', icon: 'category' },
     { id: 'llantas', label: 'Llantas & Aros Off-Road', icon: 'tire_repair' },
     { id: 'accesorios4x4', label: 'Accesorios & Equipamiento 4x4', icon: 'shield_with_heart' },
     { id: 'lubricantes', label: 'Aceites & Lubricantes de Motor', icon: 'oil_barrel' },
@@ -70,10 +110,7 @@ export const PartsCatalogView: React.FC = () => {
   ];
 
   // Brands: Official OEM & Alternative / Chinese Brands
-  const [brandSegment, setBrandSegment] = useState<'todos' | 'oficial' | 'alternativa'>('todos');
-
   const ALL_PART_BRANDS = useMemo(() => [
-    { id: 'todos', label: 'Todas las Marcas', segment: 'todos' },
     // Marcas Oficiales OEM & Tradicionales
     { id: 'TOYOTA Genuino', label: 'TOYOTA Genuino', segment: 'oficial', badge: 'OEM Oficial' },
     { id: 'Mickey Thompson', label: 'MICKEY THOMPSON (M/T)', segment: 'oficial', badge: 'USA' },
@@ -90,18 +127,60 @@ export const PartsCatalogView: React.FC = () => {
     { id: 'Aisin Seiki', label: 'Aisin Seiki', segment: 'oficial', badge: 'Japón' },
     { id: 'K&N Engineering', label: 'K&N Engineering', segment: 'oficial', badge: 'USA' },
     // Marcas Alternativas & Chinas Garantizadas
-    { id: 'Triangle Tire', label: 'Triangle Tire (China)', segment: 'alternativa', badge: 'Marca China A+' },
-    { id: 'Sailun Tire', label: 'Sailun Tire (China)', segment: 'alternativa', badge: 'Marca China A+' },
-    { id: 'Longji Brakes', label: 'Longji Brakes (China)', segment: 'alternativa', badge: 'Marca China A+' },
-    { id: 'SenSen Shocks', label: 'SenSen Shocks (China)', segment: 'alternativa', badge: 'Marca China A+' },
-    { id: 'Camel Battery', label: 'Camel Battery (China)', segment: 'alternativa', badge: 'Marca China A+' },
-    { id: 'Sakura Filters', label: 'Sakura Filters (Alternativa)', segment: 'alternativa', badge: 'Alternativa A+' },
-    { id: 'WINBO 4x4', label: 'WINBO 4x4 (China)', segment: 'alternativa', badge: 'Marca China A+' },
-    { id: 'Huayang Lighting', label: 'Huayang LED (China)', segment: 'alternativa', badge: 'Marca China A+' },
-    { id: 'Wanxiang Automotive', label: 'Wanxiang (China)', segment: 'alternativa', badge: 'Marca China A+' },
+    { id: 'Triangle Tire', label: 'Triangle Tire', segment: 'alternativa', badge: 'Marca China A+' },
+    { id: 'Sailun Tire', label: 'Sailun Tire', segment: 'alternativa', badge: 'Marca China A+' },
+    { id: 'Longji Brakes', label: 'Longji Brakes', segment: 'alternativa', badge: 'Marca China A+' },
+    { id: 'SenSen Shocks', label: 'SenSen Shocks', segment: 'alternativa', badge: 'Marca China A+' },
+    { id: 'Camel Battery', label: 'Camel Battery', segment: 'alternativa', badge: 'Marca China A+' },
+    { id: 'Sakura Filters', label: 'Sakura Filters', segment: 'alternativa', badge: 'Alternativa A+' },
+    { id: 'WINBO 4x4', label: 'WINBO 4x4', segment: 'alternativa', badge: 'Marca China A+' },
+    { id: 'Huayang Lighting', label: 'Huayang LED', segment: 'alternativa', badge: 'Marca China A+' },
+    { id: 'Wanxiang Automotive', label: 'Wanxiang Auto', segment: 'alternativa', badge: 'Marca China A+' },
   ], []);
 
-  // Filter & Sort Logic
+  // Multi-select helpers
+  const handleToggleCategory = (catId: string) => {
+    setSelectedCategories((prev) => {
+      if (prev.includes(catId)) {
+        return prev.filter((id) => id !== catId);
+      } else {
+        return [...prev, catId];
+      }
+    });
+  };
+
+  const handleToggleBrand = (brandId: string) => {
+    setSelectedBrands((prev) => {
+      if (prev.includes(brandId)) {
+        return prev.filter((id) => id !== brandId);
+      } else {
+        return [...prev, brandId];
+      }
+    });
+  };
+
+  // Filtered Brands for display according to segment and brand search
+  const visibleBrands = useMemo(() => {
+    return ALL_PART_BRANDS.filter((b) => {
+      // Segment filter
+      if (brandSegment === 'oficial' && b.segment !== 'oficial') return false;
+      if (brandSegment === 'alternativa' && b.segment !== 'alternativa') return false;
+
+      // Internal brand search
+      if (brandSearchTerm.trim() !== '') {
+        const query = brandSearchTerm.toLowerCase();
+        const matches =
+          b.label.toLowerCase().includes(query) ||
+          b.id.toLowerCase().includes(query) ||
+          (b.badge && b.badge.toLowerCase().includes(query));
+        if (!matches) return false;
+      }
+
+      return true;
+    });
+  }, [ALL_PART_BRANDS, brandSegment, brandSearchTerm]);
+
+  // Main Filter & Sort Logic
   const filteredParts = useMemo(() => {
     return autoParts
       .filter((part) => {
@@ -113,16 +192,22 @@ export const PartsCatalogView: React.FC = () => {
           return false;
         }
 
-        // Categoría
-        if (selectedCategory !== 'todos' && part.category !== selectedCategory) {
-          return false;
+        // Multi-Categoría (si está vacío muestra todas)
+        if (selectedCategories.length > 0) {
+          if (!selectedCategories.includes(part.category)) {
+            return false;
+          }
         }
 
-        // Marca
-        if (selectedBrand !== 'todos') {
-          const brandMatch = part.brand.toLowerCase().includes(selectedBrand.toLowerCase()) ||
-                             selectedBrand.toLowerCase().includes(part.brand.toLowerCase());
-          if (!brandMatch) return false;
+        // Multi-Marca (si está vacío muestra todas)
+        if (selectedBrands.length > 0) {
+          const matchBrand = selectedBrands.some((b) => {
+            return (
+              part.brand.toLowerCase().includes(b.toLowerCase()) ||
+              b.toLowerCase().includes(part.brand.toLowerCase())
+            );
+          });
+          if (!matchBrand) return false;
         }
 
         // Solo ofertas
@@ -140,7 +225,12 @@ export const PartsCatalogView: React.FC = () => {
           const garBrand = activeGarage.brand.toLowerCase();
           const garModel = activeGarage.model.toLowerCase();
           const compText = (part.compatibleVehicle || '').toLowerCase();
-          const isComp = compText.includes(garBrand) || compText.includes(garModel) || compText.includes('universal') || compText.includes('todo tipo') || compText.includes('garantizado');
+          const isComp =
+            compText.includes(garBrand) ||
+            compText.includes(garModel) ||
+            compText.includes('universal') ||
+            compText.includes('todo tipo') ||
+            compText.includes('garantizado');
           if (!isComp) return false;
         }
 
@@ -164,20 +254,32 @@ export const PartsCatalogView: React.FC = () => {
         if (sortBy === 'price-desc') return b.priceSoles - a.priceSoles;
         if (sortBy === 'rating-desc') return b.rating - a.rating;
         if (sortBy === 'name-asc') return a.name.localeCompare(b.name);
-        // 'featured': prioriza los que tienen descuento y rating alto
         return (b.discount ? 1 : 0) - (a.discount ? 1 : 0) || b.rating - a.rating;
       });
-  }, [autoParts, selectedCategory, selectedBrand, brandSegment, onlyOffers, priceMax, onlyCompatible, searchFilter, sortBy, activeGarage]);
+  }, [
+    autoParts,
+    selectedCategories,
+    selectedBrands,
+    brandSegment,
+    onlyOffers,
+    priceMax,
+    onlyCompatible,
+    searchFilter,
+    sortBy,
+    activeGarage,
+  ]);
 
   const handleResetFilters = () => {
-    setSelectedCategory('todos');
-    setSelectedBrand('todos');
+    setSelectedCategories([]);
+    setSelectedBrands([]);
     setBrandSegment('todos');
+    setBrandSearchTerm('');
     setSearchFilter('');
     setOnlyCompatible(false);
     setOnlyOffers(false);
     setPriceMax(3500);
     setSortBy('featured');
+    setVinValidated(false);
     setCatalogCategoryFilter('todos');
     setCatalogBrandFilter('todos');
     setCatalogSearchQuery('');
@@ -190,33 +292,581 @@ export const PartsCatalogView: React.FC = () => {
       showToast('Ingresa los dígitos de tu chasis / VIN para verificar compatibilidad');
       return;
     }
-    showToast(`✓ Chasis "${vinInput.toUpperCase()}" validado con catálogo de fábrica de ${activeGarage.brand}. Mostrando productos 100% compatibles.`);
+    setVinValidated(true);
+    setOnlyCompatible(true);
+    showToast(`✓ Chasis "${vinInput.toUpperCase()}" validado con catálogo oficial OEM. Mostrando solo repuestos compatibles.`);
   };
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
-    if (selectedCategory !== 'todos') count++;
-    if (selectedBrand !== 'todos') count++;
+    count += selectedCategories.length;
+    count += selectedBrands.length;
     if (brandSegment !== 'todos') count++;
     if (searchFilter.trim() !== '') count++;
     if (onlyCompatible) count++;
     if (onlyOffers) count++;
     if (priceMax < 3500) count++;
     return count;
-  }, [selectedCategory, selectedBrand, brandSegment, searchFilter, onlyCompatible, onlyOffers, priceMax]);
+  }, [selectedCategories, selectedBrands, brandSegment, searchFilter, onlyCompatible, onlyOffers, priceMax]);
+
+  // Reusable Filter Sidebar Content component (used both in Desktop and Mobile drawer)
+  const renderFilterControls = (isMobile = false) => (
+    <div className="space-y-4">
+      {/* 1. TARJETA DESTACADA: ASISTENTE DE COMPATIBILIDAD & VIN */}
+      <div className="bg-white rounded-2xl border border-[#9D9D9C]/40 p-4 shadow-sm relative overflow-hidden space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-7 h-7 rounded-lg bg-[#212955] text-white flex items-center justify-center">
+              <span className="material-symbols-outlined text-[17px] text-[#F07F00]">directions_car</span>
+            </span>
+            <div>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#F07F00] block">
+                Tu Vehículo Guardado
+              </span>
+              <h4 className="font-bold text-xs text-[#212955] truncate max-w-[190px]">
+                {activeGarage.brand} {activeGarage.model} ({activeGarage.year})
+              </h4>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsGarageModalOpen(true)}
+            className="text-[11px] font-bold text-[#F07F00] hover:underline cursor-pointer"
+            title="Cambiar vehículo"
+          >
+            Cambiar
+          </button>
+        </div>
+
+        {/* Toggle Solo Compatibles */}
+        <label className={`flex items-start gap-2.5 p-2.5 rounded-xl border transition-all cursor-pointer ${
+          onlyCompatible
+            ? 'bg-[#212955]/5 border-[#212955] text-[#212955]'
+            : 'bg-gray-50 border-[#9D9D9C]/30 text-gray-700 hover:bg-gray-100'
+        }`}>
+          <input
+            type="checkbox"
+            checked={onlyCompatible}
+            onChange={(e) => setOnlyCompatible(e.target.checked)}
+            className="w-4 h-4 mt-0.5 accent-[#F07F00] rounded cursor-pointer shrink-0"
+          />
+          <div className="text-xs">
+            <span className="font-bold block text-[#212955]">
+              Solo repuestos 100% compatibles
+            </span>
+            <span className="text-[10px] text-gray-500 leading-tight block">
+              Filtra piezas que calcen con {activeGarage.brand} {activeGarage.model.split(' ')[0]}
+            </span>
+          </div>
+        </label>
+
+        {/* VIN Check mini-form */}
+        <div className="pt-2 border-t border-[#9D9D9C]/20">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] font-bold text-[#212955] flex items-center gap-1">
+              <span className="material-symbols-outlined text-[14px] text-[#F07F00]">pin</span>
+              Validar por Chasis (VIN)
+            </span>
+            {vinValidated && (
+              <span className="text-[9px] bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                <span className="material-symbols-outlined text-[11px]">verified</span>
+                OEM OK
+              </span>
+            )}
+          </div>
+          <form onSubmit={handleVinValidate} className="flex gap-1.5">
+            <input
+              type="text"
+              value={vinInput}
+              onChange={(e) => setVinInput(e.target.value.toUpperCase())}
+              placeholder="17 dígitos de chasis..."
+              maxLength={17}
+              className="flex-1 bg-gray-50 border border-[#9D9D9C]/50 rounded-xl px-2.5 py-1.5 text-xs font-mono uppercase tracking-wider text-[#212955] focus:outline-none focus:border-[#212955] focus:bg-white"
+            />
+            <button
+              type="submit"
+              className="bg-[#212955] hover:bg-[#2b356e] text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer shrink-0"
+            >
+              Cotejar
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {/* 2. PANEL PRINCIPAL DE FILTROS FACETADOS ESTILO FALABELLA */}
+      <div className="bg-white rounded-2xl border border-[#9D9D9C]/40 shadow-sm overflow-hidden divide-y divide-[#9D9D9C]/20">
+        {/* Cabecera del panel */}
+        <div className="p-4 flex items-center justify-between bg-gray-50/70">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[#F07F00] text-lg">tune</span>
+            <span className="font-bold text-sm text-[#212955]">Filtros Seleccionados</span>
+            {activeFiltersCount > 0 && (
+              <span className="bg-[#F07F00] text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-xs">
+                {activeFiltersCount}
+              </span>
+            )}
+          </div>
+          {activeFiltersCount > 0 && (
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="text-xs text-[#F07F00] hover:underline font-bold cursor-pointer"
+            >
+              Limpiar todo
+            </button>
+          )}
+        </div>
+
+        {/* Buscador de texto rápido */}
+        <div className="p-4">
+          <label className="block text-[11px] font-bold text-[#212955] uppercase tracking-wider mb-1.5">
+            Búsqueda de Repuesto / OEM
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+              placeholder="SKU, OEM, repuesto..."
+              className="w-full bg-gray-50 border border-[#9D9D9C]/50 rounded-xl p-2.5 pl-8 text-xs font-medium text-[#212955] focus:outline-none focus:border-[#212955] focus:bg-white"
+            />
+            <span className="material-symbols-outlined absolute left-2.5 top-2.5 text-[#9D9D9C] text-base pointer-events-none">
+              search
+            </span>
+            {searchFilter && (
+              <button
+                type="button"
+                onClick={() => setSearchFilter('')}
+                className="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-700 text-xs font-bold"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ACORDEÓN 1: CATEGORÍAS & SISTEMAS (Multi-selección) */}
+        <div>
+          <button
+            type="button"
+            onClick={() => toggleSection('categories')}
+            className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors text-left cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-xs uppercase tracking-wider text-[#212955]">
+                Categorías &amp; Sistemas
+              </span>
+              {selectedCategories.length > 0 && (
+                <span className="bg-[#F07F00] text-white text-[10px] font-extrabold px-1.5 py-0.2 rounded-full">
+                  {selectedCategories.length}
+                </span>
+              )}
+            </div>
+            <span
+              className={`material-symbols-outlined text-[#9D9D9C] text-lg transition-transform duration-200 ${
+                openSections.categories ? 'rotate-180' : ''
+              }`}
+            >
+              expand_more
+            </span>
+          </button>
+
+          {openSections.categories && (
+            <div className="px-4 pb-4 pt-1 space-y-1.5 max-h-64 overflow-y-auto pr-2 scrollbar-thin">
+              {/* Botón para desmarcar todas */}
+              {selectedCategories.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategories([])}
+                  className="text-[11px] text-[#F07F00] hover:underline font-bold mb-1 flex items-center gap-1 cursor-pointer"
+                >
+                  <span>✕</span> Deseleccionar todas las categorías
+                </button>
+              )}
+
+              {CATEGORIES.map((cat) => {
+                const isChecked = selectedCategories.includes(cat.id);
+                const count = autoParts.filter((p) => p.category === cat.id).length;
+
+                return (
+                  <label
+                    key={cat.id}
+                    className={`flex items-center justify-between p-2 rounded-xl text-xs cursor-pointer transition-colors ${
+                      isChecked
+                        ? 'bg-[#212955]/10 text-[#212955] font-bold'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 truncate">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => handleToggleCategory(cat.id)}
+                        className="w-4 h-4 accent-[#F07F00] rounded cursor-pointer shrink-0"
+                      />
+                      <span className="truncate">{cat.label}</span>
+                    </div>
+                    <span
+                      className={`text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ${
+                        isChecked
+                          ? 'bg-[#212955] text-white'
+                          : 'bg-gray-100 text-gray-500'
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* ACORDEÓN 2: MARCAS & FABRICANTES (Multi-selección + Buscador interno) */}
+        <div>
+          <button
+            type="button"
+            onClick={() => toggleSection('brands')}
+            className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors text-left cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-xs uppercase tracking-wider text-[#212955]">
+                Marcas &amp; Fabricantes
+              </span>
+              {selectedBrands.length > 0 && (
+                <span className="bg-[#F07F00] text-white text-[10px] font-extrabold px-1.5 py-0.2 rounded-full">
+                  {selectedBrands.length}
+                </span>
+              )}
+            </div>
+            <span
+              className={`material-symbols-outlined text-[#9D9D9C] text-lg transition-transform duration-200 ${
+                openSections.brands ? 'rotate-180' : ''
+              }`}
+            >
+              expand_more
+            </span>
+          </button>
+
+          {openSections.brands && (
+            <div className="px-4 pb-4 pt-1 space-y-2.5">
+              {/* Buscador interno de marcas */}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={brandSearchTerm}
+                  onChange={(e) => setBrandSearchTerm(e.target.value)}
+                  placeholder="Filtrar marca..."
+                  className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-lg py-1.5 pl-7 pr-6 text-xs text-[#212955] focus:outline-none focus:border-[#212955]"
+                />
+                <span className="material-symbols-outlined absolute left-2 top-2 text-[#9D9D9C] text-sm pointer-events-none">
+                  search
+                </span>
+                {brandSearchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setBrandSearchTerm('')}
+                    className="absolute right-2 top-2 text-gray-400 hover:text-gray-700 text-xs font-bold"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Selector de Segmento: Oficial vs Alternativa / China */}
+              <div className="grid grid-cols-3 gap-1 bg-gray-100 p-1 rounded-xl text-[10px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => setBrandSegment('todos')}
+                  className={`py-1 px-1.5 rounded-lg transition-all text-center cursor-pointer ${
+                    brandSegment === 'todos'
+                      ? 'bg-[#212955] text-white shadow-xs'
+                      : 'text-gray-600 hover:bg-white'
+                  }`}
+                >
+                  Todas
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBrandSegment('oficial')}
+                  className={`py-1 px-1.5 rounded-lg transition-all text-center cursor-pointer ${
+                    brandSegment === 'oficial'
+                      ? 'bg-[#212955] text-white shadow-xs'
+                      : 'text-gray-600 hover:bg-white'
+                  }`}
+                >
+                  OEM Oficial
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBrandSegment('alternativa')}
+                  className={`py-1 px-1.5 rounded-lg transition-all text-center cursor-pointer ${
+                    brandSegment === 'alternativa'
+                      ? 'bg-[#212955] text-white shadow-xs'
+                      : 'text-gray-600 hover:bg-white'
+                  }`}
+                >
+                  China / Alt.
+                </button>
+              </div>
+
+              {/* Botón para desmarcar marcas */}
+              {selectedBrands.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedBrands([])}
+                  className="text-[11px] text-[#F07F00] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                >
+                  <span>✕</span> Deseleccionar marcas ({selectedBrands.length})
+                </button>
+              )}
+
+              {/* Lista con checkboxes de marcas */}
+              <div className="space-y-1 max-h-56 overflow-y-auto pr-1 scrollbar-thin">
+                {visibleBrands.length === 0 ? (
+                  <p className="text-xs text-gray-400 italic py-2 text-center">
+                    No se encontró la marca "{brandSearchTerm}"
+                  </p>
+                ) : (
+                  visibleBrands.map((b) => {
+                    const isChecked = selectedBrands.includes(b.id);
+                    const count = autoParts.filter(
+                      (p) =>
+                        p.brand.toLowerCase().includes(b.id.toLowerCase()) ||
+                        b.id.toLowerCase().includes(p.brand.toLowerCase())
+                    ).length;
+
+                    return (
+                      <label
+                        key={b.id}
+                        className={`flex items-center justify-between p-2 rounded-xl text-xs cursor-pointer transition-colors ${
+                          isChecked
+                            ? 'bg-[#212955]/10 text-[#212955] font-bold'
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => handleToggleBrand(b.id)}
+                            className="w-4 h-4 accent-[#F07F00] rounded cursor-pointer shrink-0"
+                          />
+                          <span className="truncate">{b.label}</span>
+                          {b.badge && (
+                            <span
+                              className={`text-[9px] px-1 py-0.2 rounded font-bold shrink-0 ${
+                                isChecked
+                                  ? 'bg-[#212955] text-white'
+                                  : 'bg-gray-200 text-gray-600'
+                              }`}
+                            >
+                              {b.badge}
+                            </span>
+                          )}
+                        </div>
+                        <span
+                          className={`text-[10px] ml-1 shrink-0 ${
+                            isChecked ? 'text-[#212955] font-bold' : 'text-gray-400'
+                          }`}
+                        >
+                          ({count})
+                        </span>
+                      </label>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ACORDEÓN 3: RANGO DE PRECIO */}
+        <div>
+          <button
+            type="button"
+            onClick={() => toggleSection('price')}
+            className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors text-left cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-xs uppercase tracking-wider text-[#212955]">
+                Precio Máximo
+              </span>
+              {priceMax < 3500 && (
+                <span className="bg-[#F07F00] text-white text-[10px] font-extrabold px-1.5 py-0.2 rounded-full">
+                  1
+                </span>
+              )}
+            </div>
+            <span
+              className={`material-symbols-outlined text-[#9D9D9C] text-lg transition-transform duration-200 ${
+                openSections.price ? 'rotate-180' : ''
+              }`}
+            >
+              expand_more
+            </span>
+          </button>
+
+          {openSections.price && (
+            <div className="px-4 pb-4 pt-1 space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-500 font-medium">Tope seleccionado:</span>
+                <span className="font-extrabold text-sm text-[#212955] font-mono">
+                  S/ {priceMax.toLocaleString()}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="50"
+                max="3500"
+                step="50"
+                value={priceMax}
+                onChange={(e) => setPriceMax(Number(e.target.value))}
+                className="w-full accent-[#F07F00] cursor-pointer"
+              />
+              <div className="flex justify-between text-[10px] text-[#9D9D9C] font-mono">
+                <span>S/ 50</span>
+                <span>S/ 1,500</span>
+                <span>S/ 3,500+</span>
+              </div>
+
+              {/* Presets rápidos de precio */}
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {[
+                  { label: '< S/ 250', val: 250 },
+                  { label: '< S/ 600', val: 600 },
+                  { label: '< S/ 1,200', val: 1200 },
+                  { label: 'Todos', val: 3500 },
+                ].map((preset) => (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => setPriceMax(preset.val)}
+                    className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-colors cursor-pointer border ${
+                      priceMax === preset.val
+                        ? 'bg-[#212955] text-white border-[#212955]'
+                        : 'bg-gray-50 text-gray-700 border-[#9D9D9C]/30 hover:bg-gray-100'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ACORDEÓN 4: OFERTAS & PROMOCIONES */}
+        <div>
+          <button
+            type="button"
+            onClick={() => toggleSection('offers')}
+            className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors text-left cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-xs uppercase tracking-wider text-[#212955]">
+                Ofertas &amp; Beneficios
+              </span>
+              {onlyOffers && (
+                <span className="bg-[#F07F00] text-white text-[10px] font-extrabold px-1.5 py-0.2 rounded-full">
+                  1
+                </span>
+              )}
+            </div>
+            <span
+              className={`material-symbols-outlined text-[#9D9D9C] text-lg transition-transform duration-200 ${
+                openSections.offers ? 'rotate-180' : ''
+              }`}
+            >
+              expand_more
+            </span>
+          </button>
+
+          {openSections.offers && (
+            <div className="px-4 pb-4 pt-1 space-y-2">
+              <label className="flex items-center gap-2.5 text-xs font-semibold text-gray-700 cursor-pointer p-1.5 rounded-lg hover:bg-gray-50">
+                <input
+                  type="checkbox"
+                  checked={onlyOffers}
+                  onChange={(e) => setOnlyOffers(e.target.checked)}
+                  className="w-4 h-4 accent-[#F07F00] rounded cursor-pointer"
+                />
+                <div className="flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-amber-500 text-sm">local_offer</span>
+                  <span>Solo con Descuento o Promoción</span>
+                </div>
+              </label>
+
+              <label className="flex items-center gap-2.5 text-xs font-semibold text-gray-700 cursor-pointer p-1.5 rounded-lg hover:bg-gray-50">
+                <input
+                  type="checkbox"
+                  checked={onlyCompatible}
+                  onChange={(e) => setOnlyCompatible(e.target.checked)}
+                  className="w-4 h-4 accent-[#F07F00] rounded cursor-pointer"
+                />
+                <div className="flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-emerald-600 text-sm">verified</span>
+                  <span>Garantía de Calce para {activeGarage.brand}</span>
+                </div>
+              </label>
+            </div>
+          )}
+        </div>
+
+        {/* ACORDEÓN 5: CERTIFICACIÓN & GARANTÍA */}
+        <div>
+          <button
+            type="button"
+            onClick={() => toggleSection('compatibility')}
+            className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors text-left cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-xs uppercase tracking-wider text-[#212955]">
+                Garantía y Entrega
+              </span>
+            </div>
+            <span
+              className={`material-symbols-outlined text-[#9D9D9C] text-lg transition-transform duration-200 ${
+                openSections.compatibility ? 'rotate-180' : ''
+              }`}
+            >
+              expand_more
+            </span>
+          </button>
+
+          {openSections.compatibility && (
+            <div className="px-4 pb-4 pt-1 space-y-2 text-xs text-gray-600">
+              <div className="flex items-center gap-2 p-2 rounded-xl bg-gray-50">
+                <span className="material-symbols-outlined text-emerald-600 text-base">local_shipping</span>
+                <span>Despacho a todo el Perú (24-48 hrs)</span>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded-xl bg-gray-50">
+                <span className="material-symbols-outlined text-[#212955] text-base">build</span>
+                <span>Instalación disponible en Taller Nor Celis</span>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded-xl bg-gray-50">
+                <span className="material-symbols-outlined text-[#F07F00] text-base">verified_user</span>
+                <span>12 meses de garantía oficial por defecto</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-gutter py-6 space-y-6">
       {/* Active Garage Vehicle Banner */}
-      <div className="bg-primary text-white rounded-3xl p-5 sm:p-6 shadow-xl border border-primary-container relative overflow-hidden">
+      <div className="bg-[#212955] text-white rounded-3xl p-5 sm:p-6 shadow-xl border border-[#212955]/30 relative overflow-hidden">
         <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-secondary-container text-white flex items-center justify-center font-bold shadow-lg shrink-0">
+            <div className="w-14 h-14 rounded-2xl bg-[#F07F00] text-white flex items-center justify-center font-bold shadow-lg shrink-0">
               <span className="material-symbols-outlined text-3xl">garage</span>
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-secondary-fixed bg-secondary/80 px-2.5 py-0.5 rounded-full">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#212955] bg-white px-2.5 py-0.5 rounded-full">
                   Tu Garaje Activo
                 </span>
                 <span className="flex items-center gap-1 text-[11px] text-emerald-400 font-bold">
@@ -227,7 +877,7 @@ export const PartsCatalogView: React.FC = () => {
               <h2 className="font-headline font-bold text-xl sm:text-2xl text-white mt-1">
                 {activeGarage.brand} {activeGarage.model} ({activeGarage.year})
               </h2>
-              <div className="text-xs text-surface-container-highest/80 flex flex-wrap gap-2 mt-0.5 font-mono">
+              <div className="text-xs text-gray-300 flex flex-wrap gap-2 mt-0.5 font-mono">
                 <span>Placa: <strong className="text-white">{activeGarage.plate}</strong></span>
                 <span>•</span>
                 <span>{activeGarage.engine}</span>
@@ -243,12 +893,14 @@ export const PartsCatalogView: React.FC = () => {
 
           <div className="flex flex-wrap items-center gap-3">
             {/* Toggle switch for compatible only */}
-            <label className="flex items-center gap-2.5 bg-white/10 hover:bg-white/15 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer border border-white/15 transition-colors">
+            <label className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer border transition-colors ${
+              onlyCompatible ? 'bg-[#F07F00] text-white border-[#F07F00]' : 'bg-white/10 hover:bg-white/15 text-white border-white/15'
+            }`}>
               <input
                 type="checkbox"
                 checked={onlyCompatible}
                 onChange={(e) => setOnlyCompatible(e.target.checked)}
-                className="w-4 h-4 accent-secondary-container rounded cursor-pointer"
+                className="w-4 h-4 accent-white rounded cursor-pointer"
               />
               <span>Filtrar solo compatibles con {activeGarage.model.split(' ')[0]}</span>
             </label>
@@ -265,313 +917,95 @@ export const PartsCatalogView: React.FC = () => {
       </div>
 
       {/* Brand Logos Quick Carousel / Pills */}
-      <div className="bg-surface-container-lowest p-4 rounded-2xl border border-surface-container shadow-xs">
+      <div className="bg-white p-4 rounded-2xl border border-[#9D9D9C]/30 shadow-xs">
         <div className="flex items-center justify-between mb-2.5">
-          <span className="text-xs font-bold text-primary flex items-center gap-1.5 uppercase tracking-wider">
-            <span className="material-symbols-outlined text-secondary text-sm">stars</span>
+          <span className="text-xs font-bold text-[#212955] flex items-center gap-1.5 uppercase tracking-wider">
+            <span className="material-symbols-outlined text-[#F07F00] text-sm">stars</span>
             Marcas Oficiales Nor Celis
           </span>
-          <span className="text-[11px] text-outline">Click para filtrar por fabricante</span>
+          <span className="text-[11px] text-[#9D9D9C]">Click para filtrar o combinar marcas</span>
         </div>
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-1">
+          <button
+            onClick={() => setSelectedBrands([])}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border cursor-pointer flex items-center gap-1.5 min-h-[38px] ${
+              selectedBrands.length === 0
+                ? 'bg-[#212955] text-white border-[#212955] shadow-xs'
+                : 'bg-gray-50 text-gray-700 border-[#9D9D9C]/30 hover:border-[#212955]/40 hover:bg-gray-100'
+            }`}
+          >
+            <span>Todas las Marcas</span>
+          </button>
           {[
-            { name: 'Todas', val: 'todos', count: autoParts.length },
             { name: 'Mickey Thompson (M/T)', val: 'Mickey Thompson' },
-            { name: 'KEKO', val: 'KEKO' },
-            { name: 'Mobil', val: 'Mobil' },
+            { name: 'KEKO 4x4', val: 'KEKO' },
+            { name: 'Mobil 1', val: 'Mobil' },
             { name: 'LLumar', val: 'LLumar' },
             { name: 'BLACK RHINO', val: 'BLACK RHINO' },
-            { name: '3M', val: '3M' },
-            { name: 'TRAKKO® AUTORUS', val: 'TRAKKO® AUTORUS' },
+            { name: '3M Auto', val: '3M' },
+            { name: 'TRAKKO®', val: 'TRAKKO® AUTORUS' },
             { name: 'TOYOTA OEM', val: 'TOYOTA Genuino' },
             { name: 'Brembo', val: 'Brembo Official' },
             { name: 'Bosch', val: 'Bosch Automotive' },
-            { name: 'KYB', val: 'KYB Shocks & Struts' },
+            { name: 'KYB Shocks', val: 'KYB Shocks & Struts' },
             { name: 'Denso', val: 'Denso Corporation' },
-          ].map((b) => (
-            <button
-              key={b.val}
-              onClick={() => setSelectedBrand(selectedBrand === b.val ? 'todos' : b.val)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border cursor-pointer flex items-center gap-1.5 min-h-[38px] ${
-                selectedBrand === b.val
-                  ? 'bg-primary text-white border-primary shadow-xs'
-                  : 'bg-surface-container-low text-on-surface border-surface-container hover:border-primary/40 hover:bg-surface-container'
-              }`}
-            >
-              <span>{b.name}</span>
-            </button>
-          ))}
+            { name: 'Sailun Tire', val: 'Sailun Tire' },
+            { name: 'Triangle', val: 'Triangle Tire' },
+          ].map((b) => {
+            const isSelected = selectedBrands.includes(b.val);
+            return (
+              <button
+                key={b.val}
+                onClick={() => handleToggleBrand(b.val)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border cursor-pointer flex items-center gap-1.5 min-h-[38px] ${
+                  isSelected
+                    ? 'bg-[#F07F00] text-white border-[#F07F00] shadow-xs'
+                    : 'bg-gray-50 text-gray-700 border-[#9D9D9C]/30 hover:border-[#212955]/40 hover:bg-gray-100'
+                }`}
+              >
+                <span>{b.name}</span>
+                {isSelected && <span className="text-[10px]">✓</span>}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Main Grid: Faceted Sidebar + Product Catalog */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Mobile Filter Toggle Button */}
-        <div className="lg:hidden col-span-1 flex items-center justify-between bg-surface-container-lowest p-3.5 rounded-2xl border border-surface-container">
+        <div className="lg:hidden col-span-1 flex items-center justify-between bg-white p-3.5 rounded-2xl border border-[#9D9D9C]/30">
           <button
             onClick={() => setIsMobileFiltersOpen(true)}
-            className="flex items-center gap-2 bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-xl min-h-[44px] cursor-pointer"
+            className="flex items-center gap-2 bg-[#212955] text-white text-xs font-bold px-4 py-2.5 rounded-xl min-h-[44px] cursor-pointer"
           >
-            <span className="material-symbols-outlined text-base">tune</span>
+            <span className="material-symbols-outlined text-base text-[#F07F00]">tune</span>
             <span>Filtros y Categorías ({activeFiltersCount})</span>
           </button>
-          <span className="text-xs text-outline font-medium">
-            <strong>{filteredParts.length}</strong> productos
+          <span className="text-xs text-gray-600 font-medium">
+            <strong className="text-[#212955]">{filteredParts.length}</strong> productos
           </span>
         </div>
 
-        {/* Sidebar Filters Desktop */}
-        <aside className="hidden lg:block lg:col-span-3 space-y-5">
-          <div className="bg-surface-container-lowest p-5 rounded-3xl border border-surface-container shadow-xs space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-surface-container">
-              <h3 className="font-headline font-bold text-sm text-primary flex items-center gap-2">
-                <span className="material-symbols-outlined text-lg text-secondary">filter_list</span>
-                Filtros Especializados
-                {activeFiltersCount > 0 && (
-                  <span className="bg-secondary-container text-white text-[10px] font-extrabold px-2 py-0.2 rounded-full">
-                    {activeFiltersCount}
-                  </span>
-                )}
-              </h3>
-              {activeFiltersCount > 0 && (
-                <button
-                  onClick={handleResetFilters}
-                  className="text-[11px] text-secondary hover:underline font-bold cursor-pointer"
-                >
-                  Limpiar Todo
-                </button>
-              )}
-            </div>
-
-            {/* Quick Text Filter */}
-            <div>
-              <label className="block text-xs font-bold text-on-surface mb-1.5">
-                Búsqueda Rápida
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={searchFilter}
-                  onChange={(e) => setSearchFilter(e.target.value)}
-                  placeholder="SKU, OEM, repuesto o marca..."
-                  className="w-full bg-surface-container-low border border-surface-container rounded-xl p-2.5 pl-8 text-xs font-medium focus:outline-none focus:border-primary"
-                />
-                <span className="material-symbols-outlined absolute left-2.5 top-2.5 text-outline text-base">
-                  search
-                </span>
-                {searchFilter && (
-                  <button
-                    onClick={() => setSearchFilter('')}
-                    className="absolute right-2.5 top-2.5 text-outline hover:text-on-surface text-xs"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Categorías del Sistema */}
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-on-surface uppercase tracking-wider">
-                Categorías &amp; Sistemas
-              </label>
-              <div className="space-y-1 max-h-72 overflow-y-auto pr-1">
-                {CATEGORIES.map((cat) => {
-                  const count = cat.id === 'todos' 
-                    ? autoParts.length 
-                    : autoParts.filter((p) => p.category === cat.id).length;
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => setSelectedCategory(cat.id)}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
-                        selectedCategory === cat.id
-                          ? 'bg-primary text-white font-bold shadow-xs'
-                          : 'text-on-surface hover:bg-surface-container-low'
-                      }`}
-                    >
-                      <span className="truncate pr-1">{cat.label}</span>
-                      <span
-                        className={`text-[10px] px-1.5 py-0.2 rounded-full shrink-0 ${
-                          selectedCategory === cat.id
-                            ? 'bg-white/20 text-white'
-                            : 'bg-surface-container text-outline'
-                        }`}
-                      >
-                        {count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Tipo de Marca: Oficiales OEM vs Alternativas / Chinas */}
-            <div className="space-y-2 pt-2 border-t border-surface-container">
-              <label className="block text-xs font-bold text-on-surface uppercase tracking-wider">
-                Línea de Marca
-              </label>
-              <div className="grid grid-cols-3 gap-1 bg-surface-container p-1 rounded-xl text-[11px] font-semibold">
-                <button
-                  type="button"
-                  onClick={() => setBrandSegment('todos')}
-                  className={`py-1.5 px-2 rounded-lg transition-all text-center cursor-pointer ${
-                    brandSegment === 'todos'
-                      ? 'bg-primary text-white font-bold shadow-xs'
-                      : 'text-on-surface hover:bg-surface-container-low'
-                  }`}
-                >
-                  Todas
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBrandSegment('oficial')}
-                  className={`py-1.5 px-2 rounded-lg transition-all text-center cursor-pointer ${
-                    brandSegment === 'oficial'
-                      ? 'bg-primary text-white font-bold shadow-xs'
-                      : 'text-on-surface hover:bg-surface-container-low'
-                  }`}
-                >
-                  Oficial OEM
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBrandSegment('alternativa')}
-                  className={`py-1.5 px-2 rounded-lg transition-all text-center cursor-pointer ${
-                    brandSegment === 'alternativa'
-                      ? 'bg-primary text-white font-bold shadow-xs'
-                      : 'text-on-surface hover:bg-surface-container-low'
-                  }`}
-                >
-                  Alternativa / China
-                </button>
-              </div>
-            </div>
-
-            {/* Fabricantes y Marcas */}
-            <div className="space-y-2 pt-2 border-t border-surface-container">
-              <label className="block text-xs font-bold text-on-surface uppercase tracking-wider">
-                Marca / Fabricante
-              </label>
-              <div className="space-y-1 text-xs max-h-56 overflow-y-auto pr-1">
-                {ALL_PART_BRANDS.filter((b) => brandSegment === 'todos' || b.segment === 'todos' || b.segment === brandSegment).map((b) => {
-                  const isSelected = selectedBrand === b.id;
-                  const count = b.id === 'todos'
-                    ? autoParts.length
-                    : autoParts.filter((p) => p.brand.toLowerCase().includes(b.id.toLowerCase()) || b.id.toLowerCase().includes(p.brand.toLowerCase())).length;
-                  return (
-                    <button
-                      key={b.id}
-                      onClick={() => setSelectedBrand(b.id)}
-                      className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-                        isSelected
-                          ? 'bg-secondary text-white font-bold'
-                          : 'text-on-surface-variant hover:bg-surface-container-low'
-                      }`}
-                    >
-                      <div className="flex items-center gap-1.5 truncate">
-                        <span className="truncate">{b.label}</span>
-                        {b.badge && (
-                          <span className={`text-[9px] px-1 py-0.2 rounded font-bold shrink-0 ${isSelected ? 'bg-white/20 text-white' : 'bg-surface-container text-outline'}`}>
-                            {b.badge}
-                          </span>
-                        )}
-                      </div>
-                      <span className={`text-[10px] shrink-0 ml-1 ${isSelected ? 'text-white' : 'text-outline'}`}>
-                        ({count})
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Price Slider */}
-            <div className="space-y-2 pt-2 border-t border-surface-container">
-              <div className="flex items-center justify-between text-xs font-bold">
-                <span className="uppercase tracking-wider">Precio Máximo</span>
-                <span className="text-primary font-mono font-bold">S/ {priceMax.toLocaleString()}</span>
-              </div>
-              <input
-                type="range"
-                min="50"
-                max="3500"
-                step="50"
-                value={priceMax}
-                onChange={(e) => setPriceMax(Number(e.target.value))}
-                className="w-full accent-primary cursor-pointer"
-              />
-              <div className="flex justify-between text-[10px] text-outline font-mono">
-                <span>S/ 50</span>
-                <span>S/ 3,500+</span>
-              </div>
-            </div>
-
-            {/* Checkboxes extra */}
-            <div className="space-y-2.5 pt-2 border-t border-surface-container">
-              <label className="flex items-center gap-2 text-xs font-semibold text-on-surface cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={onlyOffers}
-                  onChange={(e) => setOnlyOffers(e.target.checked)}
-                  className="w-4 h-4 accent-secondary-container rounded cursor-pointer"
-                />
-                <span>Solo productos con Descuento / Promo</span>
-              </label>
-              <label className="flex items-center gap-2 text-xs font-semibold text-on-surface cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={onlyCompatible}
-                  onChange={(e) => setOnlyCompatible(e.target.checked)}
-                  className="w-4 h-4 accent-secondary-container rounded cursor-pointer"
-                />
-                <span>Solo compatibles con mi vehículo activo</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Live VIN Validator Box */}
-          <div className="bg-surface-container-low p-5 rounded-3xl border border-surface-container space-y-3">
-            <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-wider">
-              <span className="material-symbols-outlined text-base text-secondary">pin</span>
-              ¿Dudas de Compatibilidad?
-            </div>
-            <p className="text-xs text-outline leading-relaxed">
-              Ingresa los 17 dígitos del número de Chasis (VIN) de tu tarjeta de propiedad y nuestro sistema cotejará la compatibilidad de fábrica al 100%.
-            </p>
-            <form onSubmit={handleVinValidate} className="space-y-2">
-              <input
-                type="text"
-                value={vinInput}
-                onChange={(e) => setVinInput(e.target.value.toUpperCase())}
-                placeholder="Ej: 4T1B11HK5JU123456"
-                maxLength={17}
-                className="w-full bg-white border border-surface-container rounded-xl p-2.5 text-xs font-mono uppercase tracking-wider focus:outline-none focus:border-primary"
-              />
-              <button
-                type="submit"
-                className="w-full bg-primary hover:bg-primary-container text-white py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[44px]"
-              >
-                Validar Compatibilidad de Fábrica
-              </button>
-            </form>
-          </div>
+        {/* Sidebar Filters Desktop (CSS Target: .filter-panel-container) */}
+        <aside className="filter-panel-container hidden lg:block lg:col-span-3 max-h-[calc(100vh-2rem)] overflow-y-auto scrollbar-thin pr-1 pb-6">
+          {renderFilterControls(false)}
         </aside>
 
         {/* Product Grid Content */}
         <main className="lg:col-span-9 space-y-4">
           {/* Active filter chips & Top Sort Toolbar */}
-          <div className="bg-surface-container-lowest p-4 rounded-2xl border border-surface-container space-y-3">
+          <div className="bg-white p-4 rounded-2xl border border-[#9D9D9C]/30 space-y-3 shadow-xs">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div className="text-xs text-outline font-medium">
-                Mostrando <strong className="text-on-surface font-bold text-sm text-primary">{filteredParts.length}</strong> repuestos &amp; accesorios garantizados
+              <div className="text-xs text-gray-500 font-medium">
+                Mostrando <strong className="text-[#212955] font-bold text-sm">{filteredParts.length}</strong> repuestos &amp; accesorios garantizados
               </div>
               <div className="flex items-center gap-2 text-xs w-full sm:w-auto justify-between sm:justify-end">
-                <span className="text-outline hidden sm:inline">Ordenar por:</span>
+                <span className="text-gray-500 hidden sm:inline">Ordenar por:</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
-                  className="bg-surface-container-low border border-surface-container rounded-xl p-2 text-xs font-semibold focus:outline-none cursor-pointer min-h-[40px]"
+                  className="bg-gray-50 border border-[#9D9D9C]/40 text-[#212955] rounded-xl p-2 text-xs font-semibold focus:outline-none cursor-pointer min-h-[40px]"
                 >
                   <option value="featured">Destacados &amp; Recomendados OEM</option>
                   <option value="price-asc">Precio: Menor a Mayor</option>
@@ -582,47 +1016,115 @@ export const PartsCatalogView: React.FC = () => {
               </div>
             </div>
 
-            {/* Active filter tags */}
+            {/* Active filter chips tags */}
             {activeFiltersCount > 0 && (
-              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-surface-container text-xs">
-                <span className="text-[11px] font-bold text-outline">Filtros activos:</span>
-                {selectedCategory !== 'todos' && (
-                  <span className="inline-flex items-center gap-1 bg-primary/10 text-primary font-bold px-2.5 py-1 rounded-lg border border-primary/20">
-                    Cat: {CATEGORIES.find((c) => c.id === selectedCategory)?.label || selectedCategory}
-                    <button onClick={() => setSelectedCategory('todos')} className="hover:text-red-500 font-black ml-1">✕</button>
+              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100 text-xs">
+                <span className="text-[11px] font-bold text-gray-400">Filtros activos:</span>
+
+                {/* Selected categories chips */}
+                {selectedCategories.map((catId) => {
+                  const catObj = CATEGORIES.find((c) => c.id === catId);
+                  return (
+                    <span
+                      key={catId}
+                      className="inline-flex items-center gap-1 bg-[#212955]/10 text-[#212955] font-bold px-2.5 py-1 rounded-lg border border-[#212955]/20"
+                    >
+                      <span>Cat: {catObj?.label || catId}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleCategory(catId)}
+                        className="hover:text-red-500 font-black ml-1 text-xs cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  );
+                })}
+
+                {/* Selected brands chips */}
+                {selectedBrands.map((brandId) => (
+                  <span
+                    key={brandId}
+                    className="inline-flex items-center gap-1 bg-[#F07F00]/10 text-[#212955] font-bold px-2.5 py-1 rounded-lg border border-[#F07F00]/30"
+                  >
+                    <span>Marca: {brandId}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleBrand(brandId)}
+                      className="hover:text-red-500 font-black ml-1 text-xs cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+
+                {brandSegment !== 'todos' && (
+                  <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-800 font-bold px-2.5 py-1 rounded-lg border border-gray-200">
+                    Línea: {brandSegment === 'oficial' ? 'OEM Oficial' : 'China / Alt.'}
+                    <button
+                      type="button"
+                      onClick={() => setBrandSegment('todos')}
+                      className="hover:text-red-500 font-black ml-1 text-xs cursor-pointer"
+                    >
+                      ✕
+                    </button>
                   </span>
                 )}
-                {selectedBrand !== 'todos' && (
-                  <span className="inline-flex items-center gap-1 bg-secondary/10 text-secondary font-bold px-2.5 py-1 rounded-lg border border-secondary/20">
-                    Marca: {selectedBrand}
-                    <button onClick={() => setSelectedBrand('todos')} className="hover:text-red-500 font-black ml-1">✕</button>
-                  </span>
-                )}
+
                 {searchFilter.trim() !== '' && (
-                  <span className="inline-flex items-center gap-1 bg-surface-container text-on-surface font-semibold px-2.5 py-1 rounded-lg border border-surface-container-high">
+                  <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-800 font-semibold px-2.5 py-1 rounded-lg border border-gray-200">
                     Búsqueda: "{searchFilter}"
-                    <button onClick={() => setSearchFilter('')} className="hover:text-red-500 font-black ml-1">✕</button>
+                    <button
+                      type="button"
+                      onClick={() => setSearchFilter('')}
+                      className="hover:text-red-500 font-black ml-1 text-xs cursor-pointer"
+                    >
+                      ✕
+                    </button>
                   </span>
                 )}
+
                 {onlyOffers && (
                   <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 font-bold px-2.5 py-1 rounded-lg">
                     Con Oferta / Promo
-                    <button onClick={() => setOnlyOffers(false)} className="hover:text-red-500 font-black ml-1">✕</button>
+                    <button
+                      type="button"
+                      onClick={() => setOnlyOffers(false)}
+                      className="hover:text-red-500 font-black ml-1 text-xs cursor-pointer"
+                    >
+                      ✕
+                    </button>
                   </span>
                 )}
+
                 {onlyCompatible && (
                   <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-900 font-bold px-2.5 py-1 rounded-lg">
                     Compatible {activeGarage.model.split(' ')[0]}
-                    <button onClick={() => setOnlyCompatible(false)} className="hover:text-red-500 font-black ml-1">✕</button>
+                    <button
+                      type="button"
+                      onClick={() => setOnlyCompatible(false)}
+                      className="hover:text-red-500 font-black ml-1 text-xs cursor-pointer"
+                    >
+                      ✕
+                    </button>
                   </span>
                 )}
+
                 {priceMax < 3500 && (
-                  <span className="inline-flex items-center gap-1 bg-surface-container text-on-surface font-semibold px-2.5 py-1 rounded-lg">
-                    Hasta S/ {priceMax}
-                    <button onClick={() => setPriceMax(3500)} className="hover:text-red-500 font-black ml-1">✕</button>
+                  <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-800 font-semibold px-2.5 py-1 rounded-lg">
+                    Hasta S/ {priceMax.toLocaleString()}
+                    <button
+                      type="button"
+                      onClick={() => setPriceMax(3500)}
+                      className="hover:text-red-500 font-black ml-1 text-xs cursor-pointer"
+                    >
+                      ✕
+                    </button>
                   </span>
                 )}
+
                 <button
+                  type="button"
                   onClick={handleResetFilters}
                   className="text-xs text-red-600 hover:underline font-bold ml-auto cursor-pointer"
                 >
@@ -634,17 +1136,20 @@ export const PartsCatalogView: React.FC = () => {
 
           {/* Product Cards Grid */}
           {filteredParts.length === 0 ? (
-            <div className="bg-surface-container-lowest p-12 rounded-3xl border border-surface-container text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mx-auto text-outline">
+            <div className="bg-white p-12 rounded-3xl border border-[#9D9D9C]/30 text-center space-y-4 shadow-sm">
+              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto text-[#9D9D9C]">
                 <span className="material-symbols-outlined text-3xl">search_off</span>
               </div>
-              <h3 className="text-lg font-bold text-primary">No se encontraron repuestos con los filtros seleccionados</h3>
-              <p className="text-xs text-outline max-w-md mx-auto">
-                Prueba ajustando el rango de precio, cambiando la marca o desactivando el filtro de compatibilidad estricta.
+              <h3 className="text-lg font-bold text-[#212955]">
+                No se encontraron repuestos con los filtros seleccionados
+              </h3>
+              <p className="text-xs text-gray-500 max-w-md mx-auto">
+                Prueba ajustando el rango de precio, desmarcando algunas marcas o desactivando el filtro de compatibilidad estricta.
               </p>
               <button
+                type="button"
                 onClick={handleResetFilters}
-                className="bg-primary hover:bg-primary-container text-white text-xs font-bold px-6 py-3 rounded-xl cursor-pointer min-h-[44px]"
+                className="bg-[#212955] hover:bg-[#2b356e] text-white text-xs font-bold px-6 py-3 rounded-xl cursor-pointer min-h-[44px]"
               >
                 Restablecer Filtros de Catálogo
               </button>
@@ -656,12 +1161,12 @@ export const PartsCatalogView: React.FC = () => {
                 return (
                   <div
                     key={part.id}
-                    className="bg-surface-container-lowest rounded-3xl border border-surface-container hover:border-primary/40 hover:shadow-lg transition-all flex flex-col justify-between overflow-hidden group"
+                    className="bg-white rounded-3xl border border-[#9D9D9C]/30 hover:border-[#212955]/40 hover:shadow-lg transition-all flex flex-col justify-between overflow-hidden group"
                   >
                     {/* Photo area with Quick Zoom Button */}
                     <div
                       onClick={() => openPartDetail(part.sku)}
-                      className="relative aspect-video bg-surface-container-low p-4 flex items-center justify-center overflow-hidden cursor-pointer"
+                      className="relative aspect-video bg-gray-50 p-4 flex items-center justify-center overflow-hidden cursor-pointer"
                     >
                       <SafeImage
                         src={part.image}
@@ -673,12 +1178,12 @@ export const PartsCatalogView: React.FC = () => {
                         loading="lazy"
                       />
                       {part.badge && (
-                        <span className="absolute top-3 left-3 bg-primary text-white text-[10px] font-extrabold px-2.5 py-1 rounded-md shadow-sm">
+                        <span className="absolute top-3 left-3 bg-[#212955] text-white text-[10px] font-extrabold px-2.5 py-1 rounded-md shadow-sm">
                           {part.badge}
                         </span>
                       )}
                       {part.discount && (
-                        <span className="absolute bottom-3 left-3 bg-secondary-container text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">
+                        <span className="absolute bottom-3 left-3 bg-[#F07F00] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">
                           {part.discount}
                         </span>
                       )}
@@ -690,7 +1195,7 @@ export const PartsCatalogView: React.FC = () => {
                           e.stopPropagation();
                           setZoomModalPart(part);
                         }}
-                        className="absolute bottom-3 right-3 bg-white/90 hover:bg-primary hover:text-white text-on-surface text-[11px] font-bold px-2.5 py-1 rounded-xl shadow-md border border-surface-container flex items-center gap-1 transition-all opacity-0 group-hover:opacity-100 hover:scale-105 cursor-pointer z-10"
+                        className="absolute bottom-3 right-3 bg-white/90 hover:bg-[#212955] hover:text-white text-[#212955] text-[11px] font-bold px-2.5 py-1 rounded-xl shadow-md border border-[#9D9D9C]/30 flex items-center gap-1 transition-all opacity-0 group-hover:opacity-100 hover:scale-105 cursor-pointer z-10"
                         title="Ver con Zoom Focal HD"
                       >
                         <span className="material-symbols-outlined text-[16px]">zoom_in</span>
@@ -698,28 +1203,26 @@ export const PartsCatalogView: React.FC = () => {
                       </button>
 
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleWishlist({
                             id: part.id,
                             type: 'part',
                             title: part.name,
-                            subtitle: part.compatibleVehicle,
+                            subtitle: `${part.brand} • SKU: ${part.sku}`,
                             sku: part.sku,
                             priceSoles: part.priceSoles,
                             priceUsd: part.priceUsd,
                             oldPriceSoles: part.oldPriceSoles,
                             image: part.image,
-                            categoryBadge: 'Repuesto Oficial',
+                            categoryBadge: part.brandType === 'alternativa' ? 'Alternativa / China' : 'OEM Oficial',
                           });
                         }}
-                        className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer z-10 ${
-                          inWish
-                            ? 'bg-secondary-container text-white shadow-md'
-                            : 'bg-white/80 hover:bg-white text-on-surface shadow-xs'
+                        className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-xs cursor-pointer ${
+                          inWish ? 'bg-red-50 text-red-500' : 'bg-white/80 hover:bg-white text-gray-400 hover:text-red-500'
                         }`}
-                        title="Guardar en lista de deseos"
-                        aria-label="Guardar en favoritos"
+                        title={inWish ? 'Quitar de Favoritos' : 'Guardar en Favoritos'}
                       >
                         <span className="material-symbols-outlined text-[18px]">
                           {inWish ? 'favorite' : 'favorite_border'}
@@ -727,80 +1230,81 @@ export const PartsCatalogView: React.FC = () => {
                       </button>
                     </div>
 
-                    {/* Content area */}
-                    <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                      <div className="space-y-2">
-                        {/* Brand & SKU */}
-                        <div className="flex items-center justify-between text-[11px] font-mono">
-                          <span className="font-bold text-secondary uppercase tracking-wider">{part.brand}</span>
-                          <span className="text-outline">SKU: {part.sku}</span>
+                    {/* Part Details Info */}
+                    <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="font-extrabold uppercase tracking-wider text-[#F07F00]">
+                            {part.brand}
+                          </span>
+                          <span className="font-mono text-gray-400 text-[10px]">
+                            SKU: {part.sku}
+                          </span>
                         </div>
 
-                        {/* Title */}
-                        <h4
+                        <h3
                           onClick={() => openPartDetail(part.sku)}
-                          className="font-headline font-bold text-sm text-on-surface hover:text-primary transition-colors cursor-pointer line-clamp-2"
-                          title={part.name}
+                          className="font-bold text-sm text-[#212955] group-hover:text-[#F07F00] transition-colors line-clamp-2 cursor-pointer leading-snug"
                         >
                           {part.name}
-                        </h4>
+                        </h3>
 
-                        {/* OEM & Compatibility */}
-                        <div className="space-y-1">
-                          <div className="text-[11px] text-outline font-mono flex items-center gap-1.5">
-                            <span className="material-symbols-outlined text-[14px] text-emerald-600">verified</span>
-                            <span>OEM: <strong className="text-on-surface">{part.oemCode}</strong></span>
-                          </div>
-                          <div className="text-[11px] text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg font-medium line-clamp-1">
+                        <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                          <span className="material-symbols-outlined text-[14px] text-emerald-600">verified</span>
+                          <span className="truncate text-[11px] font-medium">
                             {part.compatibleVehicle}
-                          </div>
+                          </span>
                         </div>
 
-                        {/* Features bullet list */}
-                        <ul className="space-y-0.5 text-[11px] text-outline pt-1">
-                          {part.features.slice(0, 2).map((feat, i) => (
-                            <li key={i} className="flex items-center gap-1.5 truncate">
-                              <span className="w-1.5 h-1.5 rounded-full bg-secondary shrink-0"></span>
-                              <span className="truncate">{feat}</span>
-                            </li>
+                        <div className="flex flex-wrap gap-1 pt-1">
+                          {part.features.slice(0, 2).map((feat, idx) => (
+                            <span
+                              key={idx}
+                              className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-medium truncate max-w-full"
+                            >
+                              • {feat}
+                            </span>
                           ))}
-                        </ul>
+                        </div>
                       </div>
 
-                      {/* Pricing & CTA */}
-                      <div className="space-y-3 pt-3 border-t border-surface-container">
+                      {/* Price & Action Button */}
+                      <div className="pt-3 border-t border-gray-100 space-y-2.5">
                         <div className="flex items-baseline justify-between">
                           <div>
-                            <div className="text-xs text-outline">Precio Final:</div>
-                            <div className="text-lg font-black text-primary font-mono">
-                              S/ {part.priceSoles.toLocaleString()}
-                              <span className="text-xs text-outline font-normal ml-1.5">
-                                (${part.priceUsd} USD)
+                            <div className="flex items-baseline gap-1.5">
+                              <span className="font-headline font-black text-lg text-[#212955] font-mono">
+                                S/ {part.priceSoles.toLocaleString()}
                               </span>
+                              {part.oldPriceSoles && (
+                                <span className="text-xs text-[#9D9D9C] line-through font-mono">
+                                  S/ {part.oldPriceSoles.toLocaleString()}
+                                </span>
+                              )}
                             </div>
+                            <span className="text-[10px] text-gray-400 font-mono">
+                              (${part.priceUsd} USD aprox.)
+                            </span>
                           </div>
-                          {part.oldPriceSoles && (
-                            <div className="text-right">
-                              <span className="text-xs text-outline line-through font-mono">
-                                S/ {part.oldPriceSoles.toLocaleString()}
-                              </span>
-                            </div>
-                          )}
-                        </div>
 
-                        <div className="text-[10px] text-outline font-medium flex items-center gap-1 truncate">
-                          <span className="material-symbols-outlined text-[13px] text-emerald-600">inventory_2</span>
-                          <span className="truncate">{part.stockText}</span>
+                          <div className="text-right">
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                              {part.stockText || 'En Stock'}
+                            </span>
+                          </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-2">
                           <button
+                            type="button"
                             onClick={() => openPartDetail(part.sku)}
-                            className="w-full bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-bold py-2.5 rounded-xl transition-all text-center cursor-pointer min-h-[44px] flex items-center justify-center"
+                            className="w-full bg-gray-100 hover:bg-gray-200 text-[#212955] text-xs font-bold py-2 rounded-xl transition-all cursor-pointer min-h-[40px]"
                           >
                             Ver Ficha
                           </button>
                           <button
+                            type="button"
                             onClick={() =>
                               addToCart({
                                 type: 'part',
@@ -811,9 +1315,9 @@ export const PartsCatalogView: React.FC = () => {
                                 specsSubtitle: `${part.brand} • ${part.oemCode}`,
                               })
                             }
-                            className="w-full bg-primary hover:bg-primary-container text-white text-xs font-bold py-2.5 rounded-xl transition-all shadow-xs flex items-center justify-center gap-1 cursor-pointer min-h-[44px]"
+                            className="w-full bg-[#212955] hover:bg-[#2b356e] text-white text-xs font-bold py-2 rounded-xl transition-all shadow-xs flex items-center justify-center gap-1 cursor-pointer min-h-[40px]"
                           >
-                            <span className="material-symbols-outlined text-base">add_shopping_cart</span>
+                            <span className="material-symbols-outlined text-base text-[#F07F00]">add_shopping_cart</span>
                             <span>Agregar</span>
                           </button>
                         </div>
@@ -830,134 +1334,35 @@ export const PartsCatalogView: React.FC = () => {
       {/* Mobile Filters Drawer Modal */}
       {isMobileFiltersOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex justify-end">
-          <div className="w-full max-w-sm bg-white h-full overflow-y-auto p-5 space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-surface-container">
-              <h3 className="font-headline font-bold text-base text-primary flex items-center gap-2">
-                <span className="material-symbols-outlined text-secondary">tune</span>
-                Filtros de Repuestos
+          <div className="w-full max-w-sm bg-white h-full overflow-y-auto p-5 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#9D9D9C]/30">
+              <h3 className="font-headline font-bold text-base text-[#212955] flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#F07F00]">tune</span>
+                Filtros Especializados
               </h3>
               <button
+                type="button"
                 onClick={() => setIsMobileFiltersOpen(false)}
-                className="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-outline cursor-pointer"
+                className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:text-[#212955] cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            {/* Quick Text Filter */}
-            <div>
-              <label className="block text-xs font-bold text-on-surface mb-1.5">Búsqueda</label>
-              <input
-                type="text"
-                value={searchFilter}
-                onChange={(e) => setSearchFilter(e.target.value)}
-                placeholder="SKU, marca, repuesto..."
-                className="w-full bg-surface-container-low border border-surface-container rounded-xl p-3 text-xs"
-              />
-            </div>
+            {renderFilterControls(true)}
 
-            {/* Categories */}
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-on-surface uppercase">Categoría</label>
-              <div className="space-y-1 max-h-48 overflow-y-auto">
-                {CATEGORIES.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs ${
-                      selectedCategory === cat.id ? 'bg-primary text-white font-bold' : 'text-on-surface hover:bg-surface-container-low'
-                    }`}
-                  >
-                    <span>{cat.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Brands Line Segment */}
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-on-surface uppercase">Tipo de Marca</label>
-              <div className="grid grid-cols-3 gap-1 bg-surface-container p-1 rounded-xl text-xs font-semibold">
-                <button
-                  type="button"
-                  onClick={() => setBrandSegment('todos')}
-                  className={`py-1.5 px-2 rounded-lg text-center ${
-                    brandSegment === 'todos' ? 'bg-primary text-white font-bold' : 'text-on-surface'
-                  }`}
-                >
-                  Todas
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBrandSegment('oficial')}
-                  className={`py-1.5 px-2 rounded-lg text-center ${
-                    brandSegment === 'oficial' ? 'bg-primary text-white font-bold' : 'text-on-surface'
-                  }`}
-                >
-                  Oficial OEM
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBrandSegment('alternativa')}
-                  className={`py-1.5 px-2 rounded-lg text-center ${
-                    brandSegment === 'alternativa' ? 'bg-primary text-white font-bold' : 'text-on-surface'
-                  }`}
-                >
-                  China/Alt.
-                </button>
-              </div>
-            </div>
-
-            {/* Brands */}
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-on-surface uppercase">Marca / Fabricante</label>
-              <div className="space-y-1 max-h-48 overflow-y-auto">
-                {ALL_PART_BRANDS.filter((b) => brandSegment === 'todos' || b.segment === 'todos' || b.segment === brandSegment).map((b) => (
-                  <button
-                    key={b.id}
-                    onClick={() => setSelectedBrand(b.id)}
-                    className={`w-full flex items-center justify-between p-2 rounded-lg text-xs ${
-                      selectedBrand === b.id ? 'bg-secondary text-white font-bold' : 'text-on-surface hover:bg-surface-container-low'
-                    }`}
-                  >
-                    <span>{b.label}</span>
-                    {b.badge && (
-                      <span className="text-[10px] bg-surface-container px-1.5 py-0.5 rounded text-outline font-bold">
-                        {b.badge}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Price Slider */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs font-bold">
-                <span>Precio Máx:</span>
-                <span className="text-primary">S/ {priceMax}</span>
-              </div>
-              <input
-                type="range"
-                min="50"
-                max="3500"
-                step="50"
-                value={priceMax}
-                onChange={(e) => setPriceMax(Number(e.target.value))}
-                className="w-full accent-primary"
-              />
-            </div>
-
-            <div className="pt-4 border-t border-surface-container space-y-2">
+            <div className="pt-4 border-t border-[#9D9D9C]/30 space-y-2">
               <button
+                type="button"
                 onClick={() => setIsMobileFiltersOpen(false)}
-                className="w-full bg-primary text-white font-bold py-3 rounded-xl text-xs min-h-[44px]"
+                className="w-full bg-[#212955] text-white font-bold py-3 rounded-xl text-xs min-h-[44px] cursor-pointer"
               >
-                Aplicar Filtros ({filteredParts.length} resultados)
+                Ver {filteredParts.length} repuestos
               </button>
               <button
+                type="button"
                 onClick={handleResetFilters}
-                className="w-full bg-surface-container text-outline font-bold py-2.5 rounded-xl text-xs min-h-[44px]"
+                className="w-full bg-gray-100 text-gray-700 font-bold py-2.5 rounded-xl text-xs min-h-[44px] cursor-pointer"
               >
                 Limpiar Todo
               </button>
@@ -965,25 +1370,27 @@ export const PartsCatalogView: React.FC = () => {
           </div>
         </div>
       )}
+
       {/* Quick Focal Zoom Modal on Product */}
       {zoomModalPart && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 md:p-6 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl border border-surface-container flex flex-col max-h-[90vh]">
-            <div className="p-4 md:p-5 flex items-center justify-between border-b border-surface-container bg-surface-container-low">
+          <div className="bg-white rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl border border-[#9D9D9C]/30 flex flex-col max-h-[90vh]">
+            <div className="p-4 md:p-5 flex items-center justify-between border-b border-gray-100 bg-gray-50">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-cyan-600 text-lg">zoom_in</span>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-secondary">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#F07F00]">
                     {zoomModalPart.brand} • SKU: {zoomModalPart.sku}
                   </span>
                 </div>
-                <h3 className="text-sm md:text-base font-bold text-primary truncate max-w-md">
+                <h3 className="text-sm md:text-base font-bold text-[#212955] truncate max-w-md">
                   {zoomModalPart.name}
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setZoomModalPart(null)}
-                className="w-9 h-9 rounded-full bg-white hover:bg-surface-container text-outline flex items-center justify-center shadow-xs cursor-pointer"
+                className="w-9 h-9 rounded-full bg-white hover:bg-gray-100 text-gray-400 hover:text-gray-700 flex items-center justify-center shadow-xs cursor-pointer"
               >
                 ✕
               </button>
@@ -1000,25 +1407,27 @@ export const PartsCatalogView: React.FC = () => {
                 discountBadge={zoomModalPart.discount}
               />
 
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-3 border-t border-surface-container">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-3 border-t border-gray-100">
                 <div>
-                  <div className="text-xs text-outline font-medium">Compatible: {zoomModalPart.compatibleVehicle}</div>
-                  <div className="text-lg font-black text-primary font-mono">
-                    S/ {zoomModalPart.priceSoles.toLocaleString()} <span className="text-xs text-outline font-normal">(${zoomModalPart.priceUsd} USD)</span>
+                  <div className="text-xs text-gray-500 font-medium">Compatible: {zoomModalPart.compatibleVehicle}</div>
+                  <div className="text-lg font-black text-[#212955] font-mono">
+                    S/ {zoomModalPart.priceSoles.toLocaleString()} <span className="text-xs text-gray-400 font-normal">(${zoomModalPart.priceUsd} USD)</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <button
+                    type="button"
                     onClick={() => {
                       const sku = zoomModalPart.sku;
                       setZoomModalPart(null);
                       openPartDetail(sku);
                     }}
-                    className="flex-1 sm:flex-none bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer min-h-[44px]"
+                    className="flex-1 sm:flex-none bg-gray-100 hover:bg-gray-200 text-[#212955] text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer min-h-[44px]"
                   >
                     Ver Ficha Completa
                   </button>
                   <button
+                    type="button"
                     onClick={() => {
                       addToCart({
                         type: 'part',
@@ -1030,9 +1439,9 @@ export const PartsCatalogView: React.FC = () => {
                       });
                       setZoomModalPart(null);
                     }}
-                    className="flex-1 sm:flex-none bg-primary hover:bg-primary-container text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-xs cursor-pointer min-h-[44px] flex items-center justify-center gap-1.5"
+                    className="flex-1 sm:flex-none bg-[#212955] hover:bg-[#2b356e] text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-xs cursor-pointer min-h-[44px] flex items-center justify-center gap-1.5"
                   >
-                    <span className="material-symbols-outlined text-base">add_shopping_cart</span>
+                    <span className="material-symbols-outlined text-base text-[#F07F00]">add_shopping_cart</span>
                     <span>Agregar</span>
                   </button>
                 </div>
