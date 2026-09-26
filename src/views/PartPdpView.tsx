@@ -63,21 +63,21 @@ export const PartPdpView: React.FC = () => {
   };
 
   return (
-    <div className="bg-surface-container-lowest min-h-screen py-8 px-gutter">
+    <div className="min-h-screen py-8 px-gutter">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Breadcrumb Navigation */}
-        <nav className="flex items-center gap-2 text-xs text-outline flex-wrap">
-          <button onClick={() => setCurrentView('home')} className="hover:text-primary transition-colors">
+        <nav className="flex items-center gap-2 text-xs text-white/70 flex-wrap">
+          <button onClick={() => setCurrentView('home')} className="hover:text-white transition-colors cursor-pointer">
             Inicio
           </button>
           <span>/</span>
-          <button onClick={() => setCurrentView('parts')} className="hover:text-primary transition-colors">
+          <button onClick={() => setCurrentView('parts')} className="hover:text-white transition-colors cursor-pointer">
             Repuestos &amp; Autopartes OEM
           </button>
           <span>/</span>
-          <span className="capitalize">{part.category}</span>
+          <span className="capitalize text-white/80">{part.category}</span>
           <span>/</span>
-          <span className="text-on-surface font-semibold line-clamp-1 max-w-[300px]">{part.name}</span>
+          <span className="text-white font-semibold line-clamp-1 max-w-[300px]">{part.name}</span>
         </nav>
 
         {/* Garage Active Compatibility Alert Banner */}

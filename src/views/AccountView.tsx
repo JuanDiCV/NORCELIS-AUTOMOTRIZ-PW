@@ -228,15 +228,15 @@ export const AccountView: React.FC = () => {
   };
 
   return (
-    <div className="bg-surface-container-lowest min-h-screen py-8 px-gutter">
+    <div className="min-h-screen py-8 px-gutter">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-xs text-outline">
-          <button onClick={() => setCurrentView('home')} className="hover:text-primary transition-colors">
+        <nav className="flex items-center gap-2 text-xs text-white/70">
+          <button onClick={() => setCurrentView('home')} className="hover:text-white transition-colors cursor-pointer">
             Inicio
           </button>
           <span>/</span>
-          <span className="text-on-surface font-semibold">Mi Cuenta &amp; Garaje</span>
+          <span className="text-white font-semibold">Mi Cuenta &amp; Garaje</span>
         </nav>
 
         {/* User Profile Header Card */}

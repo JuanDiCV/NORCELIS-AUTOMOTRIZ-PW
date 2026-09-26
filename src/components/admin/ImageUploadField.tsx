@@ -22,6 +22,7 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
   const [mode, setMode] = useState<'upload' | 'url'>('upload');
   const [dragActive, setDragActive] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,9 +34,10 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
 
   const processFile = (file: File) => {
     if (!file.type.startsWith('image/')) {
-      alert('Por favor selecciona un archivo de imagen válido (PNG, JPG, WebP, SVG).');
+      setErrorMsg('Por favor selecciona un archivo de imagen válido (PNG, JPG, WebP, SVG).');
       return;
     }
+    setErrorMsg(null);
     const reader = new FileReader();
     reader.onload = (event) => {
       const result = event.target?.result as string;
@@ -112,6 +114,22 @@ export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
           </button>
         </div>
       </div>
+
+      {errorMsg && (
+        <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-600 flex items-center justify-between animate-in fade-in">
+          <span className="flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-sm">warning</span>
+            <span>{errorMsg}</span>
+          </span>
+          <button
+            type="button"
+            onClick={() => setErrorMsg(null)}
+            className="text-red-400 hover:text-red-700 cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-sm">close</span>
+          </button>
+        </div>
+      )}
 
       {mode === 'upload' ? (
         <div>

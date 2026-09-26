@@ -7,11 +7,26 @@ import {
   TireOffRoadIcon,
   Equip4x4Icon,
   LubricantOilIcon,
-  SecurityFilmIcon,
   DetailingPPFIcon,
   SuspensionHDIcon,
   WorkshopServiceIcon,
   PlanRetomaIcon,
+  AutoPartsIcon,
+  VehicleIcon,
+  AppleVerifiedSealIcon,
+  AppleIconBadge,
+  AppleSearchIcon,
+  AppleTuneSlidersIcon,
+  AppleHeartIcon,
+  AppleCartIcon,
+  AppleChevronRightIcon,
+  ExpressDeliveryVanIcon,
+  Showroom360Icon,
+  BrakeDiscIcon,
+  EngineIcon,
+  CarBatteryIcon,
+  CertifiedShieldIcon,
+  SpeedometerGaugeIcon,
 } from '../components/AutoIcons';
 
 export const HomeView: React.FC = () => {
@@ -89,69 +104,70 @@ export const HomeView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setHeroTab('parts')}
-                className={`p-3.5 min-h-[48px] text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer ${
+                className={`p-3.5 min-h-[48px] text-center transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
                   heroTab === 'parts'
                     ? 'bg-surface-container-lowest text-primary border-b-2 border-primary shadow-xs font-black'
                     : 'text-outline hover:text-on-surface'
                 }`}
               >
-                <span className="material-symbols-outlined text-lg text-primary">settings_suggest</span>
+                <AutoPartsIcon size={20} className={heroTab === 'parts' ? 'text-[#F07F00]' : 'text-primary'} />
                 <span>Repuestos OEM</span>
               </button>
               <button
                 type="button"
                 onClick={() => setHeroTab('workshop')}
-                className={`p-3.5 min-h-[48px] text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer ${
+                className={`p-3.5 min-h-[48px] text-center transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
                   heroTab === 'workshop'
                     ? 'bg-surface-container-lowest text-primary border-b-2 border-primary shadow-xs font-black'
                     : 'text-outline hover:text-on-surface'
                 }`}
               >
-                <span className="material-symbols-outlined text-lg text-secondary">calendar_month</span>
+                <WorkshopServiceIcon size={20} className={heroTab === 'workshop' ? 'text-[#F07F00]' : 'text-[#212955]'} />
                 <span>Citas Taller</span>
               </button>
               <button
                 type="button"
                 onClick={() => setHeroTab('new_cars')}
-                className={`p-3.5 min-h-[48px] text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer ${
+                className={`p-3.5 min-h-[48px] text-center transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
                   heroTab === 'new_cars'
                     ? 'bg-surface-container-lowest text-primary border-b-2 border-primary shadow-xs font-black'
                     : 'text-outline hover:text-on-surface'
                 }`}
               >
-                <span className="material-symbols-outlined text-lg text-emerald-600">directions_car</span>
+                <VehicleIcon size={20} className={heroTab === 'new_cars' ? 'text-[#F07F00]' : 'text-[#212955]'} />
                 <span>Autos 2025</span>
               </button>
               <button
                 type="button"
                 onClick={() => setHeroTab('used_cars')}
-                className={`p-3.5 min-h-[48px] text-center transition-all flex flex-col items-center justify-center gap-1 cursor-pointer ${
+                className={`p-3.5 min-h-[48px] text-center transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
                   heroTab === 'used_cars'
                     ? 'bg-surface-container-lowest text-primary border-b-2 border-primary shadow-xs font-black'
                     : 'text-outline hover:text-on-surface'
                 }`}
               >
-                <span className="material-symbols-outlined text-lg text-purple-600">verified</span>
+                <AppleVerifiedSealIcon size={20} className={heroTab === 'used_cars' ? 'text-[#F07F00]' : 'text-[#212955]'} />
                 <span>Seminuevos</span>
               </button>
             </div>
 
             {/* Form Content */}
             <form onSubmit={handleHeroSubmit} className="p-5 sm:p-6 space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-surface-container pb-3">
                 <div className="space-y-0.5">
-                  <span className="text-xs font-extrabold text-primary flex items-center gap-1.5 uppercase tracking-wider">
-                    <span className="material-symbols-outlined text-sm text-secondary">tune</span>
+                  <span className="text-xs font-black text-[#212955] flex items-center gap-1.5 uppercase tracking-wider font-headline text-sm">
+                    <AppleTuneSlidersIcon size={18} className="text-[#F07F00]" />
                     Buscador Rápido de Compatibilidad
                   </span>
-                  <p className="text-xs text-outline">
+                  <p className="text-xs text-[#9D9D9C] font-body font-medium m-0">
                     {heroTab === 'parts' && 'Filtra y verifica repuestos compatibles con tu vehículo al instante'}
                     {heroTab === 'workshop' && 'Reserva turno prioritario en nuestro taller de alta tecnología en Cajamarca'}
                     {heroTab === 'new_cars' && 'Cotiza vehículos 0 km 2025 con bonos especiales'}
                     {heroTab === 'used_cars' && 'Seminuevos certificados con 150 puntos y garantía mecánica'}
                   </p>
                 </div>
-                <span className="text-[10px] bg-secondary-container/15 text-secondary font-bold px-2.5 py-1 rounded-full border border-secondary-container/30 shrink-0">
+                <span className="text-[10px] bg-[#212955] text-white font-bold px-3 py-1 rounded-full border border-[#F07F00]/50 shrink-0 font-headline uppercase tracking-wider shadow-xs flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#F07F00] animate-pulse"></span>
                   Compatibilidad &amp; Stock en Tiempo Real
                 </span>
               </div>
@@ -233,9 +249,9 @@ export const HomeView: React.FC = () => {
                       maxLength={17}
                       className="w-full min-h-[44px] bg-surface-container-low border border-surface-container rounded-xl px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider focus:outline-none focus:border-primary font-mono"
                     />
-                    <span className="material-symbols-outlined absolute right-3 top-3 text-outline text-lg pointer-events-none">
-                      badge
-                    </span>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-outline">
+                      <AppleVerifiedSealIcon size={18} />
+                    </div>
                   </div>
                 </div>
 
@@ -260,9 +276,9 @@ export const HomeView: React.FC = () => {
 
               <button
                 type="submit"
-                className="w-full min-h-[48px] bg-primary hover:bg-primary-container text-white py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full min-h-[48px] btn-primary py-3 px-6 text-sm uppercase tracking-wider text-center flex items-center justify-center gap-2"
               >
-                <span className="material-symbols-outlined text-[18px]">search</span>
+                <AppleSearchIcon size={18} />
                 <span>Consultar Catálogo Especializado</span>
               </button>
             </form>
@@ -270,43 +286,43 @@ export const HomeView: React.FC = () => {
         </div>
       </section>
 
-      {/* Trust Strip */}
+      {/* Trust Strip con Estilo Apple y Microgradientes */}
       <section className="px-gutter">
         <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 rounded-2xl bg-surface-container-low border border-surface-container flex items-center gap-3.5 shadow-sm">
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
-              <span className="material-symbols-outlined text-2xl">verified</span>
-            </div>
+          <div className="p-4 rounded-2xl bg-surface-container-low border border-surface-container flex items-center gap-3.5 shadow-sm group hover:border-emerald-500/40 transition-colors">
+            <AppleIconBadge variant="emerald" size="md">
+              <AppleVerifiedSealIcon size={22} className="text-white" />
+            </AppleIconBadge>
             <div>
               <div className="text-xs font-bold text-primary">Autopartes 100% Originales</div>
               <div className="text-[11px] text-outline">Garantía oficial de fábrica y boleta/factura</div>
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-surface-container-low border border-surface-container flex items-center gap-3.5 shadow-sm">
-            <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center">
-              <span className="material-symbols-outlined text-2xl">precision_manufacturing</span>
-            </div>
+          <div className="p-4 rounded-2xl bg-surface-container-low border border-surface-container flex items-center gap-3.5 shadow-sm group hover:border-[#212955]/40 transition-colors">
+            <AppleIconBadge variant="secondary" size="md">
+              <AutoPartsIcon size={22} className="text-white" />
+            </AppleIconBadge>
             <div>
               <div className="text-xs font-bold text-primary">Compatibilidad Verificada</div>
               <div className="text-[11px] text-outline">Por catálogo técnico OEM y chasis VIN</div>
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-surface-container-low border border-surface-container flex items-center gap-3.5 shadow-sm">
-            <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-800 flex items-center justify-center">
-              <span className="material-symbols-outlined text-2xl">local_shipping</span>
-            </div>
+          <div className="p-4 rounded-2xl bg-surface-container-low border border-surface-container flex items-center gap-3.5 shadow-sm group hover:border-[#F07F00]/40 transition-colors">
+            <AppleIconBadge variant="primary" size="md">
+              <ExpressDeliveryVanIcon size={22} className="text-white" />
+            </AppleIconBadge>
             <div>
               <div className="text-xs font-bold text-primary">Despacho 24h &amp; Retiro</div>
               <div className="text-[11px] text-outline">Sede Cajamarca: Av. Vía de Evitamiento Sur 6003</div>
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-surface-container-low border border-surface-container flex items-center gap-3.5 shadow-sm">
-            <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-800 flex items-center justify-center">
-              <span className="material-symbols-outlined text-2xl">build</span>
-            </div>
+          <div className="p-4 rounded-2xl bg-surface-container-low border border-surface-container flex items-center gap-3.5 shadow-sm group hover:border-[#212955]/40 transition-colors">
+            <AppleIconBadge variant="subtle-blue" size="md">
+              <WorkshopServiceIcon size={22} className="text-[#212955]" />
+            </AppleIconBadge>
             <div>
               <div className="text-xs font-bold text-primary">Instalación Opcional en Taller</div>
               <div className="text-[11px] text-outline">Mano de obra certificada e inspección</div>
@@ -318,32 +334,32 @@ export const HomeView: React.FC = () => {
       {/* 3. CATEGORÍAS POPULARES DE AUTOPARTES & MARCAS */}
       <section className="px-gutter">
         <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-2 border-b border-surface-container pb-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-2 border-b border-white/15 pb-4">
             <div>
-              <span className="text-xs font-bold text-secondary uppercase tracking-wider">
+              <span className="text-xs font-bold text-[#F07F00] uppercase tracking-wider">
                 Líneas Especializadas Nor Celis
               </span>
-              <h2 className="font-headline font-bold text-2xl text-on-surface">
+              <h2 className="font-headline font-bold text-2xl text-white">
                 Categorías de Autopartes &amp; Repuestos
               </h2>
             </div>
             <button
               onClick={() => navigateToPartsCatalog('todos')}
-              className="min-h-[44px] px-3 py-2 text-xs font-bold text-primary hover:text-secondary-container rounded-xl hover:bg-surface-container-low flex items-center gap-1 transition-colors cursor-pointer"
+              className="min-h-[44px] px-3.5 py-2 text-xs font-bold text-white hover:text-[#F07F00] bg-white/10 hover:bg-white/20 rounded-xl flex items-center gap-1 transition-colors cursor-pointer border border-white/20"
             >
               <span>Ver todas las autopartes ({autoParts.length})</span>
-              <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+              <AppleChevronRightIcon size={16} />
             </button>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
             {[
-              { name: 'Llantas Off-Road', icon: TireOffRoadIcon, desc: 'Mickey Thompson & BR', code: 'llantas' },
-              { name: 'Equipamiento 4x4', icon: Equip4x4Icon, desc: 'KEKO Barras & Tapas', code: 'accesorios4x4' },
-              { name: 'Aceites & Fluidos', icon: LubricantOilIcon, desc: 'Mobil 1 & Delvac', code: 'lubricantes' },
-              { name: 'Frenos & Pastillas', icon: WorkshopServiceIcon, desc: 'Brembo & Toyota OEM', code: 'frenos' },
-              { name: 'Detailing & PPF', icon: DetailingPPFIcon, desc: '3M Ceramic Coating', code: 'detailing' },
-              { name: 'Suspensión HD', icon: SuspensionHDIcon, desc: 'TRAKKO® & KYB Lift', code: 'suspension' },
+              { name: 'Llantas Off-Road', icon: TireOffRoadIcon, desc: 'Mickey Thompson & BR', code: 'llantas', badgeVariant: 'subtle-orange' as const },
+              { name: 'Equipamiento 4x4', icon: Equip4x4Icon, desc: 'KEKO Barras & Tapas', code: 'accesorios4x4', badgeVariant: 'secondary' as const },
+              { name: 'Aceites & Fluidos', icon: LubricantOilIcon, desc: 'Mobil 1 & Delvac', code: 'lubricantes', badgeVariant: 'subtle-orange' as const },
+              { name: 'Frenos & Pastillas', icon: BrakeDiscIcon, desc: 'Brembo & Toyota OEM', code: 'frenos', badgeVariant: 'primary' as const },
+              { name: 'Detailing & PPF', icon: DetailingPPFIcon, desc: '3M Ceramic Coating', code: 'detailing', badgeVariant: 'subtle-blue' as const },
+              { name: 'Suspensión HD', icon: SuspensionHDIcon, desc: 'TRAKKO® & KYB Lift', code: 'suspension', badgeVariant: 'secondary' as const },
             ].map((cat, i) => {
               const IconComp = cat.icon;
               return (
@@ -352,9 +368,9 @@ export const HomeView: React.FC = () => {
                   onClick={() => navigateToPartsCatalog(cat.code)}
                   className="p-4 min-h-[44px] rounded-2xl bg-surface-container-lowest border border-surface-container hover:border-primary hover:shadow-md transition-all text-center group cursor-pointer"
                 >
-                  <div className="w-12 h-12 mx-auto rounded-xl bg-surface-container group-hover:bg-primary group-hover:text-white text-primary flex items-center justify-center mb-3 transition-colors">
+                  <AppleIconBadge variant={cat.badgeVariant} size="lg" className="mx-auto mb-3">
                     <IconComp size={24} />
-                  </div>
+                  </AppleIconBadge>
                   <div className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors">
                     {cat.name}
                   </div>
@@ -404,23 +420,23 @@ export const HomeView: React.FC = () => {
       {/* 4. MAIN SPOTLIGHT: AUTOPARTES & REPUESTOS MÁS VENDIDOS (PRIORIDAD PRINCIPAL) */}
       <section className="px-gutter">
         <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 border-b border-surface-container pb-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 border-b border-white/15 pb-4">
             <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container/15 text-secondary text-xs font-extrabold uppercase tracking-wider mb-1">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F07F00]/20 text-[#F07F00] text-xs font-extrabold uppercase tracking-wider mb-1 border border-[#F07F00]/30">
                 <span className="material-symbols-outlined text-sm">local_fire_department</span>
                 Alta Demanda &amp; Stock Inmediato
               </div>
-              <h2 className="font-headline font-black text-2xl sm:text-3xl text-on-surface">
+              <h2 className="font-headline font-black text-2xl sm:text-3xl text-white">
                 Autopartes &amp; Repuestos Originales
               </h2>
-              <p className="text-xs sm:text-sm text-outline mt-0.5">
+              <p className="text-xs sm:text-sm text-white/80 mt-0.5 font-medium">
                 Componentes OEM certificados con garantía oficial y servicio de instalación opcional en taller.
               </p>
             </div>
 
             <button
               onClick={() => navigateToPartsCatalog('todos')}
-              className="min-h-[44px] px-4 py-2.5 bg-primary hover:bg-primary-container text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer shrink-0"
+              className="min-h-[44px] px-4 py-2.5 bg-[#F07F00] hover:bg-[#d97300] text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer shrink-0"
             >
               <span>Explorar Todo el Catálogo de Repuestos</span>
               <span className="material-symbols-outlined text-base">arrow_forward</span>
@@ -492,14 +508,12 @@ export const HomeView: React.FC = () => {
                           categoryBadge: part.category,
                         })
                       }
-                      className={`absolute top-3 right-3 w-8 h-8 rounded-lg flex items-center justify-center transition-colors shadow-sm cursor-pointer ${
+                      className={`absolute top-3 right-3 w-8 h-8 rounded-xl flex items-center justify-center transition-colors shadow-sm cursor-pointer ${
                         inWish ? 'bg-secondary-container text-white' : 'bg-white/90 hover:bg-white text-on-surface'
                       }`}
                       aria-label="Favorito"
                     >
-                      <span className="material-symbols-outlined text-base">
-                        {inWish ? 'favorite' : 'favorite_border'}
-                      </span>
+                      <AppleHeartIcon size={16} />
                     </button>
 
                     {part.stockText && (
@@ -557,15 +571,15 @@ export const HomeView: React.FC = () => {
                             setSelectedPartSku(part.sku);
                             setCurrentView('part-pdp');
                           }}
-                          className="min-h-[38px] px-2.5 py-1.5 bg-surface-container-low hover:bg-surface-container text-on-surface rounded-xl text-xs font-bold transition-colors cursor-pointer text-center"
+                          className="min-h-[38px] px-2.5 py-1.5 btn-ghost text-xs text-center"
                         >
                           Ficha Técnica
                         </button>
                         <button
                           onClick={() => handleAddToCart(part, false)}
-                          className="min-h-[38px] px-2.5 py-1.5 bg-primary hover:bg-primary-container text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer shadow-xs"
+                          className="min-h-[38px] px-2.5 py-1.5 btn-primary text-xs uppercase flex items-center justify-center gap-1.5"
                         >
-                          <span className="material-symbols-outlined text-sm">shopping_cart</span>
+                          <AppleCartIcon size={16} />
                           <span>Comprar</span>
                         </button>
                       </div>
@@ -581,26 +595,26 @@ export const HomeView: React.FC = () => {
       {/* 5. WORKSHOP & DETAILING SERVICES SECTION */}
       <section className="px-gutter">
         <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-2 border-b border-surface-container pb-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-2 border-b border-white/15 pb-4">
             <div>
-              <span className="text-xs font-bold text-secondary uppercase tracking-wider flex items-center gap-1">
-                <WorkshopServiceIcon size={16} className="text-secondary" />
+              <span className="text-xs font-bold text-[#F07F00] uppercase tracking-wider flex items-center gap-1">
+                <WorkshopServiceIcon size={16} className="text-[#F07F00]" />
                 Centro de Alta Ingeniería Automotriz • Sede Cajamarca
               </span>
-              <h2 className="font-headline font-bold text-2xl text-on-surface">
+              <h2 className="font-headline font-bold text-2xl text-white">
                 Servicios Especializados de Taller &amp; Detailing
               </h2>
             </div>
             <button
               onClick={() => setCurrentView('services')}
-              className="min-h-[44px] px-3 py-2 text-xs font-bold text-primary hover:text-secondary-container rounded-xl hover:bg-surface-container-low flex items-center gap-1 transition-colors cursor-pointer"
+              className="min-h-[44px] px-3.5 py-2 text-xs font-bold text-white hover:text-[#F07F00] bg-white/10 hover:bg-white/20 rounded-xl flex items-center gap-1 transition-colors cursor-pointer border border-white/20"
             >
               <span>Ver los 8 Paquetes &amp; Agendar Cita</span>
-              <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+              <AppleChevronRightIcon size={16} />
             </button>
           </div>
 
-          {/* Quick Service Cards Grid */}
+          {/* Quick Service Cards Grid con Iconos Apple Especializados */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
               {
@@ -608,91 +622,100 @@ export const HomeView: React.FC = () => {
                 desc: 'Escaneo Techstream, cambio de fluidos Mobil 1 y 25 puntos de inspección.',
                 price: 'Desde S/ 280',
                 time: 'Tiempo: 90 min',
-                icon: 'build_circle',
+                icon: WorkshopServiceIcon,
                 badge: 'Más Solicitado',
                 badgeColor: 'bg-primary text-white',
+                badgeVariant: 'primary' as const,
               },
               {
                 title: 'Alineamiento 3D & Enllantado',
                 desc: 'Alineación láser sin contacto de aro y balanceo dinámico con plomos adhesivos.',
                 price: 'Desde S/ 49 /rueda',
                 time: 'Tiempo: 45 min',
-                icon: 'tire_repair',
+                icon: TireOffRoadIcon,
                 badge: 'Tecnología Láser',
                 badgeColor: 'bg-amber-600 text-white',
+                badgeVariant: 'amber' as const,
               },
               {
                 title: 'Láminas Nanocerámicas LLumar',
                 desc: '96% de rechazo infrarrojo, 99% bloqueo UV y certificado para permiso PNP.',
                 price: 'Desde S/ 420',
                 time: 'Cabina presurizada',
-                icon: 'shield',
+                icon: CertifiedShieldIcon,
                 badge: 'Garantía 10 Años',
                 badgeColor: 'bg-emerald-600 text-white',
+                badgeVariant: 'emerald' as const,
               },
               {
                 title: 'Detailing Cerámico 9H 3M',
                 desc: 'Corrección de laca en 3 pasos, descontaminado de pintura y sellado 9H.',
                 price: 'Desde S/ 850',
                 time: 'Tiempo: 24h',
-                icon: 'auto_fix_high',
+                icon: DetailingPPFIcon,
                 badge: 'Acabado Espejo',
                 badgeColor: 'bg-purple-600 text-white',
+                badgeVariant: 'secondary' as const,
               },
               {
                 title: 'Frenos & Discos OEM Brembo/Toyota',
                 desc: 'Cambio de pastillas cerámicas, rectificado de discos y purga electrónica.',
                 price: 'Desde S/ 190',
                 time: 'Tiempo: 60 min',
-                icon: 'speed',
+                icon: BrakeDiscIcon,
                 badge: 'Repuesto Original',
                 badgeColor: 'bg-blue-600 text-white',
+                badgeVariant: 'subtle-orange' as const,
               },
               {
                 title: 'Suspensión Pesada & Lift Kits 4x4',
                 desc: 'Instalación de paquetes TRAKKO® +2", amortiguadores reforzados y gemelas.',
                 price: 'Cotización a medida',
                 time: 'Para Trocha y Minería',
-                icon: 'engineering',
+                icon: SuspensionHDIcon,
                 badge: 'Off-Road Pro',
                 badgeColor: 'bg-cyan-700 text-white',
+                badgeVariant: 'subtle-blue' as const,
               },
-            ].map((svc, idx) => (
-              <div
-                key={idx}
-                onClick={() => setCurrentView('services')}
-                className="bg-surface-container-lowest p-5 rounded-2xl border border-surface-container hover:border-primary hover:shadow-lg transition-all cursor-pointer flex flex-col justify-between group"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
-                      <span className="material-symbols-outlined text-2xl">{svc.icon}</span>
+            ].map((svc, idx) => {
+              const ServiceIcon = svc.icon;
+              return (
+                <div
+                  key={idx}
+                  onClick={() => setCurrentView('services')}
+                  className="bg-surface-container-lowest p-5 rounded-2xl border border-surface-container hover:border-primary hover:shadow-lg transition-all cursor-pointer flex flex-col justify-between group"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <AppleIconBadge variant={svc.badgeVariant} size="md">
+                        <ServiceIcon size={20} />
+                      </AppleIconBadge>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${svc.badgeColor}`}>
+                        {svc.badge}
+                      </span>
                     </div>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${svc.badgeColor}`}>
-                      {svc.badge}
+                    <div>
+                      <h3 className="font-headline font-bold text-sm text-on-surface group-hover:text-primary transition-colors">
+                        {svc.title}
+                      </h3>
+                      <p className="text-xs text-outline mt-1 leading-relaxed">
+                        {svc.desc}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-surface-container flex items-center justify-between text-xs">
+                    <div>
+                      <span className="font-bold text-primary font-mono">{svc.price}</span>
+                      <div className="text-[10px] text-outline">{svc.time}</div>
+                    </div>
+                    <span className="text-xs font-bold text-secondary group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                      <span>Agendar</span>
+                      <AppleChevronRightIcon size={14} />
                     </span>
                   </div>
-                  <div>
-                    <h3 className="font-headline font-bold text-sm text-on-surface group-hover:text-primary transition-colors">
-                      {svc.title}
-                    </h3>
-                    <p className="text-xs text-outline mt-1 leading-relaxed">
-                      {svc.desc}
-                    </p>
-                  </div>
                 </div>
-                <div className="mt-4 pt-3 border-t border-surface-container flex items-center justify-between text-xs">
-                  <div>
-                    <span className="font-bold text-primary font-mono">{svc.price}</span>
-                    <div className="text-[10px] text-outline">{svc.time}</div>
-                  </div>
-                  <span className="text-xs font-bold text-secondary group-hover:translate-x-1 transition-transform flex items-center gap-0.5">
-                    <span>Agendar</span>
-                    <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                  </span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Workshop & Detailing Hero Feature Banner */}
@@ -710,9 +733,9 @@ export const HomeView: React.FC = () => {
               <div className="pt-2">
                 <button
                   onClick={() => setCurrentView('services')}
-                  className="min-h-[44px] bg-secondary-container hover:bg-secondary text-white font-bold text-xs px-6 py-3.5 rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer hover:scale-[1.02]"
+                  className="min-h-[46px] btn-primary text-sm uppercase px-7 py-3.5 flex items-center gap-2"
                 >
-                  <span className="material-symbols-outlined text-[18px]">calendar_month</span>
+                  <WorkshopServiceIcon size={18} />
                   <span>Agendar Cita en Taller Sin Colas</span>
                 </button>
               </div>
@@ -733,27 +756,27 @@ export const HomeView: React.FC = () => {
         </div>
       </section>
 
-      {/* 6. VEHICLES COMPACT SHOWCASE (REDUCIDO A 3 DESTACADOS PARA PRIORIZAR AUTOPARTES) */}
+      {/* 6. VEHICLES COMPACT SHOWCASE */}
       <section className="px-gutter">
         <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-2 border-b border-surface-container pb-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-2 border-b border-white/15 pb-4">
             <div>
-              <span className="text-xs font-bold text-secondary uppercase tracking-wider">
+              <span className="text-xs font-bold text-[#F07F00] uppercase tracking-wider">
                 Concesionario Multimarca 2025
               </span>
-              <h2 className="font-headline font-bold text-2xl text-on-surface">
+              <h2 className="font-headline font-bold text-2xl text-white">
                 Vehículos 0 km con Bonos Especiales
               </h2>
-              <p className="text-xs text-outline mt-0.5">
+              <p className="text-xs text-white/80 mt-0.5 font-medium">
                 Modelos seleccionados listos para entrega inmediata con financiamiento y retoma.
               </p>
             </div>
             <button
               onClick={() => setCurrentView('cars')}
-              className="min-h-[44px] px-4 py-2 text-xs font-bold text-primary hover:text-secondary-container rounded-xl hover:bg-surface-container-low flex items-center gap-1 transition-colors cursor-pointer"
+              className="min-h-[44px] px-4 py-2 text-xs font-bold text-white hover:text-[#F07F00] bg-white/10 hover:bg-white/20 rounded-xl flex items-center gap-1 transition-colors cursor-pointer border border-white/20"
             >
               <span>Ver catálogo completo de autos ({vehicles.length})</span>
-              <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+              <AppleChevronRightIcon size={16} />
             </button>
           </div>
 
@@ -806,9 +829,7 @@ export const HomeView: React.FC = () => {
                       }`}
                       aria-label="Guardar en lista de deseos"
                     >
-                      <span className="material-symbols-outlined text-lg">
-                        {inWish ? 'favorite' : 'favorite_border'}
-                      </span>
+                      <AppleHeartIcon size={18} />
                     </button>
                   </div>
 
@@ -859,7 +880,7 @@ export const HomeView: React.FC = () => {
                             setSelectedVehicleId(car.id);
                             setCurrentView('vehicle-pdp');
                           }}
-                          className="min-h-[38px] px-3 py-2 bg-primary hover:bg-primary-container text-white rounded-xl text-xs font-bold transition-colors cursor-pointer text-center flex items-center justify-center"
+                          className="min-h-[38px] px-3 py-2 btn-secondary text-xs uppercase"
                         >
                           Ficha Técnica
                         </button>
@@ -868,9 +889,9 @@ export const HomeView: React.FC = () => {
                             setSelectedVehicleId(car.id);
                             setIsViewer360Open(true);
                           }}
-                          className="min-h-[38px] px-3 py-2 bg-surface-container hover:bg-surface-container-high text-primary rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                          className="min-h-[38px] px-3 py-2 btn-ghost text-xs flex items-center justify-center gap-1.5"
                         >
-                          <span className="material-symbols-outlined text-sm">360</span>
+                          <Showroom360Icon size={16} />
                           <span>Visor 360°</span>
                         </button>
                       </div>
@@ -902,7 +923,7 @@ export const HomeView: React.FC = () => {
                 className="min-h-[44px] bg-primary hover:bg-primary-container text-white text-xs font-bold px-5 py-3 rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer"
               >
                 <span>Ver Seminuevos Disponibles ({usedCars.length})</span>
-                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                <AppleChevronRightIcon size={16} />
               </button>
               <button
                 onClick={() => setCurrentView('trade-in')}

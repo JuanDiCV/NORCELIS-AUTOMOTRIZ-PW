@@ -103,11 +103,11 @@ export const CartView: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-gutter py-6 space-y-6">
       {/* Header */}
-      <div className="border-b border-surface-container pb-4">
-        <span className="text-xs font-bold uppercase tracking-wider text-secondary">
+      <div className="border-b border-white/20 pb-4">
+        <span className="text-xs font-bold uppercase tracking-wider text-[#F07F00]">
           Bolsa de Compras
         </span>
-        <h1 className="font-headline font-extrabold text-2xl sm:text-3xl text-on-surface">
+        <h1 className="font-headline font-extrabold text-2xl sm:text-3xl text-white">
           Carrito de Compras ({cartItems.length} ítems)
         </h1>
       </div>
@@ -131,11 +131,11 @@ export const CartView: React.FC = () => {
       </div>
 
       {/* Active Garage Check */}
-      <div className="bg-surface-container-low p-3.5 rounded-2xl border border-surface-container flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
+      <div className="bg-white/95 text-gray-800 p-3.5 rounded-2xl border border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs shadow-xs">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary text-lg shrink-0">garage</span>
-          <span className="text-outline break-words">
-            Repuestos validados para: <strong className="text-on-surface">{activeGarage.brand} {activeGarage.model} ({activeGarage.year})</strong>
+          <span className="material-symbols-outlined text-[#212955] text-lg shrink-0">garage</span>
+          <span className="text-gray-600 break-words">
+            Repuestos validados para: <strong className="text-[#212955]">{activeGarage.brand} {activeGarage.model} ({activeGarage.year})</strong>
           </span>
         </div>
         <span className="text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded text-[10px] shrink-0">

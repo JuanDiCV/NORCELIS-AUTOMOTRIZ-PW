@@ -28,15 +28,15 @@ export const WishlistView: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-gutter py-6 space-y-6">
       {/* Header (Screen 7 spec) */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-surface-container pb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/20 pb-4">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-secondary">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#F07F00]">
             Guardados Personalizados
           </span>
-          <h1 className="font-headline font-extrabold text-2xl sm:text-3xl text-on-surface">
+          <h1 className="font-headline font-extrabold text-2xl sm:text-3xl text-white">
             Mi Lista de Deseos ({wishlistItems.length} ítems)
           </h1>
-          <p className="text-xs text-outline mt-0.5">
+          <p className="text-xs text-white/80 mt-0.5">
             Monitorea disponibilidad de stock, cotizaciones y ofertas exclusivas guardadas en tu cuenta.
           </p>
         </div>
@@ -44,7 +44,7 @@ export const WishlistView: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => showToast('Enlace de tu lista de deseos copiado al portapapeles')}
-            className="p-2.5 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface text-xs font-semibold flex items-center gap-1.5 transition-colors border border-surface-container"
+            className="p-2.5 rounded-xl bg-white hover:bg-gray-100 text-[#212955] text-xs font-semibold flex items-center gap-1.5 transition-colors border border-gray-200 cursor-pointer shadow-xs"
           >
             <span className="material-symbols-outlined text-[17px]">share</span>
             <span>Compartir</span>
@@ -53,7 +53,7 @@ export const WishlistView: React.FC = () => {
             href={`https://wa.me/51987654321?text=Hola,%20deseo%20asesoria%20sobre%20mi%20lista%20de%20deseos%20con%20${wishlistItems.length}%20items`}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition-colors"
+            className="p-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
           >
             <span className="material-symbols-outlined text-[17px]">chat</span>
             <span>Enviar a Asesor</span>
@@ -71,10 +71,10 @@ export const WishlistView: React.FC = () => {
                 showToast('Descargando cotización formal en PDF...');
               }
             }}
-            className="p-2.5 rounded-xl bg-primary hover:bg-primary-container text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+            className="p-2.5 rounded-xl bg-[#F07F00] hover:bg-[#d97300] text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
             title="Descargar proforma y cotización formal con membrete Nor Celis"
           >
-            <span className="material-symbols-outlined text-[17px] text-red-400">picture_as_pdf</span>
+            <span className="material-symbols-outlined text-[17px]">picture_as_pdf</span>
             <span>Cotización PDF</span>
           </button>
         </div>
@@ -82,22 +82,22 @@ export const WishlistView: React.FC = () => {
 
       {/* Rapid Purchase Ribbon (Screen 7 spec) */}
       {wishlistItems.length > 0 && (
-        <div className="bg-primary text-white rounded-3xl p-5 shadow-lg border border-primary-container flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="bg-white/10 backdrop-blur-sm text-white rounded-3xl p-5 shadow-lg border border-white/20 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-secondary-container text-white flex items-center justify-center font-bold text-2xl shadow-md">
+            <div className="w-12 h-12 rounded-2xl bg-[#F07F00] text-white flex items-center justify-center font-bold text-2xl shadow-md">
               <span className="material-symbols-outlined text-2xl">shopping_bag</span>
             </div>
             <div>
-              <span className="text-[10px] uppercase font-bold text-secondary-fixed block">
+              <span className="text-[10px] uppercase font-bold text-[#F07F00] block">
                 Resumen de tu Selección
               </span>
               <div className="font-headline font-extrabold text-xl text-white">
                 Valor estimado: S/ {totalValueSoles.toLocaleString()}{' '}
-                <span className="text-xs font-mono text-surface-container-highest/70 font-normal">
+                <span className="text-xs font-mono text-white/70 font-normal">
                   (~${totalValueUsd.toLocaleString()} USD)
                 </span>
               </div>
-              <p className="text-xs text-surface-container-highest/80">
+              <p className="text-xs text-white/80">
                 {wishlistItems.length} productos listos para despacho express o instalación en taller
               </p>
             </div>
@@ -106,7 +106,7 @@ export const WishlistView: React.FC = () => {
           <div className="flex items-center gap-3 w-full md:w-auto">
             <button
               onClick={moveAllWishlistToCart}
-              className="flex-1 md:flex-none bg-secondary-container hover:bg-secondary text-white font-bold text-xs px-5 py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+              className="flex-1 md:flex-none bg-[#F07F00] hover:bg-[#d97300] text-white font-bold text-xs px-5 py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
             >
               <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span>
               <span>Mover Todo al Carrito</span>
@@ -116,7 +116,7 @@ export const WishlistView: React.FC = () => {
                 moveAllWishlistToCart();
                 setCurrentView('cart');
               }}
-              className="flex-1 md:flex-none bg-white hover:bg-surface-container-lowest text-primary font-bold text-xs px-5 py-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="flex-1 md:flex-none bg-white hover:bg-gray-100 text-[#212955] font-bold text-xs px-5 py-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
             >
               <span className="material-symbols-outlined text-[18px]">bolt</span>
               <span>Comprar con 1 Clic</span>
@@ -126,11 +126,11 @@ export const WishlistView: React.FC = () => {
       )}
 
       {/* Active Garage Compatibility Indicator */}
-      <div className="bg-surface-container-low p-3.5 rounded-2xl border border-surface-container flex items-center justify-between text-xs">
+      <div className="bg-white/95 text-gray-800 p-3.5 rounded-2xl border border-gray-200 flex items-center justify-between text-xs shadow-xs">
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-emerald-600 text-lg">verified</span>
-          <span className="text-outline">
-            Verificando compatibilidad con: <strong className="text-on-surface">{activeGarage.brand} {activeGarage.model} ({activeGarage.year})</strong>
+          <span className="text-gray-600">
+            Verificando compatibilidad con: <strong className="text-[#212955]">{activeGarage.brand} {activeGarage.model} ({activeGarage.year})</strong>
           </span>
         </div>
         <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">
@@ -139,46 +139,46 @@ export const WishlistView: React.FC = () => {
       </div>
 
       {/* Category Tabs */}
-      <div className="flex border-b border-surface-container text-xs font-bold gap-2">
+      <div className="flex border-b border-white/20 text-xs font-bold gap-2 overflow-x-auto scrollbar-none">
         <button
           onClick={() => setActiveTab('all')}
-          className={`py-2.5 px-4 border-b-2 transition-all ${
+          className={`py-2.5 px-4 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'all'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-outline hover:text-on-surface'
+              ? 'border-[#F07F00] text-white font-extrabold'
+              : 'border-transparent text-white/70 hover:text-white'
           }`}
         >
           Todos los Deseos ({wishlistItems.length})
         </button>
         <button
           onClick={() => setActiveTab('vehicle')}
-          className={`py-2.5 px-4 border-b-2 transition-all ${
+          className={`py-2.5 px-4 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'vehicle'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-outline hover:text-on-surface'
+              ? 'border-[#F07F00] text-white font-extrabold'
+              : 'border-transparent text-white/70 hover:text-white'
           }`}
         >
           Vehículos ({wishlistItems.filter(i => i.type === 'vehicle').length})
         </button>
         <button
           onClick={() => setActiveTab('part')}
-          className={`py-2.5 px-4 border-b-2 transition-all ${
+          className={`py-2.5 px-4 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'part'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-outline hover:text-on-surface'
+              ? 'border-[#F07F00] text-white font-extrabold'
+              : 'border-transparent text-white/70 hover:text-white'
           }`}
         >
           Repuestos OEM ({wishlistItems.filter(i => i.type === 'part').length})
         </button>
         <button
           onClick={() => setActiveTab('service')}
-          className={`py-2.5 px-4 border-b-2 transition-all ${
+          className={`py-2.5 px-4 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'service'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-outline hover:text-on-surface'
+              ? 'border-[#F07F00] text-white font-extrabold'
+              : 'border-transparent text-white/70 hover:text-white'
           }`}
         >
-          Servicios de Taller ({wishlistItems.filter(i => i.type === 'service').length})
+          Servicios Taller ({wishlistItems.filter(i => i.type === 'service').length})
         </button>
       </div>
 

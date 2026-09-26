@@ -1473,7 +1473,7 @@ export const INITIAL_HERO_SLIDES: HeroSlide[] = [
     normalPrice: 181.70,
     productPng: 'https://images.unsplash.com/photo-1581244277943-fe4a9c777189?auto=format&fit=crop&w=700&q=80',
     backgroundImage: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1920&q=80',
-    bgGradient: 'from-[#65a30d]/90 via-[#4d7c0f]/80 to-[#1e3a8a]/70',
+    bgGradient: 'from-[#212955]/95 via-[#181e40]/85 to-[#F07F00]/60',
     active: true,
   },
   {
@@ -1491,7 +1491,7 @@ export const INITIAL_HERO_SLIDES: HeroSlide[] = [
     normalPrice: 420,
     productPng: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBm2ZVyPDgaG_gT5Wlg5rKy4I0y0Y_fr6zB51Ec6gRO9a7UFdIO1N0ljWWg_U6h2wgDrYr2yed5l2g6yIoSBO0O3rK22XateCDgT6pxwfz8tPd8N8z5MZqE5Q_qtDqThCSeAz5RnI3Zxa1HZvziVUiK0IaPbFuspln3dVL-Bdmgt2mDj1rbqvT1S1UrNC8kr6JdBPLRstTEB7C10Ni__fvF0uRzB1pc-VBBtjEZmy1nTX_wD-VBIBJc',
     backgroundImage: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=1920&q=80',
-    bgGradient: 'from-[#84cc16]/90 via-[#65a30d]/80 to-[#0f172a]/75',
+    bgGradient: 'from-[#F07F00]/90 via-[#d97300]/85 to-[#212955]/85',
     active: true,
   },
   {
@@ -1508,7 +1508,7 @@ export const INITIAL_HERO_SLIDES: HeroSlide[] = [
     normalPrice: 450,
     productPng: 'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=700&q=80',
     backgroundImage: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1920&q=80',
-    bgGradient: 'from-[#0284c7]/90 via-[#0369a1]/80 to-[#0f172a]/75',
+    bgGradient: 'from-[#212955]/95 via-[#2b356e]/85 to-[#181e40]/90',
     active: true,
   },
   {
@@ -1526,7 +1526,7 @@ export const INITIAL_HERO_SLIDES: HeroSlide[] = [
     normalPrice: 1980,
     productPng: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBdfVk_uYU8eyl8B4OWkZBEHTgEzsPGkIncWquDyZZjMrwZFQQJKU56rlYaGlskvXDCkuAzLoEgwFmTBOx7MpraATJaeBjdVy72h8TGgX_9kyc6zinSO3C2W8zat5rg0JLFAwbtKUOqE-cEYvsfgnBBYaBBrY36BEYRMbRJUloNvSFA7u82WjHQ7p2fRNUZm_ilig0UZpRPV6VE-xoDtcZI8UvbupdMs4YqOPtxDElx2yFMOzPAoh1T',
     backgroundImage: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1920&q=80',
-    bgGradient: 'from-[#84cc16]/90 via-[#4d7c0f]/80 to-[#1e293b]/75',
+    bgGradient: 'from-[#F07F00]/95 via-[#b35e00]/85 to-[#212955]/90',
     active: true,
   },
   {
@@ -1544,7 +1544,7 @@ export const INITIAL_HERO_SLIDES: HeroSlide[] = [
     normalPrice: 240,
     productPng: 'https://images.unsplash.com/photo-1615906655593-ad0386982a0f?auto=format&fit=crop&w=700&q=80',
     backgroundImage: 'https://images.unsplash.com/photo-1600705722908-bab1e61c0b4d?auto=format&fit=crop&w=1920&q=80',
-    bgGradient: 'from-[#059669]/90 via-[#047857]/80 to-[#0f172a]/75',
+    bgGradient: 'from-[#212955]/95 via-[#181e40]/90 to-[#F07F00]/50',
     active: true,
   },
 ];

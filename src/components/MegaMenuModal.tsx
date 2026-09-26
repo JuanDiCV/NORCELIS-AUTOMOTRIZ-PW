@@ -10,9 +10,14 @@ import {
   TireOffRoadIcon,
   Equip4x4Icon,
   LubricantOilIcon,
-  SecurityFilmIcon,
   DetailingPPFIcon,
   SuspensionHDIcon,
+  BrakeDiscIcon,
+  AppleIconBadge,
+  AppleSearchIcon,
+  AppleCloseIcon,
+  AppleChevronRightIcon,
+  AppleUserIcon,
 } from './AutoIcons';
 
 interface MegaMenuModalProps {
@@ -600,7 +605,7 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
           {/* User Welcome Pill */}
           <div className="flex items-center gap-3 shrink-0">
             <div className="w-9 h-9 rounded-full bg-[#212955] text-[#FFFFFF] flex items-center justify-center font-bold text-xs shadow-xs border-2 border-[#F07F00]">
-              <span className="material-symbols-outlined text-lg">person</span>
+              <AppleUserIcon size={18} className="text-white" />
             </div>
             <div>
               <div className="text-xs font-bold text-[#212955]">
@@ -624,16 +629,16 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
               placeholder="Buscar en Nor Celis Automotriz / Repuestos, Marcas..."
               className="w-full bg-[#FFFFFF] border border-[#9D9D9C] rounded-full pl-10 pr-10 py-2 text-xs sm:text-sm text-[#212955] placeholder:text-[#9D9D9C] focus:outline-none focus:border-[#F07F00] focus:ring-1 focus:ring-[#F07F00] transition-all"
             />
-            <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9D9D9C] text-lg">
-              search
-            </span>
+            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9D9D9C] pointer-events-none">
+              <AppleSearchIcon size={18} />
+            </div>
             {menuSearchQuery && (
               <button
                 type="button"
                 onClick={() => setMenuSearchQuery('')}
                 className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9D9D9C] hover:text-[#212955] cursor-pointer"
               >
-                <span className="material-symbols-outlined text-base">close</span>
+                <AppleCloseIcon size={16} />
               </button>
             )}
           </form>
@@ -659,34 +664,52 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
             <div className="space-y-0.5">
               {DEPARTMENTS.map((dept) => {
                 const isActive = dept.id === currentDept.id;
+                const getDepartmentIcon = (id: string) => {
+                  switch (id) {
+                    case 'automotriz':
+                      return AutoPartsIcon;
+                    case 'repuestos-autopartes':
+                      return BrakeDiscIcon;
+                    case 'equipamiento-4x4':
+                      return Equip4x4Icon;
+                    case 'llantas-aros':
+                      return TireOffRoadIcon;
+                    case 'limpieza-detailing':
+                      return DetailingPPFIcon;
+                    case 'taller-servicios':
+                      return WorkshopServiceIcon;
+                    case 'vehiculos-catalogo':
+                      return VehicleIcon;
+                    default:
+                      return MasterCatalogIcon;
+                  }
+                };
+                const DeptIcon = getDepartmentIcon(dept.id);
                 return (
                   <button
                     key={dept.id}
                     onClick={() => setActiveDeptId(dept.id)}
                     onMouseEnter={() => setActiveDeptId(dept.id)}
-                    className={`w-full flex items-center justify-between px-4 py-3 text-left transition-colors cursor-pointer text-xs sm:text-sm ${
+                    className={`w-full flex items-center justify-between px-4 py-3 text-left transition-colors cursor-pointer text-xs sm:text-sm group ${
                       isActive
                         ? 'bg-[#FFFFFF] text-[#F07F00] font-bold border-l-4 border-[#F07F00] shadow-2xs'
                         : 'text-[#212955] hover:bg-[#FFFFFF] hover:text-[#F07F00] font-medium'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 truncate pr-2">
-                      <span
-                        className={`material-symbols-outlined text-lg ${
-                          isActive ? 'text-[#F07F00]' : 'text-[#9D9D9C]'
-                        }`}
+                      <AppleIconBadge
+                        variant={isActive ? 'primary' : 'subtle-blue'}
+                        size="xs"
+                        className={isActive ? '' : 'opacity-80 group-hover:opacity-100'}
                       >
-                        {dept.iconName}
-                      </span>
+                        <DeptIcon size={14} className={isActive ? 'text-white' : 'text-[#212955]'} />
+                      </AppleIconBadge>
                       <span className="truncate">{dept.name}</span>
                     </div>
-                    <span
-                      className={`material-symbols-outlined text-sm shrink-0 ${
-                        isActive ? 'text-[#F07F00]' : 'text-[#9D9D9C]'
-                      }`}
-                    >
-                      chevron_right
-                    </span>
+                    <AppleChevronRightIcon
+                      size={14}
+                      className={isActive ? 'text-[#F07F00]' : 'text-[#9D9D9C]'}
+                    />
                   </button>
                 );
               })}
@@ -722,9 +745,34 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
             {/* Corporate Orange Header Bar */}
             <div className="bg-[#F07F00] text-[#FFFFFF] px-6 py-3.5 flex items-center justify-between shadow-xs shrink-0">
               <div className="flex items-center gap-2.5">
-                <span className="material-symbols-outlined text-xl text-[#FFFFFF]">
-                  {currentDept.iconName}
-                </span>
+                {(() => {
+                  const getBannerDeptIcon = (id: string) => {
+                    switch (id) {
+                      case 'automotriz':
+                        return AutoPartsIcon;
+                      case 'repuestos-autopartes':
+                        return BrakeDiscIcon;
+                      case 'equipamiento-4x4':
+                        return Equip4x4Icon;
+                      case 'llantas-aros':
+                        return TireOffRoadIcon;
+                      case 'limpieza-detailing':
+                        return DetailingPPFIcon;
+                      case 'taller-servicios':
+                        return WorkshopServiceIcon;
+                      case 'vehiculos-catalogo':
+                        return VehicleIcon;
+                      default:
+                        return MasterCatalogIcon;
+                    }
+                  };
+                  const BannerIcon = getBannerDeptIcon(currentDept.id);
+                  return (
+                    <AppleIconBadge variant="frosted" size="md">
+                      <BannerIcon size={20} className="text-[#F07F00]" />
+                    </AppleIconBadge>
+                  );
+                })()}
                 <div>
                   <h3 className="font-bold text-sm sm:text-base text-[#FFFFFF] tracking-wide">
                     {currentDept.bannerTitle}
@@ -740,7 +788,7 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
                 className="text-xs sm:text-sm font-bold text-[#FFFFFF] hover:text-[#FFFFFF]/90 flex items-center gap-1 underline-offset-2 hover:underline cursor-pointer"
               >
                 <span>Ver todo</span>
-                <span className="material-symbols-outlined text-sm">chevron_right</span>
+                <AppleChevronRightIcon size={14} />
               </button>
             </div>
 
@@ -771,9 +819,10 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
                             className="group/item flex items-center justify-between w-full text-left text-xs text-[#212955] opacity-80 hover:opacity-100 hover:scale-[1.03] hover:translate-x-1 origin-left hover:text-[#F07F00] hover:font-semibold py-1 px-1.5 rounded transition-all duration-200 ease-out cursor-pointer"
                           >
                             <span className="line-clamp-1">{item.name}</span>
-                            <span className="material-symbols-outlined text-[14px] text-[#F07F00] opacity-0 -translate-x-1 group-hover/item:opacity-100 group-hover/item:translate-x-0 transition-all duration-200 shrink-0">
-                              chevron_right
-                            </span>
+                            <AppleChevronRightIcon
+                              size={14}
+                              className="text-[#F07F00] opacity-0 -translate-x-1 group-hover/item:opacity-100 group-hover/item:translate-x-0 transition-all duration-200 shrink-0"
+                            />
                           </button>
                         </li>
                       ))}

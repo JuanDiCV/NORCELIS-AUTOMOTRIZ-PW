@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { HeroSlide, Vehicle, AutoPart } from '../types';
 import { ImageUploadField } from '../components/admin/ImageUploadField';
@@ -20,12 +20,52 @@ interface CustomOffer {
 }
 
 const PRESET_GRADIENTS = [
-  { name: 'Azul Nor Celis Oficial', class: 'from-[#0284c7]/90 via-[#0369a1]/80 to-[#0f172a]/75' },
+  { name: 'Azul & Naranja Nor Celis Oficial', class: 'from-[#212955]/95 via-[#181e40]/85 to-[#F07F00]/60' },
+  { name: 'Naranja Empresarial Nor Celis', class: 'from-[#F07F00]/90 via-[#d97300]/85 to-[#212955]/85' },
+  { name: 'Azul Marino Royal', class: 'from-[#212955]/95 via-[#181e40]/90 to-[#0f172a]/80' },
   { name: 'Verde Racing OEM', class: 'from-[#65a30d]/90 via-[#4d7c0f]/80 to-[#1e3a8a]/70' },
   { name: 'Naranja Fuego Comercial', class: 'from-[#ea580c]/90 via-[#c2410c]/80 to-[#18181b]/80' },
-  { name: 'Esmeralda Eco Híbridos', class: 'from-[#059669]/90 via-[#047857]/80 to-[#0f172a]/75' },
   { name: 'Dark Titanium 4x4', class: 'from-[#1e293b]/95 via-[#0f172a]/90 to-[#020617]/95' },
-  { name: 'Azul Marino Royal', class: 'from-[#212955]/95 via-[#181e40]/90 to-[#0f172a]/80' },
+];
+
+const INITIAL_OFFERS: CustomOffer[] = [
+  {
+    id: 'off-retoma',
+    title: 'Plan Retoma Nor Celis',
+    badge: 'Bono Hasta $2,500',
+    description: 'Tasación técnica oficial en 30 min para dejar tu vehículo como parte de pago.',
+    discountText: 'Bono Comercial de hasta $2,500 USD',
+    active: true,
+    targetView: 'cars',
+  },
+  {
+    id: 'off-santander',
+    title: 'Tasa Exclusiva Santander Consumer',
+    badge: 'Desde 9.99% TEA',
+    description: 'Financiamiento directo con cuotas mensuales accesibles en unidades 0 km.',
+    discountText: 'Aprobación en 24 horas hábiles',
+    active: true,
+    targetView: 'cars',
+  },
+  {
+    id: 'off-taller',
+    title: '1er Servicio Preventivo Bonificado',
+    badge: '1,000 KM Gratis',
+    description: 'Mano de obra 100% bonificada en nuestro taller de alta tecnología en Cajamarca.',
+    discountText: 'Mano de obra 0 soles',
+    active: true,
+    targetView: 'services',
+  },
+  {
+    id: 'off-cyber-repuestos',
+    title: 'Descuento en Pastillas & Frenos OEM',
+    badge: '-20% Descuento',
+    description: 'Kits de frenos Brembo y filtros originales con instalación certificada.',
+    discountText: '20% OFF en repuestos seleccionados',
+    active: true,
+    targetView: 'parts',
+    categoryOrBrand: 'frenos',
+  },
 ];
 
 export const AdminDashboardView: React.FC = () => {
@@ -107,46 +147,69 @@ export const AdminDashboardView: React.FC = () => {
     },
   });
 
-  // --- STATE FOR COMMERCIAL OFFERS ---
-  const [offersList, setOffersList] = useState<CustomOffer[]>([
-    {
-      id: 'off-retoma',
-      title: 'Plan Retoma Nor Celis',
-      badge: 'Bono Hasta $2,500',
-      description: 'Tasación técnica oficial en 30 min para dejar tu vehículo como parte de pago.',
-      discountText: 'Bono Comercial de hasta $2,500 USD',
-      active: true,
-      targetView: 'cars',
-    },
-    {
-      id: 'off-santander',
-      title: 'Tasa Exclusiva Santander Consumer',
-      badge: 'Desde 9.99% TEA',
-      description: 'Financiamiento directo con cuotas mensuales accesibles en unidades 0 km.',
-      discountText: 'Aprobación en 24 horas hábiles',
-      active: true,
-      targetView: 'cars',
-    },
-    {
-      id: 'off-taller',
-      title: '1er Servicio Preventivo Bonificado',
-      badge: '1,000 KM Gratis',
-      description: 'Mano de obra 100% bonificada en nuestro taller de alta tecnología en Cajamarca.',
-      discountText: 'Mano de obra 0 soles',
-      active: true,
-      targetView: 'services',
-    },
-    {
-      id: 'off-cyber-repuestos',
-      title: 'Descuento en Pastillas & Frenos OEM',
-      badge: '-20% Descuento',
-      description: 'Kits de frenos Brembo y filtros originales con instalación certificada.',
-      discountText: '20% OFF en repuestos seleccionados',
-      active: true,
-      targetView: 'parts',
-      categoryOrBrand: 'frenos',
-    },
-  ]);
+  // --- STATE FOR COMMERCIAL OFFERS (PERSISTENT IN LOCALSTORAGE) ---
+  const [offersList, setOffersList] = useState<CustomOffer[]>(() => {
+    try {
+      const saved = localStorage.getItem('norcelis_commercial_offers');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return INITIAL_OFFERS;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('norcelis_commercial_offers', JSON.stringify(offersList));
+    } catch (e) {}
+  }, [offersList]);
+
+  const [isCreatingOffer, setIsCreatingOffer] = useState(false);
+  const [editingOffer, setEditingOffer] = useState<CustomOffer | null>(null);
+  const [offerFormData, setOfferFormData] = useState<Omit<CustomOffer, 'id'>>({
+    title: '',
+    badge: 'Bono Especial',
+    description: '',
+    discountText: '',
+    active: true,
+    targetView: 'cars',
+  });
+
+  // --- IN-APP CONFIRMATION MODAL STATE (Zero native window.confirm) ---
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    confirmText: string;
+    isDestructive?: boolean;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    description: '',
+    confirmText: 'Confirmar',
+    isDestructive: false,
+    onConfirm: () => {},
+  });
+
+  const requestConfirmation = (opts: {
+    title: string;
+    description: string;
+    confirmText?: string;
+    isDestructive?: boolean;
+    onConfirm: () => void;
+  }) => {
+    setConfirmModal({
+      isOpen: true,
+      title: opts.title,
+      description: opts.description,
+      confirmText: opts.confirmText || 'Confirmar',
+      isDestructive: opts.isDestructive ?? true,
+      onConfirm: opts.onConfirm,
+    });
+  };
+
+  const closeConfirmation = () => {
+    setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+  };
 
   // --- STATE FOR AUTOPARTS ---
   const [partsSearchQuery, setPartsSearchQuery] = useState('');
@@ -317,21 +380,24 @@ export const AdminDashboardView: React.FC = () => {
   const handleSaveSlide = (e: React.FormEvent) => {
     e.preventDefault();
     if (!slideFormData.categoryTitle || !slideFormData.productTitle) {
-      alert('Por favor completa el título de la categoría y el nombre del producto.');
+      showToast('⚠️ Por favor completa el título de la categoría y el nombre del producto');
       return;
     }
-
     if (editingSlide) {
       updatePromoSlide(editingSlide.id, slideFormData);
+      showToast('Banner promocional actualizado correctamente');
     } else {
       addPromoSlide(slideFormData as Omit<HeroSlide, 'id'>);
+      showToast('Nuevo banner agregado al carrusel');
     }
     setIsCreatingSlide(false);
     setEditingSlide(null);
   };
 
   const handleToggleSlideActive = (slide: HeroSlide) => {
-    updatePromoSlide(slide.id, { active: slide.active === false ? true : false });
+    const nextState = slide.active === false ? true : false;
+    updatePromoSlide(slide.id, { active: nextState });
+    showToast(`Banner "${slide.productTitle}" ${nextState ? 'activado' : 'pausado'}`);
   };
 
   // --- VEHICLE HANDLERS ---
@@ -391,10 +457,9 @@ export const AdminDashboardView: React.FC = () => {
   const handleSaveVehicle = (e: React.FormEvent) => {
     e.preventDefault();
     if (!vehicleFormData.name || !vehicleFormData.brand || !vehicleFormData.image) {
-      alert('Por favor ingresa nombre, marca y la fotografía principal del vehículo.');
+      showToast('⚠️ Por favor ingresa nombre, marca y la fotografía principal del vehículo');
       return;
     }
-
     const payload = {
       ...vehicleFormData,
       year: Number(vehicleFormData.year) || 2025,
@@ -403,11 +468,12 @@ export const AdminDashboardView: React.FC = () => {
       monthlyUsd: Number(vehicleFormData.monthlyUsd) || 0,
       monthlySoles: Number(vehicleFormData.monthlySoles) || 0,
     };
-
     if (editingVehicle) {
       updateVehicle(editingVehicle.id, payload);
+      showToast(`Vehículo "${payload.name}" actualizado`);
     } else {
       addVehicle(payload as Omit<Vehicle, 'id'>);
+      showToast(`Nuevo vehículo "${payload.name}" ingresado`);
     }
     setIsCreatingVehicle(false);
     setEditingVehicle(null);
@@ -468,7 +534,7 @@ export const AdminDashboardView: React.FC = () => {
     e.preventDefault();
     if (!quickImagePart) return;
     if (!quickImageUrl) {
-      alert('Por favor selecciona o ingresa una imagen válida.');
+      showToast('⚠️ Por favor selecciona o ingresa una imagen válida');
       return;
     }
     updateAutoPart(quickImagePart.id, { image: quickImageUrl });
@@ -479,10 +545,9 @@ export const AdminDashboardView: React.FC = () => {
   const handleSavePart = (e: React.FormEvent) => {
     e.preventDefault();
     if (!partFormData.name || !partFormData.brand || !partFormData.image) {
-      alert('Por favor ingresa nombre, marca y la fotografía del repuesto.');
+      showToast('⚠️ Por favor ingresa nombre, marca y la fotografía del repuesto');
       return;
     }
-
     const payload = {
       ...partFormData,
       priceSoles: Number(partFormData.priceSoles) || 0,
@@ -491,14 +556,79 @@ export const AdminDashboardView: React.FC = () => {
       reviewCount: partFormData.reviewCount || 1,
       features: Array.isArray(partFormData.features) ? partFormData.features : ['Garantía de calidad Nor Celis'],
     };
-
     if (editingPart) {
       updateAutoPart(editingPart.id, payload);
+      showToast(`Repuesto "${payload.name}" actualizado`);
     } else {
       addAutoPart(payload as Omit<AutoPart, 'id'>);
+      showToast(`Repuesto "${payload.name}" agregado al catálogo`);
     }
     setIsCreatingPart(false);
     setEditingPart(null);
+  };
+
+  // --- COMMERCIAL OFFER HANDLERS ---
+  const handleOpenCreateOffer = () => {
+    setEditingOffer(null);
+    setOfferFormData({
+      title: '',
+      badge: 'Bono Especial',
+      description: '',
+      discountText: '',
+      active: true,
+      targetView: 'cars',
+    });
+    setIsCreatingOffer(true);
+  };
+
+  const handleEditOffer = (offer: CustomOffer) => {
+    setEditingOffer(offer);
+    setOfferFormData({
+      title: offer.title,
+      badge: offer.badge,
+      description: offer.description,
+      discountText: offer.discountText,
+      active: offer.active,
+      targetView: offer.targetView,
+      categoryOrBrand: offer.categoryOrBrand,
+    });
+    setIsCreatingOffer(true);
+  };
+
+  const handleSaveOffer = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!offerFormData.title || !offerFormData.badge) {
+      showToast('⚠️ Por favor completa el título y la insignia de la oferta');
+      return;
+    }
+    if (editingOffer) {
+      setOffersList((prev) =>
+        prev.map((o) => (o.id === editingOffer.id ? { ...o, ...offerFormData } : o))
+      );
+      showToast(`Campaña "${offerFormData.title}" actualizada`);
+    } else {
+      const newOffer: CustomOffer = {
+        ...offerFormData,
+        id: `off-${Date.now()}`,
+      };
+      setOffersList((prev) => [newOffer, ...prev]);
+      showToast(`Nueva campaña "${newOffer.title}" creada`);
+    }
+    setIsCreatingOffer(false);
+    setEditingOffer(null);
+  };
+
+  const handleDeleteOffer = (offer: CustomOffer) => {
+    requestConfirmation({
+      title: '¿Eliminar Campaña Comercial?',
+      description: `¿Estás seguro de eliminar la campaña "${offer.title}"? Esta acción la removerá de las promociones activas.`,
+      confirmText: 'Eliminar Campaña',
+      isDestructive: true,
+      onConfirm: () => {
+        setOffersList((prev) => prev.filter((o) => o.id !== offer.id));
+        showToast(`Campaña "${offer.title}" eliminada`);
+      },
+    });
   };
 
   const handleExportPartsCsv = () => {
@@ -557,9 +687,12 @@ export const AdminDashboardView: React.FC = () => {
             }
           });
         }
+        if (parsed.offersList && Array.isArray(parsed.offersList)) {
+          setOffersList(parsed.offersList);
+        }
         showToast('Datos de copia de seguridad importados satisfactoriamente');
       } catch (err) {
-        alert('Archivo de copia de seguridad no válido o dañado.');
+        showToast('❌ Archivo de copia de seguridad no válido o dañado');
       }
     };
     reader.readAsText(file);
@@ -576,16 +709,17 @@ export const AdminDashboardView: React.FC = () => {
   const handleUpdatePin = (e: React.FormEvent) => {
     e.preventDefault();
     if (newPin.length !== 4 || !/^\d+$/.test(newPin)) {
-      alert('El PIN debe contener exactamente 4 dígitos numéricos.');
+      showToast('⚠️ El PIN debe contener exactamente 4 dígitos numéricos');
       return;
     }
     if (newPin !== confirmPin) {
-      alert('Los códigos PIN ingresados no coinciden.');
+      showToast('⚠️ Los códigos PIN ingresados no coinciden');
       return;
     }
     setAdminPin(newPin);
     setNewPin('');
     setConfirmPin('');
+    showToast('✓ PIN de seguridad actualizado con éxito');
   };
 
   const handleLogout = () => {
@@ -595,7 +729,7 @@ export const AdminDashboardView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-[#212955] pb-24">
+    <div className="min-h-screen text-[#212955] pb-24">
       {/* Hidden File Input for JSON Backup Import */}
       <input
         ref={jsonImportRef}
@@ -981,9 +1115,16 @@ export const AdminDashboardView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => {
-                            if (confirm(`¿Eliminar el banner "${slide.productTitle}"?`)) {
-                              deletePromoSlide(slide.id);
-                            }
+                            requestConfirmation({
+                              title: '¿Eliminar Banner Promocional?',
+                              description: `¿Estás seguro de eliminar el banner "${slide.productTitle}" (${slide.categoryTitle}) del carrusel principal?`,
+                              confirmText: 'Eliminar Banner',
+                              isDestructive: true,
+                              onConfirm: () => {
+                                deletePromoSlide(slide.id);
+                                showToast('Banner eliminado del carrusel');
+                              },
+                            });
                           }}
                           className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 cursor-pointer"
                           title="Eliminar banner"
@@ -1513,9 +1654,16 @@ export const AdminDashboardView: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => {
-                              if (confirm(`¿Retirar del catálogo el vehículo "${veh.name}"?`)) {
-                                deleteVehicle(veh.id);
-                              }
+                              requestConfirmation({
+                                title: '¿Retirar Vehículo del Catálogo?',
+                                description: `¿Estás seguro de retirar el vehículo "${veh.name}" (${veh.brand}) del catálogo?`,
+                                confirmText: 'Eliminar Vehículo',
+                                isDestructive: true,
+                                onConfirm: () => {
+                                  deleteVehicle(veh.id);
+                                  showToast(`Vehículo "${veh.name}" retirado del catálogo`);
+                                },
+                              });
                             }}
                             className="p-2 min-h-[38px] bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition-colors flex items-center justify-center cursor-pointer"
                             title="Eliminar auto"
@@ -1600,7 +1748,16 @@ export const AdminDashboardView: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  if (confirm(`¿Eliminar ${veh.name}?`)) deleteVehicle(veh.id);
+                                  requestConfirmation({
+                                    title: '¿Retirar Vehículo del Catálogo?',
+                                    description: `¿Estás seguro de retirar "${veh.name}" del catálogo?`,
+                                    confirmText: 'Eliminar Vehículo',
+                                    isDestructive: true,
+                                    onConfirm: () => {
+                                      deleteVehicle(veh.id);
+                                      showToast(`Vehículo "${veh.name}" retirado`);
+                                    },
+                                  });
                                 }}
                                 className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors cursor-pointer"
                                 title="Eliminar"
@@ -2195,9 +2352,16 @@ export const AdminDashboardView: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => {
-                                if (confirm(`¿Eliminar repuesto "${part.name}" del catálogo?`)) {
-                                  deleteAutoPart(part.id);
-                                }
+                                requestConfirmation({
+                                  title: '¿Eliminar Autoparte del Catálogo?',
+                                  description: `¿Estás seguro de eliminar el repuesto "${part.name}" (SKU: ${part.sku})?`,
+                                  confirmText: 'Eliminar Repuesto',
+                                  isDestructive: true,
+                                  onConfirm: () => {
+                                    deleteAutoPart(part.id);
+                                    showToast(`Repuesto "${part.name}" eliminado`);
+                                  },
+                                });
                               }}
                               className="min-h-[34px] p-1.5 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center cursor-pointer"
                               title="Eliminar repuesto"
@@ -2314,9 +2478,16 @@ export const AdminDashboardView: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  if (confirm(`¿Eliminar repuesto "${part.name}"?`)) {
-                                    deleteAutoPart(part.id);
-                                  }
+                                  requestConfirmation({
+                                    title: '¿Eliminar Autoparte del Catálogo?',
+                                    description: `¿Estás seguro de eliminar el repuesto "${part.name}"?`,
+                                    confirmText: 'Eliminar Repuesto',
+                                    isDestructive: true,
+                                    onConfirm: () => {
+                                      deleteAutoPart(part.id);
+                                      showToast(`Repuesto "${part.name}" eliminado`);
+                                    },
+                                  });
                                 }}
                                 className="p-1.5 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white rounded-lg transition-colors cursor-pointer"
                                 title="Eliminar repuesto"
@@ -2680,9 +2851,17 @@ export const AdminDashboardView: React.FC = () => {
                   Gestor de Ofertas Destacadas &amp; Campañas Comerciales
                 </h2>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  Activa o desactiva bonos comerciales, planes de financiamiento y promociones de taller para la página web.
+                  Activa, crea y personaliza bonos comerciales, planes de financiamiento y promociones de taller para la web.
                 </p>
               </div>
+              <button
+                type="button"
+                onClick={handleOpenCreateOffer}
+                className="bg-[#F07F00] hover:bg-[#d97300] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+              >
+                <span className="material-symbols-outlined text-base">add_circle</span>
+                <span>Nueva Campaña Comercial</span>
+              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -2696,26 +2875,44 @@ export const AdminDashboardView: React.FC = () => {
                   }`}
                 >
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2">
                       <span className="bg-[#F07F00] text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded shadow-xs">
                         {offer.badge}
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setOffersList((prev) =>
-                            prev.map((o) => (o.id === offer.id ? { ...o, active: !o.active } : o))
-                          );
-                          showToast(`Campaña "${offer.title}" ${!offer.active ? 'activada' : 'desactivada'}`);
-                        }}
-                        className={`text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer transition-colors ${
-                          offer.active
-                            ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                            : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                        }`}
-                      >
-                        {offer.active ? '✓ Campaña Activa' : 'Pausada'}
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setOffersList((prev) =>
+                              prev.map((o) => (o.id === offer.id ? { ...o, active: !o.active } : o))
+                            );
+                            showToast(`Campaña "${offer.title}" ${!offer.active ? 'activada' : 'pausada'}`);
+                          }}
+                          className={`text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer transition-colors ${
+                            offer.active
+                              ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                              : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                          }`}
+                        >
+                          {offer.active ? '✓ Activa' : 'Pausada'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleEditOffer(offer)}
+                          className="p-1.5 rounded-lg bg-gray-100 hover:bg-[#212955] text-gray-600 hover:text-white transition-colors cursor-pointer"
+                          title="Editar Campaña"
+                        >
+                          <span className="material-symbols-outlined text-sm">edit</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteOffer(offer)}
+                          className="p-1.5 rounded-lg bg-red-50 hover:bg-red-600 text-red-600 hover:text-white transition-colors cursor-pointer"
+                          title="Eliminar Campaña"
+                        >
+                          <span className="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                      </div>
                     </div>
 
                     <div>
@@ -2733,15 +2930,140 @@ export const AdminDashboardView: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
-                    <span className="capitalize">Sección: {offer.targetView}</span>
-                    <span className="text-[11px] text-emerald-600 font-bold">
-                      {offer.active ? '● Visible en Portada' : '○ Oculta'}
+                  <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400 mt-4">
+                    <span className="capitalize flex items-center gap-1">
+                      <span className="material-symbols-outlined text-xs text-[#212955]">folder</span>
+                      <span>Sección: {offer.targetView === 'cars' ? 'Vehículos' : offer.targetView === 'parts' ? 'Autopartes' : 'Taller'}</span>
+                    </span>
+                    <span className={`text-[11px] font-bold ${offer.active ? 'text-emerald-600' : 'text-gray-400'}`}>
+                      {offer.active ? '● Visible en Tienda' : '○ Oculta'}
                     </span>
                   </div>
                 </div>
               ))}
             </div>
+
+            {/* Modal para Crear / Editar Oferta Comercial */}
+            {isCreatingOffer && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+                <div className="bg-white rounded-2xl p-6 max-w-lg w-full border border-[#9D9D9C]/30 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+                  <div className="flex items-center justify-between border-b pb-3">
+                    <h3 className="font-headline font-bold text-base text-[#212955]">
+                      {editingOffer ? 'Editar Campaña Comercial' : 'Nueva Campaña Comercial'}
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setIsCreatingOffer(false)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <span className="material-symbols-outlined text-xl">close</span>
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSaveOffer} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-[#212955] mb-1">
+                        Título de la Campaña *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={offerFormData.title}
+                        onChange={(e) => setOfferFormData({ ...offerFormData, title: e.target.value })}
+                        placeholder="Ej: Bono Comercial Plan Retoma"
+                        className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-xl px-3 py-2 text-xs text-[#212955]"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-[#212955] mb-1">
+                          Insignia / Badge *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={offerFormData.badge}
+                          onChange={(e) => setOfferFormData({ ...offerFormData, badge: e.target.value })}
+                          placeholder="Ej: Bono $2,500 o 20% OFF"
+                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-xl px-3 py-2 text-xs text-[#212955]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-[#212955] mb-1">
+                          Sección Destino
+                        </label>
+                        <select
+                          value={offerFormData.targetView}
+                          onChange={(e) => setOfferFormData({ ...offerFormData, targetView: e.target.value as any })}
+                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-xl px-3 py-2 text-xs text-[#212955] min-h-[38px]"
+                        >
+                          <option value="cars">Catálogo de Vehículos</option>
+                          <option value="parts">Autopartes &amp; Repuestos</option>
+                          <option value="services">Servicios de Taller</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-[#212955] mb-1">
+                        Detalle del Beneficio / Descuento *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={offerFormData.discountText}
+                        onChange={(e) => setOfferFormData({ ...offerFormData, discountText: e.target.value })}
+                        placeholder="Ej: Bono Comercial de hasta $2,500 USD directo al precio"
+                        className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-xl px-3 py-2 text-xs text-[#212955]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-[#212955] mb-1">
+                        Descripción Informativa
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={offerFormData.description}
+                        onChange={(e) => setOfferFormData({ ...offerFormData, description: e.target.value })}
+                        placeholder="Detalla los términos o alcance de la promoción comercial..."
+                        className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-xl px-3 py-2 text-xs text-[#212955]"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="offerActiveCheck"
+                        checked={offerFormData.active}
+                        onChange={(e) => setOfferFormData({ ...offerFormData, active: e.target.checked })}
+                        className="w-4 h-4 text-[#F07F00] rounded accent-[#F07F00]"
+                      />
+                      <label htmlFor="offerActiveCheck" className="text-xs font-semibold text-gray-700">
+                        Campaña activa inmediatamente en la portada
+                      </label>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-3 pt-3 border-t">
+                      <button
+                        type="button"
+                        onClick={() => setIsCreatingOffer(false)}
+                        className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-5 py-2 text-xs font-bold bg-[#212955] hover:bg-[#181e40] text-white rounded-xl shadow-xs cursor-pointer"
+                      >
+                        {editingOffer ? 'Guardar Cambios' : 'Crear Campaña'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -2859,13 +3181,20 @@ export const AdminDashboardView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => {
-                      if (
-                        confirm(
-                          '¿Estás seguro de restablecer todos los autos, banners y PIN al estado inicial de fábrica?'
-                        )
-                      ) {
-                        resetToDefaultData();
-                      }
+                      requestConfirmation({
+                        title: '¿Restablecer Datos de Fábrica?',
+                        description: 'Esta acción reiniciará todos los autos, autopartes OEM, banners publicitarios y ofertas comerciales al estado inicial de demostración. El PIN volverá a ser 1234.',
+                        confirmText: 'Restablecer Todo',
+                        isDestructive: true,
+                        onConfirm: () => {
+                          resetToDefaultData();
+                          setOffersList(INITIAL_OFFERS);
+                          try {
+                            localStorage.removeItem('norcelis_commercial_offers');
+                          } catch (e) {}
+                          showToast('Valores de fábrica restablecidos correctamente');
+                        },
+                      });
                     }}
                     className="w-full min-h-[42px] bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold rounded-xl border border-red-200 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                   >
@@ -2873,9 +3202,65 @@ export const AdminDashboardView: React.FC = () => {
                     <span>Restablecer Datos de Fábrica</span>
                   </button>
                   <span className="text-[10px] text-gray-400 block text-center">
-                    PIN volverá a ser 1234 y se recuperarán los autos de muestra.
+                    PIN volverá a ser 1234 y se recuperarán los autos y banners de muestra.
                   </span>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ============================================================== */}
+        {/* IN-APP CONFIRMATION MODAL (Zero window.confirm)                */}
+        {/* ============================================================== */}
+        {confirmModal.isOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl p-6 max-w-md w-full border border-[#9D9D9C]/30 shadow-2xl space-y-4">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                    confirmModal.isDestructive
+                      ? 'bg-red-50 text-red-600 border border-red-200'
+                      : 'bg-[#212955]/10 text-[#212955]'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-xl">
+                    {confirmModal.isDestructive ? 'warning' : 'help'}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="font-headline font-bold text-base text-[#212955]">
+                    {confirmModal.title}
+                  </h3>
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-600 leading-relaxed">
+                {confirmModal.description}
+              </p>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={closeConfirmation}
+                  className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    confirmModal.onConfirm();
+                    closeConfirmation();
+                  }}
+                  className={`px-4 py-2 text-xs font-bold text-white rounded-xl shadow-xs transition-colors cursor-pointer ${
+                    confirmModal.isDestructive
+                      ? 'bg-red-600 hover:bg-red-700'
+                      : 'bg-[#212955] hover:bg-[#181e40]'
+                  }`}
+                >
+                  {confirmModal.confirmText}
+                </button>
               </div>
             </div>
           </div>

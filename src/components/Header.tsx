@@ -11,6 +11,17 @@ import {
   MasterCatalogIcon,
   GarageLiftIcon,
   DealershipPinIcon,
+  AppleSearchIcon,
+  AppleHeartIcon,
+  AppleCartIcon,
+  AppleMenuIcon,
+  AppleCloseIcon,
+  AppleChevronDownIcon,
+  AppleIconBadge,
+  BankFinancingIcon,
+  AppleChevronRightIcon,
+  AppleUserIcon,
+  OfficialQuoteIcon,
 } from './AutoIcons';
 
 type NavDropdownType = 'none' | 'vehiculos' | 'repuestos' | 'finanzas' | 'taller';
@@ -102,39 +113,37 @@ export const Header: React.FC = () => {
   return (
     <header className="sticky top-0 z-40 bg-surface-container-lowest border-b border-surface-container shadow-sm">
       {/* Main Bar */}
-      <div className="px-4 sm:px-6 lg:px-8 py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          {/* Logo & Brand */}
-          <div className="flex items-center gap-3">
+      <div className="px-3 sm:px-5 lg:px-8 py-3.5">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 sm:gap-4">
+          {/* Logo & Brand - Desplazado ligeramente hacia la izquierda para mayor presencia institucional */}
+          <div className="flex items-center gap-2 sm:gap-3 -ml-1 sm:-ml-2.5 shrink-0">
             <button
               onClick={() => setIsMegaMenuOpen(!isMegaMenuOpen)}
-              className="md:hidden min-w-[44px] min-h-[44px] flex items-center justify-center p-2.5 rounded-xl hover:bg-surface-container text-on-surface cursor-pointer"
+              className="md:hidden min-w-[44px] min-h-[44px] flex items-center justify-center p-2 rounded-xl hover:bg-surface-container text-[#212955] hover:text-[#F07F00] transition-colors cursor-pointer"
               aria-label="Abrir mega menú de navegación"
             >
-              <span className="material-symbols-outlined text-2xl">
-                {isMegaMenuOpen ? 'close' : 'menu'}
-              </span>
+              {isMegaMenuOpen ? <AppleCloseIcon size={26} /> : <AppleMenuIcon size={26} />}
             </button>
 
             <button
               onClick={() => setCurrentView('home')}
-              className="flex items-center text-left focus:outline-none group cursor-pointer py-1 min-h-[44px]"
+              className="flex items-center text-left focus:outline-none group cursor-pointer py-1 min-h-[46px]"
               title="Nor Celis Automotriz - Inicio"
             >
               <NorCelisLogo
                 variant="full"
                 theme="light"
                 size="custom"
-                className="h-9 sm:h-11 md:h-12 w-auto group-hover:scale-[1.02] transition-transform drop-shadow-xs"
+                className="h-10 sm:h-12 md:h-13 w-auto group-hover:scale-[1.02] transition-transform drop-shadow-xs"
               />
             </button>
           </div>
 
           {/* Botón Menú Estilo Falabella con colores corporativos */}
-          <div className="relative hidden lg:block">
+          <div className="relative hidden lg:block shrink-0">
             <button
               onClick={() => setIsMegaMenuOpen((prev) => !prev)}
-              className={`flex items-center gap-2.5 font-bold text-sm px-4 py-2.5 min-h-[44px] rounded-xl shadow-xs transition-all cursor-pointer ring-1 group ${
+              className={`flex items-center gap-3 font-bold text-sm px-4.5 py-2.5 min-h-[48px] rounded-xl shadow-xs transition-all cursor-pointer ring-1 group ${
                 isMegaMenuOpen
                   ? 'bg-[#212955] text-white ring-2 ring-[#F07F00]'
                   : 'bg-[#212955] hover:bg-[#181e40] text-white ring-[#212955]/30'
@@ -142,103 +151,103 @@ export const Header: React.FC = () => {
               title="Abrir Menú de Departamentos y Repuestos (Estilo Falabella)"
               aria-expanded={isMegaMenuOpen}
             >
-              <div className="w-5 h-5 rounded-md bg-white/15 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center group-hover:scale-110 transition-transform">
                 {isMegaMenuOpen ? (
-                  <span className="material-symbols-outlined text-base text-[#F07F00]">close</span>
+                  <AppleCloseIcon size={20} className="text-[#F07F00]" />
                 ) : (
-                  <MasterCatalogIcon size={14} className="text-[#F07F00]" />
+                  <MasterCatalogIcon size={20} className="text-[#F07F00]" />
                 )}
               </div>
-              <span className={isMegaMenuOpen ? 'text-[#F07F00]' : 'text-white'}>
+              <span className={isMegaMenuOpen ? 'text-[#F07F00] font-headline text-lg tracking-wider' : 'text-white font-headline text-lg tracking-wider'}>
                 {isMegaMenuOpen ? '✕ Menú' : 'Menú'}
               </span>
             </button>
           </div>
 
-          {/* Search bar con UNA SOLA lupa */}
+          {/* Search bar con UNA SOLA lupa grande estilo Apple */}
           <form
             onSubmit={handleSearchSubmit}
-            className="flex-1 max-w-2xl hidden md:flex items-center bg-surface-container-low rounded-xl border border-surface-container focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all overflow-hidden min-h-[44px]"
+            className="flex-1 max-w-xl lg:max-w-2xl hidden md:flex items-center bg-surface-container-low rounded-xl border border-surface-container focus-within:border-[#212955] focus-within:ring-2 focus-within:ring-[#212955]/15 transition-all overflow-hidden min-h-[46px]"
           >
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar por Repuesto, Marca Oficial (M/T, KEKO, Mobil, 3M, LLumar, Toyota)..."
-              className="flex-1 pl-4 pr-3 py-2.5 min-h-[44px] text-sm bg-transparent focus:outline-none placeholder:text-outline text-on-surface"
+              className="flex-1 pl-4 pr-3 py-2.5 min-h-[46px] text-sm bg-transparent focus:outline-none placeholder:text-[#9D9D9C] text-on-surface font-body"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="p-2 text-outline hover:text-on-surface cursor-pointer"
+                className="p-2 text-[#9D9D9C] hover:text-on-surface cursor-pointer transition-colors"
                 title="Limpiar búsqueda"
               >
-                <span className="material-symbols-outlined text-base">close</span>
+                <AppleCloseIcon size={18} />
               </button>
             )}
             <button
               type="submit"
-              className="min-w-[44px] min-h-[44px] flex items-center justify-center p-2.5 pr-4 text-primary hover:text-secondary transition-colors cursor-pointer"
+              className="min-w-[48px] min-h-[48px] flex items-center justify-center p-2.5 pr-4 text-[#212955] hover:text-[#F07F00] transition-colors cursor-pointer group"
               title="Buscar"
               aria-label="Buscar"
             >
-              <span className="material-symbols-outlined text-xl">search</span>
+              <AppleSearchIcon size={28} className="group-hover:scale-105" />
             </button>
           </form>
 
           {/* Header Action Items */}
-          <div className="flex items-center gap-space-sm sm:gap-space-md">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Active Garage Selector */}
             <button
               onClick={() => setIsGarageModalOpen(true)}
-              className="flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-xl bg-surface-container hover:bg-surface-container-high border border-surface-container-high text-left transition-all group cursor-pointer"
+              className="flex items-center gap-2.5 px-3 py-2 min-h-[48px] rounded-xl bg-surface-container hover:bg-surface-container-high border border-surface-container-high text-left transition-all group cursor-pointer"
               title="Configurar Mi Garaje para ver compatibilidad exacta"
               aria-label="Configurar Mi Garaje"
             >
-              <div className="w-8 h-8 rounded-lg bg-primary text-secondary-container flex items-center justify-center shrink-0">
-                <GarageLiftIcon size={18} className="text-secondary-container" />
-              </div>
+              <AppleIconBadge variant="secondary" size="md">
+                <GarageLiftIcon size={22} className="text-[#F07F00]" />
+              </AppleIconBadge>
               <div className="hidden xl:block">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-outline flex items-center gap-1">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-[#9D9D9C] flex items-center gap-1.5 font-body">
                   <span>Mi Garaje</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  <span className="w-2 h-2 rounded-full bg-[#F07F00]"></span>
                 </div>
-                <div className="text-xs font-bold text-on-surface max-w-[130px] truncate">
+                <div className="text-xs font-bold text-[#212955] max-w-[125px] truncate font-body">
                   {activeGarage.model}
                 </div>
               </div>
             </button>
 
-            {/* Wishlist Link */}
+            {/* Wishlist Link - Apple SF Heart */}
             <button
               onClick={() => setCurrentView('wishlist')}
-              className={`relative min-w-[44px] min-h-[44px] flex items-center justify-center p-2.5 rounded-xl hover:bg-surface-container transition-colors cursor-pointer ${
-                currentView === 'wishlist' ? 'bg-surface-container text-primary' : 'text-on-surface'
+              className={`relative min-w-[48px] min-h-[48px] flex items-center justify-center p-2 rounded-xl hover:bg-surface-container transition-all cursor-pointer group ${
+                currentView === 'wishlist' ? 'bg-surface-container text-[#F07F00]' : 'text-[#212955] hover:text-[#F07F00]'
               }`}
               title="Ver Lista de Deseos"
               aria-label="Ver Lista de Deseos"
             >
-              <span className="material-symbols-outlined text-2xl">favorite</span>
+              <AppleHeartIcon size={32} className="transition-transform group-hover:scale-110" />
               {wishlistTotalCount > 0 && (
-                <span className="absolute top-1 right-1 bg-secondary-container text-white text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-sm">
+                <span className="absolute -top-0.5 -right-0.5 bg-[#F07F00] text-white text-[11px] font-black min-w-[20px] h-5 px-1 rounded-full flex items-center justify-center shadow-md font-headline ring-2 ring-white">
                   {wishlistTotalCount}
                 </span>
               )}
             </button>
 
-            {/* Cart Link */}
+            {/* Cart Link - Apple SF Cart */}
             <button
               onClick={() => setCurrentView('cart')}
-              className={`relative min-w-[44px] min-h-[44px] flex items-center justify-center p-2.5 rounded-xl hover:bg-surface-container transition-colors cursor-pointer ${
-                currentView === 'cart' ? 'bg-surface-container text-primary' : 'text-on-surface'
+              className={`relative min-w-[48px] min-h-[48px] flex items-center justify-center p-2 rounded-xl hover:bg-surface-container transition-all cursor-pointer group ${
+                currentView === 'cart' ? 'bg-surface-container text-[#F07F00]' : 'text-[#212955] hover:text-[#F07F00]'
               }`}
               title="Ver Carrito de Compras"
               aria-label="Ver Carrito de Compras"
             >
-              <span className="material-symbols-outlined text-2xl">shopping_cart</span>
+              <AppleCartIcon size={32} className="transition-transform group-hover:scale-110" />
               {cartTotalCount > 0 && (
-                <span className="absolute top-1 right-1 bg-primary text-white text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-sm">
+                <span className="absolute -top-0.5 -right-0.5 bg-[#F07F00] text-white text-[11px] font-black min-w-[20px] h-5 px-1 rounded-full flex items-center justify-center shadow-md font-headline ring-2 ring-white">
                   {cartTotalCount}
                 </span>
               )}
@@ -247,18 +256,18 @@ export const Header: React.FC = () => {
             {/* User Account / Profile */}
             <button
               onClick={() => setCurrentView('account')}
-              className={`flex items-center gap-2.5 min-h-[44px] p-1.5 pl-2.5 pr-3 rounded-xl transition-colors text-left cursor-pointer ${
-                currentView === 'account' ? 'bg-primary/10 ring-2 ring-primary' : 'hover:bg-surface-container'
+              className={`flex items-center gap-2.5 min-h-[48px] p-1.5 pl-2 pr-3 rounded-xl transition-colors text-left cursor-pointer ${
+                currentView === 'account' ? 'bg-[#212955]/10 ring-2 ring-[#212955]' : 'hover:bg-surface-container'
               }`}
               title="Mi Cuenta & Dashboard"
               aria-label="Mi Cuenta y Garaje"
             >
-              <div className="w-8 h-8 rounded-full bg-primary-container text-white flex items-center justify-center font-bold text-xs ring-2 ring-surface-container shrink-0">
+              <div className="w-10 h-10 rounded-full bg-[#212955] text-white flex items-center justify-center font-bold text-xs ring-2 ring-surface-container shrink-0 shadow-xs font-headline tracking-wider">
                 CM
               </div>
               <div className="hidden lg:block">
-                <div className="text-[10px] text-outline font-normal">Mi Cuenta</div>
-                <div className="text-xs font-bold text-on-surface">Hola, Carlos</div>
+                <div className="text-[10px] text-[#9D9D9C] font-normal font-body">Mi Cuenta</div>
+                <div className="text-xs font-bold text-[#212955] font-body">Hola, Carlos</div>
               </div>
             </button>
           </div>
@@ -270,7 +279,7 @@ export const Header: React.FC = () => {
         className="border-t border-surface-container bg-surface-container-lowest relative px-4 sm:px-6 lg:px-8 hidden md:block"
         onMouseLeave={handleMouseLeave}
       >
-        <nav aria-label="Categorías principales" className="max-w-7xl mx-auto flex items-center justify-center gap-2 sm:gap-3 py-1.5 text-xs font-semibold">
+        <nav aria-label="Categorías principales" className="max-w-7xl mx-auto flex items-center justify-center gap-2 sm:gap-3 py-2 text-xs font-semibold">
           {/* Autopartes y Accesorios Nav Item */}
           <div
             className="relative"
@@ -278,15 +287,15 @@ export const Header: React.FC = () => {
           >
             <button
               onClick={() => navigateToPartsCatalog('todos')}
-              className={`px-3 py-2 min-h-[40px] rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3.5 py-2 min-h-[42px] rounded-xl transition-colors flex items-center gap-2 cursor-pointer ${
                 currentView === 'parts' || currentView === 'part-pdp' || activeDropdown === 'repuestos'
                   ? 'bg-primary/10 text-primary font-bold'
                   : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
               }`}
             >
-              <AutoPartsIcon size={17} />
-              <span>Autopartes y Accesorios</span>
-              <span className="material-symbols-outlined text-xs">arrow_drop_down</span>
+              <AutoPartsIcon size={20} className="text-[#F07F00]" />
+              <span className="font-headline text-base tracking-wide">Autopartes y Accesorios</span>
+              <AppleChevronDownIcon size={14} className="text-[#9D9D9C] transition-transform duration-200" />
             </button>
           </div>
 
@@ -297,15 +306,15 @@ export const Header: React.FC = () => {
           >
             <button
               onClick={() => setCurrentView('services')}
-              className={`px-3 py-2 min-h-[40px] rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3.5 py-2 min-h-[42px] rounded-xl transition-colors flex items-center gap-2 cursor-pointer ${
                 currentView === 'services' || activeDropdown === 'taller'
                   ? 'bg-primary/10 text-primary font-bold'
                   : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
               }`}
             >
-              <WorkshopServiceIcon size={17} />
-              <span>Servicios</span>
-              <span className="material-symbols-outlined text-xs">arrow_drop_down</span>
+              <WorkshopServiceIcon size={20} className="text-[#212955]" />
+              <span className="font-headline text-base tracking-wide">Servicios de Taller</span>
+              <AppleChevronDownIcon size={14} className="text-[#9D9D9C] transition-transform duration-200" />
             </button>
           </div>
 
@@ -316,15 +325,15 @@ export const Header: React.FC = () => {
           >
             <button
               onClick={() => setCurrentView('cars')}
-              className={`px-3 py-2 min-h-[40px] rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3.5 py-2 min-h-[42px] rounded-xl transition-colors flex items-center gap-2 cursor-pointer ${
                 currentView === 'cars' || currentView === 'vehicle-pdp' || activeDropdown === 'vehiculos'
                   ? 'bg-primary/10 text-primary font-bold'
                   : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
               }`}
             >
-              <VehicleIcon size={17} />
-              <span>Vehículos</span>
-              <span className="material-symbols-outlined text-xs">arrow_drop_down</span>
+              <VehicleIcon size={20} className="text-[#212955]" />
+              <span className="font-headline text-base tracking-wide">Vehículos 2025</span>
+              <AppleChevronDownIcon size={14} className="text-[#9D9D9C] transition-transform duration-200" />
             </button>
           </div>
 
@@ -335,38 +344,38 @@ export const Header: React.FC = () => {
           >
             <button
               onClick={() => setCurrentView('trade-in')}
-              className={`px-3 py-2 min-h-[40px] rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3.5 py-2 min-h-[42px] rounded-xl transition-colors flex items-center gap-2 cursor-pointer ${
                 currentView === 'trade-in' || currentView === 'financing' || activeDropdown === 'finanzas'
                   ? 'bg-primary/10 text-primary font-bold'
                   : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
               }`}
             >
-              <PlanRetomaIcon size={17} className="text-emerald-600" />
-              <span className="text-emerald-800 font-bold">Plan Retoma &amp; Cuotas</span>
-              <span className="material-symbols-outlined text-xs">arrow_drop_down</span>
+              <PlanRetomaIcon size={20} className="text-[#F07F00]" />
+              <span className="text-[#212955] font-headline text-base tracking-wide">Plan Retoma &amp; Cuotas</span>
+              <AppleChevronDownIcon size={14} className="text-[#9D9D9C] transition-transform duration-200" />
             </button>
           </div>
 
           {/* Showroom 360° */}
           <button
             onClick={() => setIsViewer360Open(true)}
-            className="px-3 py-2 min-h-[40px] rounded-xl bg-secondary-container/10 text-secondary hover:bg-secondary-container hover:text-white transition-all flex items-center gap-1.5 font-bold cursor-pointer border border-secondary-container/30"
+            className="px-3.5 py-2 min-h-[42px] rounded-xl bg-secondary-container/10 text-secondary hover:bg-secondary-container hover:text-white transition-all flex items-center gap-2 font-bold cursor-pointer border border-secondary-container/30"
           >
-            <Showroom360Icon size={17} />
-            <span>Showroom 360°</span>
+            <Showroom360Icon size={20} className="text-[#F07F00]" />
+            <span className="font-headline text-base tracking-wide">Showroom 360°</span>
           </button>
 
           {/* Sede Cajamarca */}
           <button
             onClick={() => setCurrentView('locations')}
-            className={`px-3 py-2 min-h-[40px] rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3.5 py-2 min-h-[42px] rounded-xl transition-colors flex items-center gap-2 cursor-pointer ${
               currentView === 'locations'
                 ? 'bg-primary text-white font-bold'
                 : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
             }`}
           >
-            <DealershipPinIcon size={16} />
-            <span>Cajamarca</span>
+            <DealershipPinIcon size={20} className="text-[#F07F00]" />
+            <span className="font-headline text-base tracking-wide">Sede Cajamarca</span>
           </button>
         </nav>
 
@@ -893,10 +902,10 @@ export const Header: React.FC = () => {
             <NorCelisLogo variant="full" theme="light" size="custom" className="h-8 w-auto" />
             <button
               onClick={() => setIsMobileNavOpen(false)}
-              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl hover:bg-surface-container text-outline cursor-pointer"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl hover:bg-surface-container text-[#212955] cursor-pointer"
               aria-label="Cerrar menú"
             >
-              <span className="material-symbols-outlined text-2xl">close</span>
+              <AppleCloseIcon size={20} />
             </button>
           </div>
 
@@ -906,7 +915,9 @@ export const Header: React.FC = () => {
             className="w-full p-3.5 min-h-[50px] flex items-center justify-between text-left bg-gradient-to-r from-primary via-primary to-primary-container text-white rounded-2xl font-bold cursor-pointer shadow-md"
           >
             <div className="flex items-center gap-2.5">
-              <span className="material-symbols-outlined text-2xl text-secondary-fixed">apps</span>
+              <AppleIconBadge variant="subtle-orange" size="sm">
+                <MasterCatalogIcon size={18} className="text-[#F07F00]" />
+              </AppleIconBadge>
               <div>
                 <div className="text-xs uppercase tracking-wider text-secondary-fixed font-mono font-bold">
                   Catálogo Completo
@@ -914,7 +925,7 @@ export const Header: React.FC = () => {
                 <div className="text-sm font-headline">Explorar Mega Menú de Categorías</div>
               </div>
             </div>
-            <span className="material-symbols-outlined text-xl">arrow_forward</span>
+            <AppleChevronRightIcon size={18} className="text-white" />
           </button>
 
           {/* Search Box */}
@@ -931,7 +942,7 @@ export const Header: React.FC = () => {
               className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-primary hover:bg-surface-container cursor-pointer"
               aria-label="Ejecutar búsqueda"
             >
-              <span className="material-symbols-outlined">search</span>
+              <AppleSearchIcon size={20} />
             </button>
           </form>
 
@@ -939,30 +950,38 @@ export const Header: React.FC = () => {
           <div className="grid grid-cols-2 gap-2 text-sm font-semibold">
             <button
               onClick={() => { setCurrentView('home'); setIsMobileNavOpen(false); }}
-              className="p-3 min-h-[46px] flex items-center gap-2 text-left bg-surface-container-low rounded-xl cursor-pointer"
+              className="p-3 min-h-[46px] flex items-center gap-2 text-left bg-surface-container-low rounded-xl cursor-pointer hover:bg-surface-container transition-colors"
             >
-              <span className="material-symbols-outlined text-lg text-primary">home</span>
+              <AppleIconBadge variant="subtle-blue" size="sm">
+                <span className="text-xs font-bold">NH</span>
+              </AppleIconBadge>
               <span>Inicio</span>
             </button>
             <button
               onClick={() => { navigateToPartsCatalog('todos'); setIsMobileNavOpen(false); }}
-              className="p-3 min-h-[46px] flex items-center gap-2 text-left bg-surface-container-low rounded-xl cursor-pointer"
+              className="p-3 min-h-[46px] flex items-center gap-2 text-left bg-surface-container-low rounded-xl cursor-pointer hover:bg-surface-container transition-colors"
             >
-              <AutoPartsIcon size={18} className="text-primary" />
+              <AppleIconBadge variant="subtle-orange" size="sm">
+                <AutoPartsIcon size={16} />
+              </AppleIconBadge>
               <span>Autopartes y Accesorios</span>
             </button>
             <button
               onClick={() => { setCurrentView('services'); setIsMobileNavOpen(false); }}
-              className="p-3 min-h-[46px] flex items-center gap-2 text-left bg-surface-container-low rounded-xl cursor-pointer"
+              className="p-3 min-h-[46px] flex items-center gap-2 text-left bg-surface-container-low rounded-xl cursor-pointer hover:bg-surface-container transition-colors"
             >
-              <WorkshopServiceIcon size={18} className="text-primary" />
+              <AppleIconBadge variant="subtle-blue" size="sm">
+                <WorkshopServiceIcon size={16} />
+              </AppleIconBadge>
               <span>Servicios</span>
             </button>
             <button
               onClick={() => { setCurrentView('cars'); setIsMobileNavOpen(false); }}
-              className="p-3 min-h-[46px] flex items-center gap-2 text-left bg-surface-container-low rounded-xl cursor-pointer"
+              className="p-3 min-h-[46px] flex items-center gap-2 text-left bg-surface-container-low rounded-xl cursor-pointer hover:bg-surface-container transition-colors"
             >
-              <VehicleIcon size={18} className="text-primary" />
+              <AppleIconBadge variant="secondary" size="sm">
+                <VehicleIcon size={16} />
+              </AppleIconBadge>
               <span>Vehículos</span>
             </button>
           </div>
@@ -977,8 +996,10 @@ export const Header: React.FC = () => {
               onClick={() => { setCurrentView('trade-in'); setIsMobileNavOpen(false); }}
               className="w-full p-3 min-h-[46px] flex items-center justify-between text-left bg-emerald-50 border border-emerald-200 text-emerald-950 rounded-xl font-bold cursor-pointer"
             >
-              <div className="flex items-center gap-2">
-                <PlanRetomaIcon size={20} className="text-emerald-700" />
+              <div className="flex items-center gap-2.5">
+                <AppleIconBadge variant="emerald" size="sm">
+                  <PlanRetomaIcon size={16} className="text-white" />
+                </AppleIconBadge>
                 <span>Plan Retoma (Bono hasta S/ 7,500)</span>
               </div>
               <span className="text-[10px] bg-emerald-700 text-white px-2 py-0.5 rounded-full uppercase">
@@ -990,8 +1011,10 @@ export const Header: React.FC = () => {
               onClick={() => { setCurrentView('financing'); setIsMobileNavOpen(false); }}
               className="w-full p-3 min-h-[46px] flex items-center justify-between text-left bg-blue-50 border border-blue-200 text-blue-950 rounded-xl font-bold cursor-pointer"
             >
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-xl text-blue-700">account_balance</span>
+              <div className="flex items-center gap-2.5">
+                <AppleIconBadge variant="secondary" size="sm">
+                  <BankFinancingIcon size={16} className="text-white" />
+                </AppleIconBadge>
                 <span>Simulador de Cuotas &amp; Crédito</span>
               </div>
               <span className="text-[10px] bg-blue-700 text-white px-2 py-0.5 rounded-full uppercase">
@@ -1003,8 +1026,10 @@ export const Header: React.FC = () => {
               onClick={() => { setIsGarageModalOpen(true); setIsMobileNavOpen(false); }}
               className="w-full p-3 min-h-[46px] flex items-center justify-between text-left bg-surface-container-low border border-surface-container text-on-surface rounded-xl font-bold cursor-pointer"
             >
-              <div className="flex items-center gap-2">
-                <GarageLiftIcon size={20} className="text-primary" />
+              <div className="flex items-center gap-2.5">
+                <AppleIconBadge variant="primary" size="sm">
+                  <GarageLiftIcon size={16} className="text-white" />
+                </AppleIconBadge>
                 <span>Mi Garaje Virtual (Compatibilidad VIN)</span>
               </div>
               <span className="text-xs text-emerald-600 font-bold">{activeGarage.model}</span>
@@ -1014,11 +1039,13 @@ export const Header: React.FC = () => {
               onClick={() => { setIsViewer360Open(true); setIsMobileNavOpen(false); }}
               className="w-full p-3 min-h-[46px] flex items-center justify-between text-left bg-surface-container-low border border-surface-container text-secondary rounded-xl font-bold cursor-pointer"
             >
-              <div className="flex items-center gap-2">
-                <Showroom360Icon size={20} className="text-secondary" />
+              <div className="flex items-center gap-2.5">
+                <AppleIconBadge variant="subtle-orange" size="sm">
+                  <Showroom360Icon size={16} />
+                </AppleIconBadge>
                 <span>Showroom Interactivo 360°</span>
               </div>
-              <span className="material-symbols-outlined text-sm">arrow_forward</span>
+              <AppleChevronDownIcon size={14} className="-rotate-90 text-[#9D9D9C]" />
             </button>
           </div>
 
@@ -1053,16 +1080,16 @@ export const Header: React.FC = () => {
           <div className="grid grid-cols-2 gap-2 pt-2 border-t border-surface-container text-xs font-bold">
             <button
               onClick={() => { setCurrentView('account'); setIsMobileNavOpen(false); }}
-              className="p-3 min-h-[44px] flex items-center justify-center gap-1.5 text-center bg-primary text-white rounded-xl cursor-pointer"
+              className="p-3 min-h-[44px] flex items-center justify-center gap-2 text-center bg-primary text-white rounded-xl cursor-pointer"
             >
-              <span className="material-symbols-outlined text-base">person</span>
+              <AppleUserIcon size={16} />
               <span>Mi Cuenta</span>
             </button>
             <button
               onClick={() => { setCurrentView('claims'); setIsMobileNavOpen(false); }}
-              className="p-3 min-h-[44px] flex items-center justify-center gap-1.5 text-center bg-surface-container-low text-on-surface rounded-xl cursor-pointer"
+              className="p-3 min-h-[44px] flex items-center justify-center gap-2 text-center bg-surface-container-low text-on-surface rounded-xl cursor-pointer"
             >
-              <span className="material-symbols-outlined text-base">menu_book</span>
+              <OfficialQuoteIcon size={16} />
               <span>Reclamaciones</span>
             </button>
           </div>

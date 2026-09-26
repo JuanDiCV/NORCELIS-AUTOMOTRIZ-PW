@@ -45,12 +45,12 @@ const MainContent: React.FC = () => {
   }, [currentView]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-on-surface antialiased selection:bg-secondary-container selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#212955] text-white antialiased selection:bg-[#F07F00] selection:text-white">
       {/* Sticky Header with active garage and search */}
       {currentView !== 'admin' && <Header />}
 
       {/* Main Body Routing */}
-      <main className="flex-1">
+      <main className="flex-1 bg-[#212955]">
         {currentView === 'home' && <HomeView />}
         {currentView === 'cars' && <CarsCatalogView />}
         {currentView === 'vehicle-pdp' && <VehiclePdpView />}

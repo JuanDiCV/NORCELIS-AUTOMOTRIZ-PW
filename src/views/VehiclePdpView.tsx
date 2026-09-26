@@ -3,6 +3,29 @@ import { useApp } from '../context/AppContext';
 import { VehicleFinancingCalculator } from '../components/VehicleFinancingCalculator';
 import { SafeImage } from '../components/SafeImage';
 import { generateVehicleQuotePdf } from '../utils/pdfGenerator';
+import {
+  HorsepowerIcon,
+  FuelDispenserIcon,
+  Drivetrain4wdIcon,
+  CertifiedShieldIcon,
+  SpeedometerGaugeIcon,
+  Showroom360Icon,
+  OfficialQuoteIcon,
+  BankFinancingIcon,
+  OnlineAdvisorIcon,
+  EngineIcon,
+  TransmissionGearIcon,
+  SuspensionSpringIcon,
+  BrakeDiscIcon,
+  CarDoorCapacityIcon,
+  AppleHeartIcon,
+  AppleIconBadge,
+  AppleVerifiedSealIcon,
+  AppleTuneSlidersIcon,
+  AppleCartIcon,
+  AppleSearchIcon,
+  PlanRetomaIcon,
+} from '../components/AutoIcons';
 
 export const VehiclePdpView: React.FC = () => {
   const {
@@ -200,7 +223,7 @@ export const VehiclePdpView: React.FC = () => {
               onClick={() => setIsViewer360Open(true)}
               className="absolute bottom-4 left-4 bg-primary/90 hover:bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-xl backdrop-blur-md border border-white/20 shadow-lg flex items-center gap-2 transition-all cursor-pointer group-hover:scale-105 z-10"
             >
-              <span className="material-symbols-outlined text-lg text-secondary-container">360</span>
+              <Showroom360Icon size={18} className="text-[#F07F00]" />
               <span>Lanzar Visor 360° &amp; Modo Noche</span>
             </button>
 
@@ -224,9 +247,7 @@ export const VehiclePdpView: React.FC = () => {
                 inWish ? 'bg-secondary-container text-white' : 'bg-white/80 hover:bg-white text-on-surface'
               }`}
             >
-              <span className="material-symbols-outlined text-xl">
-                {inWish ? 'favorite' : 'favorite_border'}
-              </span>
+              <AppleHeartIcon size={20} />
             </button>
           </div>
 
@@ -297,7 +318,7 @@ export const VehiclePdpView: React.FC = () => {
               </span>
               <span className="text-outline">•</span>
               <span className="text-xs text-emerald-700 font-bold flex items-center gap-1">
-                <span className="material-symbols-outlined text-[15px]">bolt</span>
+                <AppleVerifiedSealIcon size={14} />
                 Entrega Inmediata (48h)
               </span>
             </div>
@@ -310,21 +331,33 @@ export const VehiclePdpView: React.FC = () => {
             </p>
           </div>
 
-          {/* Key Specs Pills */}
+          {/* Key Specs Pills Estilo Apple */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
-            <div className="bg-surface-container-low p-2.5 rounded-xl border border-surface-container">
+            <div className="bg-surface-container-low p-2.5 rounded-xl border border-surface-container flex flex-col items-center gap-1 group hover:border-[#F07F00]/30 transition-colors">
+              <AppleIconBadge variant="subtle-orange" size="xs">
+                <HorsepowerIcon size={14} />
+              </AppleIconBadge>
               <span className="text-[10px] text-outline block">Potencia</span>
               <span className="font-bold text-primary">219 HP</span>
             </div>
-            <div className="bg-surface-container-low p-2.5 rounded-xl border border-surface-container">
+            <div className="bg-surface-container-low p-2.5 rounded-xl border border-surface-container flex flex-col items-center gap-1 group hover:border-emerald-500/30 transition-colors">
+              <AppleIconBadge variant="emerald" size="xs">
+                <FuelDispenserIcon size={14} className="text-white" />
+              </AppleIconBadge>
               <span className="text-[10px] text-outline block">Rendimiento</span>
               <span className="font-bold text-emerald-700">72 km/gal</span>
             </div>
-            <div className="bg-surface-container-low p-2.5 rounded-xl border border-surface-container">
+            <div className="bg-surface-container-low p-2.5 rounded-xl border border-surface-container flex flex-col items-center gap-1 group hover:border-[#212955]/30 transition-colors">
+              <AppleIconBadge variant="secondary" size="xs">
+                <Drivetrain4wdIcon size={14} className="text-white" />
+              </AppleIconBadge>
               <span className="text-[10px] text-outline block">Tracción</span>
               <span className="font-bold text-primary">e-Four AWD</span>
             </div>
-            <div className="bg-surface-container-low p-2.5 rounded-xl border border-surface-container">
+            <div className="bg-surface-container-low p-2.5 rounded-xl border border-surface-container flex flex-col items-center gap-1 group hover:border-[#212955]/30 transition-colors">
+              <AppleIconBadge variant="subtle-blue" size="xs">
+                <CertifiedShieldIcon size={14} className="text-[#212955]" />
+              </AppleIconBadge>
               <span className="text-[10px] text-outline block">Seguridad</span>
               <span className="font-bold text-primary">TSS 3.0</span>
             </div>
@@ -378,25 +411,25 @@ export const VehiclePdpView: React.FC = () => {
             <div className="space-y-2">
               <button
                 onClick={handleReserveNow}
-                className="w-full bg-secondary-container hover:bg-secondary text-white py-3.5 px-3 rounded-2xl font-bold text-xs uppercase tracking-wider shadow-lg hover:shadow-orange-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer text-center leading-tight"
+                className="w-full min-h-[48px] btn-primary text-sm uppercase py-3 px-4 flex items-center justify-center gap-2"
               >
-                <span className="material-symbols-outlined text-[18px] shrink-0">lock</span>
+                <AppleVerifiedSealIcon size={18} className="shrink-0" />
                 <span>Reservar esta Unidad (S/ 1,850)</span>
               </button>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <button
                   onClick={() => setIsTestDriveModalOpen(true)}
-                  className="bg-primary hover:bg-primary-container text-white py-3 px-2 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                  className="min-h-[42px] btn-secondary text-xs uppercase py-2.5 px-3 flex items-center justify-center gap-1.5"
                 >
-                  <span className="material-symbols-outlined text-[16px] shrink-0">speed</span>
+                  <SpeedometerGaugeIcon size={16} className="shrink-0" />
                   <span>Agendar Test Drive</span>
                 </button>
                 <button
                   onClick={() => setIsViewer360Open(true)}
-                  className="bg-surface-container hover:bg-surface-container-high text-primary py-3 px-2 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                  className="min-h-[42px] btn-ghost text-xs py-2.5 px-3 flex items-center justify-center gap-1.5"
                 >
-                  <span className="material-symbols-outlined text-[16px]">360</span>
+                  <Showroom360Icon size={16} className="shrink-0" />
                   <span>Showroom 360°</span>
                 </button>
               </div>
@@ -422,10 +455,10 @@ export const VehiclePdpView: React.FC = () => {
                     showToast('Descargando cotización oficial del vehículo en PDF...');
                   }
                 }}
-                className="w-full bg-surface-container-low hover:bg-surface-container text-primary py-2.5 px-3 rounded-xl font-bold text-xs border border-surface-container transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                className="w-full min-h-[42px] btn-outline-primary text-xs py-2.5 px-4 font-bold flex items-center justify-center gap-2"
                 title="Descargar Ficha Técnica Oficial y Cotización con Membrete Nor Celis en PDF"
               >
-                <span className="material-symbols-outlined text-[16px] text-red-600">picture_as_pdf</span>
+                <OfficialQuoteIcon size={18} className="shrink-0 text-[#F07F00]" />
                 <span>Descargar Cotización Oficial (PDF)</span>
               </button>
             </div>
@@ -435,7 +468,7 @@ export const VehiclePdpView: React.FC = () => {
           <div className="bg-surface-container-lowest p-5 rounded-3xl border border-surface-container shadow-sm space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-extrabold uppercase tracking-wider text-primary flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[17px] text-secondary-container">payments</span>
+                <BankFinancingIcon size={16} className="text-[#212955]" />
                 Simulador Financiero Nor Celis
               </span>
               <button
@@ -501,26 +534,26 @@ export const VehiclePdpView: React.FC = () => {
                 </div>
                 <button
                   onClick={scrollToCalculator}
-                  className="bg-secondary-container hover:bg-secondary text-white font-bold text-xs px-3 py-2 rounded-xl transition-colors flex items-center gap-1 shadow-xs"
+                  className="bg-secondary-container hover:bg-secondary text-white font-bold text-xs px-3 py-2 rounded-xl transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
                 >
                   <span>Simulador Detallado</span>
-                  <span className="material-symbols-outlined text-[14px]">tune</span>
+                  <AppleTuneSlidersIcon size={14} />
                 </button>
               </div>
 
               <div className="grid grid-cols-2 gap-2 pt-1 border-t border-surface-container">
                 <button
                   onClick={() => setCurrentView('financing')}
-                  className="bg-surface-container-low hover:bg-surface-container text-primary font-bold text-[11px] py-2 px-2.5 rounded-xl border border-surface-container flex items-center justify-center gap-1"
+                  className="bg-surface-container-low hover:bg-surface-container text-primary font-bold text-[11px] py-2 px-2.5 rounded-xl border border-surface-container flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <span className="material-symbols-outlined text-sm text-primary">account_balance</span>
+                  <BankFinancingIcon size={14} className="text-primary" />
                   <span>Evaluar con Bancos</span>
                 </button>
                 <button
                   onClick={() => setCurrentView('trade-in')}
-                  className="bg-surface-container-low hover:bg-surface-container text-secondary font-bold text-[11px] py-2 px-2.5 rounded-xl border border-surface-container flex items-center justify-center gap-1"
+                  className="bg-surface-container-low hover:bg-surface-container text-secondary font-bold text-[11px] py-2 px-2.5 rounded-xl border border-surface-container flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <span className="material-symbols-outlined text-sm">swap_horiz</span>
+                  <PlanRetomaIcon size={14} className="text-secondary" />
                   <span>Bono Retoma S/ 7,500</span>
                 </button>
               </div>
@@ -547,10 +580,10 @@ export const VehiclePdpView: React.FC = () => {
               href="https://wa.me/51987654321?text=Hola%20Ing.%20Carlos%20Mendoza,%20tengo%20consultas%20sobre%20el%20Toyota%20RAV4%202025"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-500 transition-colors shadow-sm"
+              className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-500 transition-colors shadow-sm cursor-pointer"
               title="Chat directo con Carlos Mendoza"
             >
-              <span className="material-symbols-outlined text-xl">chat</span>
+              <OnlineAdvisorIcon size={18} className="text-white" />
             </a>
           </div>
         </div>
@@ -567,43 +600,47 @@ export const VehiclePdpView: React.FC = () => {
         <div className="flex border-b border-surface-container overflow-x-auto text-xs font-bold">
           <button
             onClick={() => setActiveTab('ficha')}
-            className={`px-6 py-4 border-b-2 transition-all whitespace-nowrap ${
+            className={`px-6 py-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer ${
               activeTab === 'ficha'
-                ? 'border-primary text-primary bg-surface-container-low/50'
+                ? 'border-primary text-primary bg-surface-container-low/50 font-bold'
                 : 'border-transparent text-outline hover:text-on-surface'
             }`}
           >
-            Ficha Técnica Detallada
+            <EngineIcon size={16} />
+            <span>Ficha Técnica Detallada</span>
           </button>
           <button
             onClick={() => setActiveTab('seguridad')}
-            className={`px-6 py-4 border-b-2 transition-all whitespace-nowrap ${
+            className={`px-6 py-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer ${
               activeTab === 'seguridad'
-                ? 'border-primary text-primary bg-surface-container-low/50'
+                ? 'border-primary text-primary bg-surface-container-low/50 font-bold'
                 : 'border-transparent text-outline hover:text-on-surface'
             }`}
           >
-            Toyota Safety Sense 3.0 (Seguridad Activa)
+            <CertifiedShieldIcon size={16} />
+            <span>Toyota Safety Sense 3.0</span>
           </button>
           <button
             onClick={() => setActiveTab('garantia')}
-            className={`px-6 py-4 border-b-2 transition-all whitespace-nowrap ${
+            className={`px-6 py-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer ${
               activeTab === 'garantia'
-                ? 'border-primary text-primary bg-surface-container-low/50'
+                ? 'border-primary text-primary bg-surface-container-low/50 font-bold'
                 : 'border-transparent text-outline hover:text-on-surface'
             }`}
           >
-            Garantía Oficial &amp; Mantenimientos
+            <AppleVerifiedSealIcon size={16} />
+            <span>Garantía Oficial &amp; Mantenimientos</span>
           </button>
           <button
             onClick={() => setActiveTab('beneficios')}
-            className={`px-6 py-4 border-b-2 transition-all whitespace-nowrap ${
+            className={`px-6 py-4 border-b-2 transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer ${
               activeTab === 'beneficios'
-                ? 'border-primary text-primary bg-surface-container-low/50'
+                ? 'border-primary text-primary bg-surface-container-low/50 font-bold'
                 : 'border-transparent text-outline hover:text-on-surface'
             }`}
           >
-            Beneficios Exclusivos Nor Celis
+            <OfficialQuoteIcon size={16} />
+            <span>Beneficios Exclusivos Nor Celis</span>
           </button>
         </div>
 
@@ -611,10 +648,15 @@ export const VehiclePdpView: React.FC = () => {
         <div className="p-6 text-xs text-on-surface leading-relaxed">
           {activeTab === 'ficha' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <h4 className="font-headline font-bold text-sm text-primary uppercase tracking-wider">
-                  Motor &amp; Desempeño
-                </h4>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <AppleIconBadge variant="subtle-orange" size="xs">
+                    <EngineIcon size={14} />
+                  </AppleIconBadge>
+                  <h4 className="font-headline font-bold text-sm text-primary uppercase tracking-wider">
+                    Motor &amp; Desempeño
+                  </h4>
+                </div>
                 <ul className="space-y-1.5 text-on-surface-variant">
                   <li><strong>Motor a combustión:</strong> 2.5L 4 cilindros DOHC 16V VVT-iE (A25A-FXS)</li>
                   <li><strong>Potencia combinada:</strong> 219 HP @ 5,700 rpm</li>
@@ -624,10 +666,15 @@ export const VehiclePdpView: React.FC = () => {
                 </ul>
               </div>
 
-              <div className="space-y-2">
-                <h4 className="font-headline font-bold text-sm text-primary uppercase tracking-wider">
-                  Chasis &amp; Dimensiones
-                </h4>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <AppleIconBadge variant="subtle-blue" size="xs">
+                    <CarDoorCapacityIcon size={14} />
+                  </AppleIconBadge>
+                  <h4 className="font-headline font-bold text-sm text-primary uppercase tracking-wider">
+                    Chasis &amp; Dimensiones
+                  </h4>
+                </div>
                 <ul className="space-y-1.5 text-on-surface-variant">
                   <li><strong>Plataforma:</strong> TNGA-K de alta rigidez estructural</li>
                   <li><strong>Largo x Ancho x Alto:</strong> 4,600 x 1,855 x 1,685 mm</li>
@@ -637,10 +684,15 @@ export const VehiclePdpView: React.FC = () => {
                 </ul>
               </div>
 
-              <div className="space-y-2">
-                <h4 className="font-headline font-bold text-sm text-primary uppercase tracking-wider">
-                  Frenos &amp; Suspensión
-                </h4>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <AppleIconBadge variant="primary" size="xs">
+                    <BrakeDiscIcon size={14} />
+                  </AppleIconBadge>
+                  <h4 className="font-headline font-bold text-sm text-primary uppercase tracking-wider">
+                    Frenos &amp; Suspensión
+                  </h4>
+                </div>
                 <ul className="space-y-1.5 text-on-surface-variant">
                   <li><strong>Suspensión delantera:</strong> Independiente tipo MacPherson con barra estabilizadora</li>
                   <li><strong>Suspensión trasera:</strong> Doble horquilla independiente con barra estabilizadora</li>
@@ -693,11 +745,11 @@ export const VehiclePdpView: React.FC = () => {
                 </h4>
                 <ul className="space-y-2 text-on-surface-variant">
                   <li className="flex items-start gap-2">
-                    <span className="material-symbols-outlined text-[16px] text-emerald-600 mt-0.5">verified</span>
+                    <AppleVerifiedSealIcon size={18} className="text-emerald-600 mt-0.5 shrink-0" />
                     <span><strong>5 años o 100,000 km</strong> de garantía de fábrica para tren motriz y carrocería.</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="material-symbols-outlined text-[16px] text-emerald-600 mt-0.5">verified</span>
+                    <AppleVerifiedSealIcon size={18} className="text-emerald-600 mt-0.5 shrink-0" />
                     <span><strong>8 años o 160,000 km</strong> de garantía extendida para el sistema híbrido y la batería de tracción.</span>
                   </li>
                 </ul>
@@ -780,7 +832,7 @@ export const VehiclePdpView: React.FC = () => {
                 }
                 className="mt-3 w-full bg-primary hover:bg-primary-container text-white py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <span className="material-symbols-outlined text-[15px]">add_shopping_cart</span>
+                <AppleCartIcon size={15} />
                 <span>Añadir al Carrito</span>
               </button>
             </div>

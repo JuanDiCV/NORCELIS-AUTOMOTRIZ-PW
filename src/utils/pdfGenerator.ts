@@ -1,11 +1,44 @@
 /**
- * Nor Celis Automotriz - Official PDF Document Generator
- * Generates high-fidelity, printable PDF documents with official letterhead,
- * itemized tables, financial schedules, and warranty certificates.
+ * Nor Celis Automotriz - Generador Oficial de Cotizaciones y Documentos PDF
+ * GRUPO MEVAC S.A.C. (Nombre Comercial: NORCELIS AUTOMOTRIZ) - RUC 20610829318
+ * 
+ * Estructura estricta comercial, cálculos exactos con IGV, descuentos,
+ * cuentas bancarias autorizadas, detracciones Banco de la Nación y políticas oficiales.
  */
 
 import { jsPDF } from 'jspdf';
 import { Vehicle, WishlistItem, ActiveGarageVehicle, MaintenanceRecord } from '../types';
+
+export interface QuotationItem {
+  itemNumber: number;
+  codigo: string;
+  unidadMedida: string;
+  cantidad: number;
+  descripcion: string;
+  precioUnitario: number;
+  descuentoPorcentaje: number;
+  unitarioConDescuento: number;
+  importeTotal: number;
+}
+
+export interface CommercialQuotationData {
+  numeroDocumento: string; // Formato correlativo: ej. 2026-004812
+  cliente: {
+    nombreOrazonSocial: string;
+    rucOdni?: string;
+    direccion: string;
+    telefono: string;
+    correo: string;
+    placaVehiculo: string;
+  };
+  fechaEmision: string; // DD/MM/YYYY
+  fechaVencimiento: string; // DD/MM/YYYY (+7 días)
+  moneda: 'PEN' | 'USD';
+  formaPago: string; // ej. Efectivo, Transferencia Bancaria, Crédito
+  asesorVentas: string;
+  items: QuotationItem[];
+  observaciones?: string;
+}
 
 export interface FinancingPdfParams {
   vehicleName: string;
@@ -30,98 +63,304 @@ export interface FinancingPdfParams {
   }>;
 }
 
-const BRAND = {
-  name: 'NOR CELIS AUTOMOTRIZ S.A.C.',
-  ruc: 'R.U.C. 20608754129',
-  address: 'Av. Vía de Evitamiento Sur 6003, Cajamarca - Perú',
-  phone: 'Central: (076) 364-890 / WhatsApp: +51 987 654 321',
-  email: 'ventas@norcelis.pe / atencion@norcelis.pe',
-  web: 'www.norcelis.pe',
-  primaryColor: [12, 25, 56], // #0c1938
-  secondaryColor: [29, 78, 216], // #1d4ed8
-  slateDark: [30, 41, 59], // #1e293b
-  slateLight: [241, 245, 249], // #f1f5f9
-  borderGrey: [203, 213, 225], // #cbd5e1
+// Datos Fijos Oficiales de la Empresa
+export const COMPANY_DATA = {
+  razonSocial: 'GRUPO MEVAC S.A.C.',
+  nombreComercial: 'NORCELIS AUTOMOTRIZ',
+  ruc: '20610829318',
+  sucursales: [
+    {
+      sede: 'Sede Cajamarca',
+      direccion: 'Av. Vía de Evitamiento Sur 6003, Cajamarca - Perú',
+      telefonos: '965171717 - 963134961',
+    },
+    {
+      sede: 'Sede Lima',
+      direccion: 'Av. Elmer Faucett 1450, Callao / Lima - Perú',
+      telefonos: '965171717 - 963134961',
+    },
+  ],
+  telefonos: '965171717 - 963134961',
+  correos: 'ventas1@norcelis.com / ventas2@norcelis.com',
+  web: 'www.norcelis.com',
+  colors: {
+    azulEmpresarial: [33, 41, 85] as [number, number, number], // #212955
+    naranjaEmpresarial: [240, 127, 0] as [number, number, number], // #F07F00
+    grisEmpresarial: [157, 157, 156] as [number, number, number], // #9D9D9C
+    blanco: [255, 255, 255] as [number, number, number], // #FFFFFF
+    slateBg: [248, 250, 252] as [number, number, number], // #f8fafc
+    borderGrey: [226, 232, 240] as [number, number, number], // #e2e8f0
+  },
+  cuentasBancarias: {
+    titular: 'GRUPO MEVAC S.A.C. - RUC: 20610829318',
+    soles: [
+      { banco: 'BCP', cuenta: '245-9966172-0-49', cci: '002-245-00996617204992' },
+      { banco: 'BBVA', cuenta: '0011-0248-0100034831', cci: '011-248-00010003483125' },
+      { banco: 'Scotiabank', cuenta: '000-4949476', cci: '009-010-00000494947605' },
+    ],
+    dolares: [
+      { banco: 'BCP', cuenta: '245-9964344-1-94', cci: '002-245-00996434419494' },
+      { banco: 'BBVA', cuenta: '0011-0248-0100034874', cci: '011-248-00010003487428' },
+      { banco: 'Scotiabank', cuenta: '000-4949488', cci: '009-010-00000494948809' },
+    ],
+    detraccionesBN: {
+      banco: 'Banco de la Nación (Cuenta Detracciones)',
+      cuenta: '00-772-001053',
+    },
+  },
+  politicas: [
+    'La presente cotización tiene validez por 7 días, los productos tienen un stock limitado.',
+    'Los precios pueden variar según diagnóstico final del vehículo o disponibilidad de repuestos al momento de la confirmación del vehículo.',
+  ],
+  mensajeCierre:
+    'Gracias por confiar en NORCELIS AUTOMOTRIZ especialistas en autopartes, accesorios y servicios automotrices. NORCELIS AUTOMOTRIZ CALIDAD, CONFIANZA Y TECNOLOGÍA PARA TU VEHICULO.',
 };
 
 /**
- * Draws the official Nor Celis letterhead at the top of a page.
+ * Conversión de números a letras oficial en español (estilo bancario y comercial peruano)
  */
-function drawLetterhead(doc: jsPDF, documentTitle: string, docNumber: string) {
-  const pageWidth = doc.internal.pageSize.getWidth();
+export function numeroALetras(monto: number, moneda: 'PEN' | 'USD' = 'PEN'): string {
+  const unidades = ['', 'UN', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE'];
+  const decenas = ['', 'DIEZ', 'VEINTE', 'TREINTA', 'CUARENTA', 'CINCUENTA', 'SESENTA', 'SETENTA', 'OCHENTA', 'NOVENTA'];
+  const diezY = ['DIEZ', 'ONCE', 'DOCE', 'TRECE', 'CATORCE', 'QUINCE', 'DIECISÉIS', 'DIECISIETE', 'DIECIOCHO', 'DIECINUEVE'];
+  const veinti = ['', 'VEINTIUNO', 'VEINTIDÓS', 'VEINTITRÉS', 'VEINTICUATRO', 'VEINTICINCO', 'VEINTISÉIS', 'VEINTISIETE', 'VEINTIOCHO', 'VEINTINUEVE'];
+  const centenas = ['', 'CIENTO', 'DOSCIENTOS', 'TRESCIENTOS', 'CUATROCIENTOS', 'QUINIENTOS', 'SEISCIENTOS', 'SETECIENTOS', 'OCHOCIENTOS', 'NOVECIENTOS'];
 
-  // Top color bar
-  doc.setFillColor(BRAND.secondaryColor[0], BRAND.secondaryColor[1], BRAND.secondaryColor[2]);
-  doc.rect(0, 0, pageWidth, 5, 'F');
+  function convertirCentenas(num: number): string {
+    if (num === 0) return '';
+    if (num === 100) return 'CIEN';
+    const c = Math.floor(num / 100);
+    const d = Math.floor((num % 100) / 10);
+    const u = num % 10;
+    let str = centenas[c];
+    if (d === 1) {
+      str += (str ? ' ' : '') + diezY[u];
+    } else if (d === 2 && u > 0) {
+      str += (str ? ' ' : '') + veinti[u];
+    } else if (d === 2 && u === 0) {
+      str += (str ? ' ' : '') + 'VEINTE';
+    } else if (d > 2) {
+      str += (str ? ' ' : '') + decenas[d] + (u > 0 ? ' Y ' + unidades[u] : '');
+    } else if (u > 0) {
+      str += (str ? ' ' : '') + unidades[u];
+    }
+    return str.trim();
+  }
 
-  // Company Name
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
-  doc.setTextColor(BRAND.primaryColor[0], BRAND.primaryColor[1], BRAND.primaryColor[2]);
-  doc.text('NOR CELIS AUTOMOTRIZ', 14, 18);
+  const parteEntera = Math.floor(Math.abs(monto));
+  const centavos = Math.round((Math.abs(monto) - parteEntera) * 100);
+  const centavosStr = centavos < 10 ? `0${centavos}` : `${centavos}`;
 
-  // Slogan & RUC
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(100, 116, 139);
-  doc.text('CONCESIONARIO OFICIAL & TALLER ESPECIALIZADO MULTIMARCA', 14, 23);
-  doc.text(`${BRAND.ruc} • ${BRAND.address}`, 14, 28);
-  doc.text(`${BRAND.phone} • ${BRAND.web}`, 14, 33);
+  let texto = '';
+  if (parteEntera === 0) {
+    texto = 'CERO';
+  } else if (parteEntera < 1000) {
+    texto = convertirCentenas(parteEntera);
+  } else if (parteEntera < 1000000) {
+    const miles = Math.floor(parteEntera / 1000);
+    const resto = parteEntera % 1000;
+    texto = miles === 1 ? 'MIL' : `${convertirCentenas(miles)} MIL`;
+    if (resto > 0) {
+      texto += ` ${convertirCentenas(resto)}`;
+    }
+  } else {
+    const millones = Math.floor(parteEntera / 1000000);
+    const restoMillones = parteEntera % 1000000;
+    texto = millones === 1 ? 'UN MILLÓN' : `${convertirCentenas(millones)} MILLONES`;
+    if (restoMillones >= 1000) {
+      const miles = Math.floor(restoMillones / 1000);
+      const restoMiles = restoMillones % 1000;
+      texto += ` ${miles === 1 ? 'MIL' : convertirCentenas(miles) + ' MIL'}`;
+      if (restoMiles > 0) texto += ` ${convertirCentenas(restoMiles)}`;
+    } else if (restoMillones > 0) {
+      texto += ` ${convertirCentenas(restoMillones)}`;
+    }
+  }
 
-  // Document Tag Box (Right)
-  doc.setFillColor(BRAND.slateLight[0], BRAND.slateLight[1], BRAND.slateLight[2]);
-  doc.roundedRect(pageWidth - 75, 10, 61, 25, 2, 2, 'F');
-  doc.setDrawColor(BRAND.borderGrey[0], BRAND.borderGrey[1], BRAND.borderGrey[2]);
-  doc.roundedRect(pageWidth - 75, 10, 61, 25, 2, 2, 'S');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(BRAND.secondaryColor[0], BRAND.secondaryColor[1], BRAND.secondaryColor[2]);
-  doc.text(documentTitle.toUpperCase(), pageWidth - 45, 17, { align: 'center' });
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(51, 65, 85);
-  doc.text(`N°: ${docNumber}`, pageWidth - 45, 23, { align: 'center' });
-  doc.text(`Fecha: ${new Date().toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' })}`, pageWidth - 45, 29, { align: 'center' });
-
-  // Divider line
-  doc.setDrawColor(BRAND.borderGrey[0], BRAND.borderGrey[1], BRAND.borderGrey[2]);
-  doc.setLineWidth(0.5);
-  doc.line(14, 38, pageWidth - 14, 38);
+  const nombreMoneda = moneda === 'USD' ? 'DÓLARES AMERICANOS' : 'SOLES';
+  return `SON: ${texto} CON ${centavosStr}/100 ${nombreMoneda}`;
 }
 
 /**
- * Draws footer on document
+ * Formatear fecha a DD/MM/YYYY
  */
-function drawFooter(doc: jsPDF, pageNum = 1, totalPages = 1) {
+export function formatearFecha(date: Date = new Date()): string {
+  const dia = String(date.getDate()).padStart(2, '0');
+  const mes = String(date.getMonth() + 1).padStart(2, '0');
+  const anio = date.getFullYear();
+  return `${dia}/${mes}/${anio}`;
+}
+
+/**
+ * Obtener fecha +7 días
+ */
+export function obtenerFechaVencimiento7Dias(date: Date = new Date()): string {
+  const vDate = new Date(date.getTime() + 7 * 24 * 60 * 60 * 1000);
+  return formatearFecha(vDate);
+}
+
+/**
+ * Genera número de correlativo oficial (ej. 2026-004812)
+ */
+export function generarCorrelativoOficial(prefixYear = 2026): string {
+  const randomNum = Math.floor(1000 + Math.random() * 9000);
+  return `${prefixYear}-${randomNum}`;
+}
+
+/**
+ * Dibuja la cabecera oficial corporativa con datos obligatorios de GRUPO MEVAC S.A.C.
+ */
+function drawOfficialHeader(
+  doc: jsPDF,
+  documentTitle: string,
+  docNumber: string,
+  fechaEmision: string,
+  fechaVencimiento: string
+) {
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  // Barra superior Naranja Empresarial (#F07F00)
+  doc.setFillColor(...COMPANY_DATA.colors.naranjaEmpresarial);
+  doc.rect(0, 0, pageWidth, 4, 'F');
+
+  // Razón Social y Nombre Comercial
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.setTextColor(...COMPANY_DATA.colors.azulEmpresarial);
+  doc.text(COMPANY_DATA.razonSocial, 14, 14);
+
+  doc.setFontSize(10);
+  doc.setTextColor(...COMPANY_DATA.colors.naranjaEmpresarial);
+  doc.text(`Nombre comercial: ${COMPANY_DATA.nombreComercial}`, 14, 19);
+
+  // RUC y Datos de Contacto
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(71, 85, 105);
+  doc.text(`RUC: ${COMPANY_DATA.ruc}  •  Web: ${COMPANY_DATA.web}`, 14, 24);
+  doc.text(`Sucursales: Lima y Cajamarca  •  Teléfonos: ${COMPANY_DATA.telefonos}`, 14, 28);
+  doc.text(`Correos Oficiales: ${COMPANY_DATA.correos}`, 14, 32);
+
+  // Recuadro Oficial de Cotización (Lado Derecho)
+  const boxWidth = 68;
+  const boxHeight = 24;
+  const boxX = pageWidth - 14 - boxWidth;
+  const boxY = 8;
+
+  // Fondo del recuadro
+  doc.setFillColor(...COMPANY_DATA.colors.azulEmpresarial);
+  doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 2, 2, 'F');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...COMPANY_DATA.colors.blanco);
+  doc.text(documentTitle.toUpperCase(), boxX + boxWidth / 2, boxY + 6, { align: 'center' });
+
+  doc.setFontSize(10);
+  doc.setTextColor(...COMPANY_DATA.colors.naranjaEmpresarial);
+  doc.text(`N° ${docNumber}`, boxX + boxWidth / 2, boxY + 12, { align: 'center' });
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(...COMPANY_DATA.colors.blanco);
+  doc.text(`Emisión: ${fechaEmision}   |   Vence: ${fechaVencimiento}`, boxX + boxWidth / 2, boxY + 18, {
+    align: 'center',
+  });
+
+  // Línea divisoria elegante
+  doc.setDrawColor(...COMPANY_DATA.colors.naranjaEmpresarial);
+  doc.setLineWidth(0.6);
+  doc.line(14, 36, pageWidth - 14, 36);
+}
+
+/**
+ * Dibuja el pie de página con políticas oficiales, cuentas bancarias y cierre
+ */
+function drawOfficialFooterAndTerms(doc: jsPDF, currentY: number, pageNum = 1, totalPages = 1) {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
 
-  doc.setDrawColor(BRAND.borderGrey[0], BRAND.borderGrey[1], BRAND.borderGrey[2]);
-  doc.setLineWidth(0.5);
-  doc.line(14, pageHeight - 15, pageWidth - 14, pageHeight - 15);
+  let y = currentY;
+
+  // 1. Sección "A TOMAR EN CUENTA:"
+  doc.setFillColor(...COMPANY_DATA.colors.slateBg);
+  doc.roundedRect(14, y, pageWidth - 28, 16, 1.5, 1.5, 'F');
+  doc.setDrawColor(...COMPANY_DATA.colors.borderGrey);
+  doc.roundedRect(14, y, pageWidth - 28, 16, 1.5, 1.5, 'S');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(...COMPANY_DATA.colors.azulEmpresarial);
+  doc.text('A TOMAR EN CUENTA:', 17, y + 4.5);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(148, 163, 184);
-  doc.text('Documento oficial emitido por Nor Celis Automotriz S.A.C. Válido por 15 días calendario.', 14, pageHeight - 10);
-  doc.text(`Página ${pageNum} de ${totalPages}`, pageWidth - 14, pageHeight - 10, { align: 'right' });
+  doc.setFontSize(6.5);
+  doc.setTextColor(51, 65, 85);
+  doc.text(`1. ${COMPANY_DATA.politicas[0]}`, 17, y + 9);
+  doc.text(`2. ${COMPANY_DATA.politicas[1]}`, 17, y + 13);
+
+  y += 19;
+
+  // 2. Sección Cuentas Bancarias y Detracciones
+  doc.setFillColor(...COMPANY_DATA.colors.azulEmpresarial);
+  doc.roundedRect(14, y, pageWidth - 28, 20, 1.5, 1.5, 'F');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  doc.setTextColor(...COMPANY_DATA.colors.naranjaEmpresarial);
+  doc.text(`CUENTAS CORRIENTES AUTORIZADAS (${COMPANY_DATA.cuentasBancarias.titular}):`, 17, y + 4.5);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6);
+  doc.setTextColor(...COMPANY_DATA.colors.blanco);
+  doc.text(
+    'SOLES: BCP: 245-9966172-0-49 (CCI 002-245-00996617204992) | BBVA: 0011-0248-0100034831 | SCOTIABANK: 000-4949476',
+    17,
+    y + 9
+  );
+  doc.text(
+    'DÓLARES: BCP: 245-9964344-1-94 (CCI 002-245-00996434419494) | BBVA: 0011-0248-0100034874 | SCOTIABANK: 000-4949488',
+    17,
+    y + 13.5
+  );
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...COMPANY_DATA.colors.naranjaEmpresarial);
+  doc.text(`DETRACCIONES BANCO DE LA NACIÓN: N° ${COMPANY_DATA.cuentasBancarias.detraccionesBN.cuenta}`, 17, y + 17.5);
+
+  y += 23;
+
+  // 3. Mensaje de Cierre Oficial
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(6.5);
+  doc.setTextColor(...COMPANY_DATA.colors.azulEmpresarial);
+  const splitCierre = doc.splitTextToSize(COMPANY_DATA.mensajeCierre, pageWidth - 28);
+  doc.text(splitCierre, pageWidth / 2, y, { align: 'center' });
+
+  // Pie de página con numeración
+  doc.setDrawColor(...COMPANY_DATA.colors.borderGrey);
+  doc.line(14, pageHeight - 8, pageWidth - 14, pageHeight - 8);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6);
+  doc.setTextColor(...COMPANY_DATA.colors.grisEmpresarial);
+  doc.text(
+    `Documento oficial generado para fines comerciales. ${COMPANY_DATA.razonSocial} - RUC: ${COMPANY_DATA.ruc}`,
+    14,
+    pageHeight - 5
+  );
+  doc.text(`Página ${pageNum} de ${totalPages}`, pageWidth - 14, pageHeight - 5, { align: 'right' });
 }
 
 // --------------------------------------------------------------------------
-// DOWNLOAD HELPER (Iframe & Safari resilient)
+// DOWNLOAD HELPER SEGURO PARA IFRAMES Y NAVEGADORES
 // --------------------------------------------------------------------------
 export function downloadPdfSafely(doc: jsPDF, fileName: string): string {
   try {
-    // 1. Try native jsPDF save
     doc.save(fileName);
   } catch (err) {
-    console.warn('doc.save encountered an issue, trying Blob download fallback:', err);
+    console.warn('Fallo doc.save, usando fallback con Blob:', err);
   }
 
   try {
-    // 2. Direct Blob anchor trigger (reliable inside iframes / sandboxes)
     const blob = doc.output('blob');
     const blobUrl = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -138,614 +377,447 @@ export function downloadPdfSafely(doc: jsPDF, fileName: string): string {
       URL.revokeObjectURL(blobUrl);
     }, 2000);
   } catch (blobErr) {
-    console.error('Blob download fallback error:', blobErr);
+    console.error('Error en Blob fallback:', blobErr);
   }
 
   return fileName;
 }
 
-export function getPdfBlob(doc: jsPDF): Blob {
-  return doc.output('blob');
-}
-
 // --------------------------------------------------------------------------
-// 1. VEHICLE FORMAL QUOTATION PDF (Cotización de Vehículo)
+// GENERADOR OFICIAL DE COTIZACIÓN COMERCIAL PDF (NORCELIS AUTOMOTRIZ)
 // --------------------------------------------------------------------------
-export function generateVehicleQuotePdf(vehicle: Vehicle, selectedColorName = 'Blanco Perlado Premium') {
+export function generateCommercialQuotePdf(quoteData: CommercialQuotationData): string {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
-  const quoteCode = `COT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-  drawLetterhead(doc, 'Cotización Oficial', quoteCode);
+  const fechaEmision = quoteData.fechaEmision || formatearFecha();
+  const fechaVencimiento = quoteData.fechaVencimiento || obtenerFechaVencimiento7Dias();
+  const docNumero = quoteData.numeroDocumento || generarCorrelativoOficial();
 
-  let y = 46;
+  drawOfficialHeader(doc, 'Cotización Comercial', docNumero, fechaEmision, fechaVencimiento);
 
-  // Customer & Advisor Box
-  doc.setFillColor(BRAND.slateLight[0], BRAND.slateLight[1], BRAND.slateLight[2]);
-  doc.roundedRect(14, y, 182, 22, 2, 2, 'F');
+  let y = 41;
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.setTextColor(BRAND.primaryColor[0], BRAND.primaryColor[1], BRAND.primaryColor[2]);
-  doc.text('DATOS DEL CLIENTE', 18, y + 6);
-  doc.text('ASESOR COMERCIAL ASIGNADO', 110, y + 6);
+  // 1. Recuadro de Datos del Cliente y del Documento
+  doc.setFillColor(...COMPANY_DATA.colors.slateBg);
+  doc.roundedRect(14, y, pageWidth - 28, 22, 1.5, 1.5, 'F');
+  doc.setDrawColor(...COMPANY_DATA.colors.borderGrey);
+  doc.roundedRect(14, y, pageWidth - 28, 22, 1.5, 1.5, 'S');
 
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(71, 85, 105);
-  doc.text('Cliente: Juan Carlos Mendoza', 18, y + 11);
-  doc.text('DNI / RUC: 45892147', 18, y + 16);
-  doc.text('Asesor: Lic. Marco Valdivia C.', 110, y + 11);
-  doc.text('Canal: Concesionario Sede Cajamarca', 110, y + 16);
-
-  y += 28;
-
-  // Vehicle Details Card Title
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.setTextColor(BRAND.primaryColor[0], BRAND.primaryColor[1], BRAND.primaryColor[2]);
-  doc.text('VEHÍCULO COTIZADO', 14, y);
-
-  y += 5;
-
-  // Table Header
-  doc.setFillColor(BRAND.primaryColor[0], BRAND.primaryColor[1], BRAND.primaryColor[2]);
-  doc.rect(14, y, 182, 7, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  doc.setTextColor(255, 255, 255);
-  doc.text('DESCRIPCIÓN', 18, y + 4.8);
-  doc.text('AÑO', 115, y + 4.8);
-  doc.text('CONDICIÓN', 135, y + 4.8);
-  doc.text('PRECIO OFICIAL', 170, y + 4.8);
-
-  y += 7;
-
-  // Vehicle Row
-  doc.setFillColor(255, 255, 255);
-  doc.rect(14, y, 182, 14, 'F');
-  doc.setDrawColor(BRAND.borderGrey[0], BRAND.borderGrey[1], BRAND.borderGrey[2]);
-  doc.rect(14, y, 182, 14, 'S');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(15, 23, 42);
-  doc.text(vehicle.name, 18, y + 5.5);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(100, 116, 139);
-  doc.text(`Color: ${selectedColorName} • ${vehicle.subtitle}`, 18, y + 10);
-
-  doc.setFontSize(8.5);
-  doc.setTextColor(15, 23, 42);
-  doc.text(`${vehicle.year}`, 115, y + 7.5);
-  doc.text(vehicle.condition === 'nuevo' ? '0 KM Nuevo' : 'Seminuevo Cert.', 135, y + 7.5);
-
-  doc.setFont('helvetica', 'bold');
-  doc.text(`S/ ${vehicle.priceSoles.toLocaleString()}`, 165, y + 6);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(100, 116, 139);
-  doc.text(`($ ${vehicle.priceUsd.toLocaleString()} USD)`, 165, y + 10.5);
-
-  y += 20;
-
-  // Technical Specs Grid
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(BRAND.primaryColor[0], BRAND.primaryColor[1], BRAND.primaryColor[2]);
-  doc.text('FICHA TÉCNICA Y ESPECIFICACIONES HOMOLOGADAS', 14, y);
-
-  y += 5;
-  const specs = [
-    ['Motor:', vehicle.specs.engine || '2.5L Dynamic Force Hybrid'],
-    ['Transmisión:', vehicle.specs.transmission || 'Automática E-CVT'],
-    ['Tracción:', vehicle.specs.traction || 'e-Four AWD Inteligente'],
-    ['Potencia / Torque:', `${vehicle.specs.power || '219 HP'} / 221 Nm`],
-    ['Combustible:', vehicle.fuelType],
-    ['Consumo Homologado:', vehicle.specs.consumption || '72 km/gal'],
-    ['Carrocería:', vehicle.bodyType],
-    ['Garantía Oficial:', vehicle.warranty || '5 Años o 100,000 km'],
-  ];
-
-  doc.setFillColor(BRAND.slateLight[0], BRAND.slateLight[1], BRAND.slateLight[2]);
-  doc.roundedRect(14, y, 182, 34, 2, 2, 'F');
-
-  let specY = y + 6;
-  for (let i = 0; i < specs.length; i += 2) {
-    const s1 = specs[i];
-    const s2 = specs[i + 1];
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7.5);
-    doc.setTextColor(51, 65, 85);
-    doc.text(s1[0], 18, specY);
-    doc.setFont('helvetica', 'normal');
-    doc.text(s1[1], 52, specY);
-
-    if (s2) {
-      doc.setFont('helvetica', 'bold');
-      doc.text(s2[0], 108, specY);
-      doc.setFont('helvetica', 'normal');
-      doc.text(s2[1], 142, specY);
-    }
-    specY += 7;
-  }
-
-  y += 42;
-
-  // Pricing & Commercial Bonus Breakdown
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(BRAND.primaryColor[0], BRAND.primaryColor[1], BRAND.primaryColor[2]);
-  doc.text('RESUMEN COMERCIAL & CONDICIONES DE RESERVA', 14, y);
-
-  y += 5;
-  doc.setDrawColor(BRAND.borderGrey[0], BRAND.borderGrey[1], BRAND.borderGrey[2]);
-  doc.rect(14, y, 182, 32, 'S');
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
-  doc.setTextColor(71, 85, 105);
-  doc.text('Precio de Lista:', 20, y + 7);
-  doc.text(`S/ ${(vehicle.oldPriceSoles || vehicle.priceSoles + 5000).toLocaleString()}`, 80, y + 7);
-
-  doc.text('Bono de Descuento Exclusivo Concesionario:', 20, y + 13);
-  doc.setTextColor(22, 101, 52); // green
-  doc.text(`- S/ ${vehicle.discountBonus || '5,000'}`, 80, y + 13);
-
-  doc.setTextColor(71, 85, 105);
-  doc.text('Monto de Reserva para Inmovilizar Chasis (48h):', 20, y + 19);
-  doc.text('S/ 1,850 (~$500 USD) - 100% Reembolsable', 80, y + 19);
-
-  doc.text('Cuota Mensual Estimada (48 meses / 20% inicial):', 20, y + 25);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(BRAND.secondaryColor[0], BRAND.secondaryColor[1], BRAND.secondaryColor[2]);
-  doc.text(`S/ ${vehicle.monthlySoles?.toLocaleString() || '1,460'} / mes`, 80, y + 25);
-
-  // Total Final Highlight Box (Right)
-  doc.setFillColor(BRAND.primaryColor[0], BRAND.primaryColor[1], BRAND.primaryColor[2]);
-  doc.rect(125, y, 71, 32, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.text('PRECIO FINAL AL CONTADO', 160, y + 9, { align: 'center' });
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.text(`S/ ${vehicle.priceSoles.toLocaleString()}`, 160, y + 18, { align: 'center' });
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.text(`USD $ ${vehicle.priceUsd.toLocaleString()}`, 160, y + 25, { align: 'center' });
-
-  y += 40;
-
-  // Commercial Notes & Official Bank Accounts & Seal
+  // Columna Izquierda: Cliente
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
-  doc.setTextColor(BRAND.primaryColor[0], BRAND.primaryColor[1], BRAND.primaryColor[2]);
-  doc.text('A TOMAR EN CUENTA:', 14, y);
+  doc.setTextColor(...COMPANY_DATA.colors.azulEmpresarial);
+  doc.text('DATOS DEL CLIENTE:', 18, y + 5);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
-  doc.setTextColor(71, 85, 105);
-  doc.text('• La presente cotización tiene validez por 7 días, los productos tienen un stock limitado.', 14, y + 4);
-  doc.text('• Los precios pueden variar según diagnóstico final del vehículo o disponibilidad de repuestos al momento de confirmación.', 14, y + 8);
-  doc.text('• Gracias por confiar en NORCELIS AUTOMOTRIZ especialistas en autopartes, accesorios y servicios automotrices.', 14, y + 12);
+  doc.setTextColor(30, 41, 59);
+  doc.text(`Nombre / R. Social: ${quoteData.cliente.nombreOrazonSocial}`, 18, y + 9.5);
+  doc.text(`Dirección: ${quoteData.cliente.direccion || 'Cajamarca / Lima - Perú'}`, 18, y + 13.5);
+  doc.text(
+    `Teléfono: ${quoteData.cliente.telefono || 'N/A'}   •   Correo: ${quoteData.cliente.correo || 'N/A'}`,
+    18,
+    y + 17.5
+  );
+
+  // Columna Derecha: Documento, Placa, Asesor
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(...COMPANY_DATA.colors.azulEmpresarial);
+  doc.text('DATOS DE LA OPERACIÓN:', 115, y + 5);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(30, 41, 59);
+  doc.text(`Placa del Vehículo: ${quoteData.cliente.placaVehiculo || 'EN TRÁMITE / N/A'}`, 115, y + 9.5);
+  doc.text(
+    `Moneda: ${quoteData.moneda === 'USD' ? 'DÓLARES AMERICANOS (USD)' : 'SOLES (PEN)'}   •   Pago: ${
+      quoteData.formaPago || 'Contado / Transferencia'
+    }`,
+    115,
+    y + 13.5
+  );
+  doc.text(`Asesor Comercial: ${quoteData.asesorVentas || 'Asesor Oficial Norcelis'}`, 115, y + 17.5);
+
+  y += 26;
+
+  // 2. Tabla de Ítems (Columnas obligatorias en orden estricto)
+  // ITEM | CODIGO | U. MED | CANT. | DESCRIPCION | PRECIO UNIT | DSCTO % | UNIT CON DSCTO | IMPORTE TOTAL
+  const colX = {
+    item: 14,
+    codigo: 23,
+    uMed: 44,
+    cant: 56,
+    desc: 68,
+    pUnit: 122,
+    dscto: 140,
+    unitDscto: 156,
+    total: 175,
+  };
+
+  const tableWidth = pageWidth - 28;
+
+  // Encabezado de la tabla (Azul Empresarial)
+  doc.setFillColor(...COMPANY_DATA.colors.azulEmpresarial);
+  doc.rect(14, y, tableWidth, 6.5, 'F');
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7);
-  doc.setTextColor(BRAND.secondaryColor[0], BRAND.secondaryColor[1], BRAND.secondaryColor[2]);
-  doc.text('CUENTAS CORRIENTES OFICIALES (NOR CELIS AUTOMOTRIZ S.A.C. - RUC 20608754129):', 14, y + 17);
-  doc.setFont('helvetica', 'normal');
   doc.setFontSize(6.5);
-  doc.setTextColor(51, 65, 85);
-  doc.text('Soles: BCP 245-9966172-0-49 (CCI 002-245-00996617204992) • BBVA 0011-0248-0100034831 • Scotiabank 000-4949476', 14, y + 21);
-  doc.text('Dólares: BCP 245-9964344-1-94 (CCI 002-245-00996434419494) • BBVA 0011-0248-0100034874 | Detracciones BN: 00-772-001053', 14, y + 25);
+  doc.setTextColor(...COMPANY_DATA.colors.blanco);
 
-  // Stamped Signature Box
-  doc.setDrawColor(BRAND.borderGrey[0], BRAND.borderGrey[1], BRAND.borderGrey[2]);
-  doc.rect(pageWidth - 65, y, 51, 26, 'S');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7);
-  doc.setTextColor(BRAND.primaryColor[0], BRAND.primaryColor[1], BRAND.primaryColor[2]);
-  doc.text('NOR CELIS AUTOMOTRIZ S.A.C.', pageWidth - 39.5, y + 13, { align: 'center' });
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(6);
-  doc.setTextColor(100, 116, 139);
-  doc.text('GERENCIA COMERCIAL & VENTAS', pageWidth - 39.5, y + 17, { align: 'center' });
-  doc.text('Firma y Sello Autorizado', pageWidth - 39.5, y + 21, { align: 'center' });
-
-  drawFooter(doc, 1, 1);
-
-  // Save document
-  const fileName = `Cotizacion_NorCelis_${vehicle.name.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
-  downloadPdfSafely(doc, fileName);
-  return fileName;
-}
-
-// --------------------------------------------------------------------------
-// 2. VEHICLE FINANCING SIMULATION & AMORTIZATION PDF
-// --------------------------------------------------------------------------
-export function generateFinancingSimulationPdf(params: FinancingPdfParams) {
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const simCode = `FIN-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-
-  drawLetterhead(doc, 'Simulación Crédito', simCode);
-
-  let y = 46;
-
-  // Vehicle & Credit Summary Card
-  doc.setFillColor(BRAND.slateLight[0], BRAND.slateLight[1], BRAND.slateLight[2]);
-  doc.roundedRect(14, y, 182, 38, 2, 2, 'F');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9.5);
-  doc.setTextColor(BRAND.primaryColor[0], BRAND.primaryColor[1], BRAND.primaryColor[2]);
-  doc.text(`VEHÍCULO: ${params.vehicleName} (${params.vehicleYear})`, 20, y + 7);
-  doc.text(`ENTIDAD FINANCIERA: ${params.bankName.toUpperCase()}`, 110, y + 7);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(71, 85, 105);
-  doc.text(`Precio de Lista Oficial: S/ ${params.vehiclePriceSoles.toLocaleString()} ($ ${params.vehiclePriceUsd.toLocaleString()} USD)`, 20, y + 14);
-  doc.text(`Cuota Inicial (${params.downPaymentPercent}%): S/ ${params.downPaymentSoles.toLocaleString()}`, 20, y + 20);
-  doc.text(`Monto a Financiar (Capital): S/ ${params.loanAmountSoles.toLocaleString()}`, 20, y + 26);
-  doc.text(`Plazo Solicitado: ${params.loanTermMonths} Meses (${params.loanTermMonths / 12} Años)`, 20, y + 32);
-
-  doc.text(`Tasa Efectiva Anual (TEA): ${params.teaPercent.toFixed(2)}%`, 110, y + 14);
-  doc.text(`Moneda del Crédito: Soles (PEN)`, 110, y + 20);
-  doc.text(`Seguro de Desgravamen: Incluido en cuota`, 110, y + 26);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(BRAND.secondaryColor[0], BRAND.secondaryColor[1], BRAND.secondaryColor[2]);
-  doc.text(`CUOTA MENSUAL ESTIMADA: S/ ${params.monthlyPaymentSoles.toLocaleString()}`, 110, y + 33);
-
-  y += 45;
-
-  // Amortization Schedule Table Header
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(BRAND.primaryColor[0], BRAND.primaryColor[1], BRAND.primaryColor[2]);
-  doc.text(`CRONOGRAMA DE AMORTIZACIÓN PROYECTADO (${params.loanTermMonths} CUOTAS)`, 14, y);
-
-  y += 5;
-  doc.setFillColor(BRAND.primaryColor[0], BRAND.primaryColor[1], BRAND.primaryColor[2]);
-  doc.rect(14, y, 182, 6.5, 'F');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.5);
-  doc.setTextColor(255, 255, 255);
-  doc.text('N°', 18, y + 4.5);
-  doc.text('SALDO INICIAL', 32, y + 4.5);
-  doc.text('CAPITAL', 68, y + 4.5);
-  doc.text('INTERÉS', 98, y + 4.5);
-  doc.text('DESGRAVAMEN', 126, y + 4.5);
-  doc.text('CUOTA TOTAL', 155, y + 4.5);
-  doc.text('SALDO FINAL', 178, y + 4.5);
+  doc.text('ITEM', colX.item + 1, y + 4.5);
+  doc.text('CODIGO', colX.codigo, y + 4.5);
+  doc.text('U. MED', colX.uMed, y + 4.5);
+  doc.text('CANT.', colX.cant, y + 4.5);
+  doc.text('DESCRIPCION', colX.desc, y + 4.5);
+  doc.text('P. UNIT', colX.pUnit, y + 4.5);
+  doc.text('DSCTO %', colX.dscto, y + 4.5);
+  doc.text('UNIT C/DSC', colX.unitDscto, y + 4.5);
+  doc.text('IMPORTE TOT', colX.total, y + 4.5);
 
   y += 6.5;
 
-  // Generate or use amortization rows (display first 16 payments)
-  const rows = params.amortizationRows || [];
-  const rowsToDisplay = rows.length > 0 ? rows.slice(0, 16) : generateMockAmortizationRows(params, 16);
+  let totalGeneral = 0;
+  let totalDescuentoValor = 0;
+  const monedaSimbolo = quoteData.moneda === 'USD' ? '$' : 'S/';
+
+  quoteData.items.forEach((item, index) => {
+    // Cálculo exacto de UNIT CON DSCTO e IMPORTE TOTAL
+    const pUnit = item.precioUnitario;
+    const dsctoPct = item.descuentoPorcentaje || 0;
+    const unitConDscto = Math.round(pUnit * (1 - dsctoPct / 100) * 100) / 100;
+    const importeTotal = Math.round(item.cantidad * unitConDscto * 100) / 100;
+
+    const ahorroFila = Math.round(item.cantidad * (pUnit - unitConDscto) * 100) / 100;
+    totalDescuentoValor += ahorroFila;
+    totalGeneral += importeTotal;
+
+    const rowHeight = 7;
+
+    // Fila cebra
+    if (index % 2 === 1) {
+      doc.setFillColor(...COMPANY_DATA.colors.slateBg);
+      doc.rect(14, y, tableWidth, rowHeight, 'F');
+    }
+
+    doc.setDrawColor(...COMPANY_DATA.colors.borderGrey);
+    doc.setLineWidth(0.2);
+    doc.rect(14, y, tableWidth, rowHeight, 'S');
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(30, 41, 59);
+
+    doc.text(String(item.itemNumber || index + 1), colX.item + 2.5, y + 4.5);
+    doc.text((item.codigo || 'N/A').slice(0, 12), colX.codigo, y + 4.5);
+    doc.text((item.unidadMedida || 'UND').slice(0, 6), colX.uMed, y + 4.5);
+    doc.text(String(item.cantidad), colX.cant + 2, y + 4.5);
+
+    // Descripción truncada limpia
+    doc.setFont('helvetica', 'bold');
+    doc.text(item.descripcion.slice(0, 36), colX.desc, y + 4.5);
+
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${monedaSimbolo} ${pUnit.toFixed(2)}`, colX.pUnit, y + 4.5);
+    doc.text(`${dsctoPct}%`, colX.dscto + 2, y + 4.5);
+    doc.text(`${monedaSimbolo} ${unitConDscto.toFixed(2)}`, colX.unitDscto, y + 4.5);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...COMPANY_DATA.colors.azulEmpresarial);
+    doc.text(`${monedaSimbolo} ${importeTotal.toFixed(2)}`, colX.total, y + 4.5);
+
+    y += rowHeight;
+  });
+
+  y += 4;
+
+  // 3. Cálculos Financieros: OP. GRAVADA, DESCUENTO TOTAL, IGV (18%), IMPORTE TOTAL
+  const opGravada = Math.round((totalGeneral / 1.18) * 100) / 100;
+  const igv18 = Math.round((totalGeneral - opGravada) * 100) / 100;
+
+  // Recuadro de Cifra en Letras (Lado Izquierdo)
+  const textoLetras = numeroALetras(totalGeneral, quoteData.moneda);
+  doc.setFillColor(...COMPANY_DATA.colors.slateBg);
+  doc.roundedRect(14, y, 105, 24, 1.5, 1.5, 'F');
+  doc.setDrawColor(...COMPANY_DATA.colors.borderGrey);
+  doc.roundedRect(14, y, 105, 24, 1.5, 1.5, 'S');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(6.5);
+  doc.setTextColor(...COMPANY_DATA.colors.azulEmpresarial);
+  doc.text('IMPORTE EN LETRAS OBLIGATORIO:', 17, y + 5);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  doc.setTextColor(...COMPANY_DATA.colors.naranjaEmpresarial);
+  const splitLetras = doc.splitTextToSize(textoLetras, 99);
+  doc.text(splitLetras, 17, y + 10);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6);
+  doc.setTextColor(100, 116, 139);
+  doc.text('Comprobante emitido según normativa tributaria SUNAT vigente.', 17, y + 20);
+
+  // Recuadro de Totales (Lado Derecho)
+  const totalsBoxX = 124;
+  const totalsBoxW = pageWidth - 14 - totalsBoxX;
+
+  doc.setDrawColor(...COMPANY_DATA.colors.borderGrey);
+  doc.rect(totalsBoxX, y, totalsBoxW, 24, 'S');
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
-
-  rowsToDisplay.forEach((r, idx) => {
-    if (idx % 2 === 1) {
-      doc.setFillColor(248, 250, 252);
-      doc.rect(14, y, 182, 5.5, 'F');
-    }
-    doc.setTextColor(51, 65, 85);
-    doc.text(`${r.month}`, 18, y + 4);
-    doc.text(`S/ ${r.initialBalance.toLocaleString()}`, 32, y + 4);
-    doc.text(`S/ ${r.principal.toLocaleString()}`, 68, y + 4);
-    doc.text(`S/ ${r.interest.toLocaleString()}`, 98, y + 4);
-    doc.text(`S/ ${r.insurance.toLocaleString()}`, 126, y + 4);
-
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(BRAND.secondaryColor[0], BRAND.secondaryColor[1], BRAND.secondaryColor[2]);
-    doc.text(`S/ ${r.totalPayment.toLocaleString()}`, 155, y + 4);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(51, 65, 85);
-    doc.text(`S/ ${r.endingBalance.toLocaleString()}`, 178, y + 4);
-
-    y += 5.5;
-  });
-
-  if (params.loanTermMonths > 16) {
-    doc.setFillColor(BRAND.slateLight[0], BRAND.slateLight[1], BRAND.slateLight[2]);
-    doc.rect(14, y, 182, 5, 'F');
-    doc.setFont('helvetica', 'italic');
-    doc.setFontSize(6.5);
-    doc.setTextColor(100, 116, 139);
-    doc.text(`... y ${params.loanTermMonths - 16} cuotas sucesivas idénticas hasta la cancelación total del crédito.`, 18, y + 3.5);
-    y += 8;
-  }
-
-  y += 5;
-
-  // Regulatory Disclaimer Box
-  doc.setFillColor(254, 243, 199); // amber 100
-  doc.roundedRect(14, y, 182, 16, 2, 2, 'F');
-  doc.setDrawColor(245, 158, 11);
-  doc.roundedRect(14, y, 182, 16, 2, 2, 'S');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.5);
-  doc.setTextColor(146, 64, 14);
-  doc.text('NOTA IMPORTANTE DE REGULACIÓN SBS:', 18, y + 5);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(6.5);
-  doc.text('La presente simulación es informativa y referencial. La aprobación final del crédito, tasa TEA definitiva y condiciones accesorias están sujetas a evaluación crediticia por parte de la entidad financiera elegida, de acuerdo con la política de riesgos y sustento de ingresos del cliente.', 18, y + 9, { maxWidth: 174 });
-
-  drawFooter(doc, 1, 1);
-
-  const fileName = `Cronograma_Credito_${params.bankName.replace(/\s+/g, '_')}_${params.vehicleName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
-  downloadPdfSafely(doc, fileName);
-  return fileName;
-}
-
-// Helper to project realistic mock amortization rows
-function generateMockAmortizationRows(p: FinancingPdfParams, count: number) {
-  const list = [];
-  let balance = p.loanAmountSoles;
-  const monthlyRate = (p.teaPercent / 100) / 12;
-  const monthlyPayment = p.monthlyPaymentSoles;
-
-  for (let m = 1; m <= count && m <= p.loanTermMonths; m++) {
-    const interest = Math.round(balance * monthlyRate);
-    const insurance = Math.round(balance * 0.00065); // 0.065% desgravamen
-    const principal = Math.max(0, monthlyPayment - interest - insurance);
-    const ending = Math.max(0, balance - principal);
-
-    list.push({
-      month: m,
-      initialBalance: balance,
-      principal,
-      interest,
-      insurance,
-      totalPayment: monthlyPayment,
-      endingBalance: ending,
-    });
-    balance = ending;
-  }
-  return list;
-}
-
-// --------------------------------------------------------------------------
-// 3. WISHLIST / SHOPPING CART FORMAL PROFORMA PDF
-// --------------------------------------------------------------------------
-export function generateWishlistQuotePdf(items: WishlistItem[], customerName = 'Juan Carlos Mendoza') {
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const code = `PRO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-
-  drawLetterhead(doc, 'Proforma Comercial', code);
-
-  let y = 46;
-
-  // Customer Box
-  doc.setFillColor(BRAND.slateLight[0], BRAND.slateLight[1], BRAND.slateLight[2]);
-  doc.roundedRect(14, y, 182, 16, 2, 2, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  doc.setTextColor(BRAND.primaryColor[0], BRAND.primaryColor[1], BRAND.primaryColor[2]);
-  doc.text('CLIENTE:', 18, y + 6);
-  doc.text('CANAL:', 110, y + 6);
-
-  doc.setFont('helvetica', 'normal');
   doc.setTextColor(71, 85, 105);
-  doc.text(`${customerName} (contacto@norcelis.pe)`, 35, y + 6);
-  doc.text('Web Nor Celis / Carrito & Lista de Deseos', 125, y + 6);
 
-  doc.text('CONDICIONES: Precios incluyen I.G.V. (18%) • Despacho Nacional 24/48h', 18, y + 12);
+  doc.text('OP. GRAVADA:', totalsBoxX + 3, y + 5.5);
+  doc.text(`${monedaSimbolo} ${opGravada.toFixed(2)}`, pageWidth - 17, y + 5.5, { align: 'right' });
 
-  y += 22;
+  doc.text('DSCTO TOTAL:', totalsBoxX + 3, y + 10);
+  doc.text(`${monedaSimbolo} ${totalDescuentoValor.toFixed(2)}`, pageWidth - 17, y + 10, { align: 'right' });
 
-  // Table
-  doc.setFillColor(BRAND.primaryColor[0], BRAND.primaryColor[1], BRAND.primaryColor[2]);
-  doc.rect(14, y, 182, 7, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  doc.setTextColor(255, 255, 255);
-  doc.text('ITEM', 18, y + 5);
-  doc.text('DESCRIPCIÓN DEL REPUESTO / VEHÍCULO', 32, y + 5);
-  doc.text('SKU / CÓDIGO', 125, y + 5);
-  doc.text('CANT.', 155, y + 5);
-  doc.text('TOTAL PEN', 172, y + 5);
+  doc.text('I.G.V. (18%):', totalsBoxX + 3, y + 14.5);
+  doc.text(`${monedaSimbolo} ${igv18.toFixed(2)}`, pageWidth - 17, y + 14.5, { align: 'right' });
 
-  y += 7;
-
-  let totalSoles = 0;
-
-  items.forEach((item, idx) => {
-    const rowTotal = item.priceSoles * (item.quantity || 1);
-    totalSoles += rowTotal;
-
-    if (idx % 2 === 1) {
-      doc.setFillColor(248, 250, 252);
-      doc.rect(14, y, 182, 11, 'F');
-    }
-    doc.setDrawColor(BRAND.borderGrey[0], BRAND.borderGrey[1], BRAND.borderGrey[2]);
-    doc.rect(14, y, 182, 11, 'S');
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(51, 65, 85);
-    doc.text(`${idx + 1}`, 18, y + 6.5);
-
-    doc.setFont('helvetica', 'bold');
-    doc.text(item.title.slice(0, 52), 32, y + 5);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.5);
-    doc.setTextColor(100, 116, 139);
-    doc.text(item.subtitle ? item.subtitle.slice(0, 60) : 'Repuesto / Accesorio Oficial Garantizado', 32, y + 9);
-
-    doc.setFontSize(7.5);
-    doc.setTextColor(51, 65, 85);
-    doc.text(item.sku || 'N/A', 125, y + 6.5);
-    doc.text(`${item.quantity || 1}`, 158, y + 6.5);
-
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(BRAND.primaryColor[0], BRAND.primaryColor[1], BRAND.primaryColor[2]);
-    doc.text(`S/ ${rowTotal.toLocaleString()}`, 172, y + 6.5);
-
-    y += 11;
-  });
-
-  y += 5;
-
-  // Subtotal, IGV and Total Box
-  doc.setDrawColor(BRAND.borderGrey[0], BRAND.borderGrey[1], BRAND.borderGrey[2]);
-  doc.rect(pageWidth - 85, y, 71, 24, 'S');
-
-  const subtotal = Math.round((totalSoles / 1.18) * 100) / 100;
-  const igv = Math.round((totalSoles - subtotal) * 100) / 100;
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(71, 85, 105);
-  doc.text('Subtotal:', pageWidth - 80, y + 6);
-  doc.text(`S/ ${subtotal.toLocaleString()}`, pageWidth - 20, y + 6, { align: 'right' });
-
-  doc.text('I.G.V. (18%):', pageWidth - 80, y + 12);
-  doc.text(`S/ ${igv.toLocaleString()}`, pageWidth - 20, y + 12, { align: 'right' });
+  // IMPORTE TOTAL DESTACADO
+  doc.setFillColor(...COMPANY_DATA.colors.azulEmpresarial);
+  doc.rect(totalsBoxX, y + 16.5, totalsBoxW, 7.5, 'F');
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(BRAND.secondaryColor[0], BRAND.secondaryColor[1], BRAND.secondaryColor[2]);
-  doc.text('TOTAL A PAGAR:', pageWidth - 80, y + 19);
-  doc.text(`S/ ${totalSoles.toLocaleString()}`, pageWidth - 20, y + 19, { align: 'right' });
+  doc.setFontSize(8);
+  doc.setTextColor(...COMPANY_DATA.colors.blanco);
+  doc.text('IMPORTE TOTAL:', totalsBoxX + 3, y + 21.5);
+
+  doc.setTextColor(...COMPANY_DATA.colors.naranjaEmpresarial);
+  doc.text(`${monedaSimbolo} ${totalGeneral.toFixed(2)}`, pageWidth - 17, y + 21.5, { align: 'right' });
 
   y += 28;
 
-  // Notes & Official Accounts
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.5);
-  doc.setTextColor(BRAND.primaryColor[0], BRAND.primaryColor[1], BRAND.primaryColor[2]);
-  doc.text('A TOMAR EN CUENTA:', 14, y);
+  // 4. Términos, Políticas, Cuentas Bancarias y Cierre
+  drawOfficialFooterAndTerms(doc, y, 1, 1);
 
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
-  doc.setTextColor(71, 85, 105);
-  doc.text('• La presente cotización tiene validez por 7 días, los productos tienen un stock limitado.', 14, y + 4);
-  doc.text('• Los precios pueden variar según diagnóstico final del vehículo o disponibilidad de repuestos al momento de la confirmación.', 14, y + 8);
-  doc.text('• Gracias por confiar en NORCELIS AUTOMOTRIZ especialistas en autopartes, accesorios y servicios automotrices.', 14, y + 12);
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7);
-  doc.setTextColor(BRAND.secondaryColor[0], BRAND.secondaryColor[1], BRAND.secondaryColor[2]);
-  doc.text('CUENTAS CORRIENTES OFICIALES (NOR CELIS AUTOMOTRIZ S.A.C. - RUC 20608754129):', 14, y + 17);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(6.5);
-  doc.setTextColor(51, 65, 85);
-  doc.text('Soles: BCP 245-9966172-0-49 (CCI 002-245-00996617204992) • BBVA 0011-0248-0100034831 • Scotiabank 000-4949476', 14, y + 21);
-  doc.text('Dólares: BCP 245-9964344-1-94 (CCI 002-245-00996434419494) • BBVA 0011-0248-0100034874 | Detracciones BN: 00-772-001053', 14, y + 25);
-
-  drawFooter(doc, 1, 1);
-
-  const fileName = `Cotizacion_Repuestos_NorCelis_${code}.pdf`;
+  const fileName = `Cotizacion_Comercial_${COMPANY_DATA.nombreComercial}_${docNumero}.pdf`;
   downloadPdfSafely(doc, fileName);
   return fileName;
 }
 
 // --------------------------------------------------------------------------
-// 4. MAINTENANCE CERTIFICATE & WORK ORDER PDF
+// COTIZACIÓN FORMAL DE VEHÍCULO NUEVO / SEMINUEVO
 // --------------------------------------------------------------------------
-export function generateMaintenanceCertificatePdf(record: MaintenanceRecord, vehicle?: ActiveGarageVehicle) {
+export function generateVehicleQuotePdf(vehicle: Vehicle, selectedColorName = 'Blanco Perlado Premium'): string {
+  const correlativo = generarCorrelativoOficial();
+  const fechaEmision = formatearFecha();
+  const fechaVencimiento = obtenerFechaVencimiento7Dias();
+
+  const precioUnit = vehicle.priceSoles;
+  const dsctoPct = vehicle.oldPriceSoles && vehicle.oldPriceSoles > vehicle.priceSoles
+    ? Math.round(((vehicle.oldPriceSoles - vehicle.priceSoles) / vehicle.oldPriceSoles) * 100)
+    : 0;
+
+  const quoteData: CommercialQuotationData = {
+    numeroDocumento: correlativo,
+    cliente: {
+      nombreOrazonSocial: 'Cliente Comercial Norcelis',
+      direccion: 'Cajamarca / Lima - Perú',
+      telefono: COMPANY_DATA.telefonos,
+      correo: 'ventas1@norcelis.com',
+      placaVehiculo: vehicle.condition === 'nuevo' ? '0 KM POR ASIGNAR' : 'CERTIFICADA',
+    },
+    fechaEmision,
+    fechaVencimiento,
+    moneda: 'PEN',
+    formaPago: 'Contado / Crédito Bancario',
+    asesorVentas: 'Marco Valdivia Córdova - Asesor Comercial',
+    items: [
+      {
+        itemNumber: 1,
+        codigo: vehicle.id.toUpperCase(),
+        unidadMedida: 'UND',
+        cantidad: 1,
+        descripcion: `${vehicle.brand.toUpperCase()} ${vehicle.name.toUpperCase()} (${selectedColorName})`,
+        precioUnitario: vehicle.oldPriceSoles || precioUnit,
+        descuentoPorcentaje: dsctoPct,
+        unitarioConDescuento: precioUnit,
+        importeTotal: precioUnit,
+      },
+    ],
+  };
+
+  return generateCommercialQuotePdf(quoteData);
+}
+
+// --------------------------------------------------------------------------
+// PROFORMA DE CARRITO / WISHLIST DE REPUESTOS
+// --------------------------------------------------------------------------
+export function generateWishlistQuotePdf(
+  items: WishlistItem[],
+  customerName = 'Juan Carlos Mendoza',
+  customerPlate = 'ABC-123'
+): string {
+  const correlativo = generarCorrelativoOficial();
+  const fechaEmision = formatearFecha();
+  const fechaVencimiento = obtenerFechaVencimiento7Dias();
+
+  const formattedItems: QuotationItem[] = items.map((item, idx) => {
+    const pUnit = item.priceSoles;
+    const dscto = 0;
+    const unitConDscto = pUnit;
+    const cant = item.quantity || 1;
+    const tot = cant * unitConDscto;
+
+    return {
+      itemNumber: idx + 1,
+      codigo: item.sku || `REP-${item.id.slice(0, 6).toUpperCase()}`,
+      unidadMedida: 'UND',
+      cantidad: cant,
+      descripcion: item.title,
+      precioUnitario: pUnit,
+      descuentoPorcentaje: dscto,
+      unitarioConDescuento: unitConDscto,
+      importeTotal: tot,
+    };
+  });
+
+  const quoteData: CommercialQuotationData = {
+    numeroDocumento: correlativo,
+    cliente: {
+      nombreOrazonSocial: customerName,
+      direccion: 'Cajamarca / Lima - Perú',
+      telefono: '965171717',
+      correo: 'ventas1@norcelis.com',
+      placaVehiculo: customerPlate,
+    },
+    fechaEmision,
+    fechaVencimiento,
+    moneda: 'PEN',
+    formaPago: 'Transferencia Bancaria / Yape / Plin',
+    asesorVentas: 'Asesor Especialista en Autopartes',
+    items: formattedItems,
+  };
+
+  return generateCommercialQuotePdf(quoteData);
+}
+
+// --------------------------------------------------------------------------
+// SIMULACIÓN DE CRÉDITO VEHICULAR PDF
+// --------------------------------------------------------------------------
+export function generateFinancingSimulationPdf(params: FinancingPdfParams): string {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const code = `CERT-${record.id}`;
+  const docNumber = generarCorrelativoOficial();
+  const fechaEmision = formatearFecha();
+  const fechaVencimiento = obtenerFechaVencimiento7Dias();
 
-  drawLetterhead(doc, 'Certificado Oficial', code);
+  drawOfficialHeader(doc, 'Simulación de Crédito', docNumber, fechaEmision, fechaVencimiento);
 
-  let y = 48;
+  let y = 42;
 
-  // Official Certificate Banner
-  doc.setFillColor(BRAND.primaryColor[0], BRAND.primaryColor[1], BRAND.primaryColor[2]);
-  doc.roundedRect(14, y, 182, 18, 2, 2, 'F');
+  // Resumen del Vehículo y Entidad
+  doc.setFillColor(...COMPANY_DATA.colors.slateBg);
+  doc.roundedRect(14, y, doc.internal.pageSize.getWidth() - 28, 20, 1.5, 1.5, 'F');
+  doc.setDrawColor(...COMPANY_DATA.colors.borderGrey);
+  doc.roundedRect(14, y, doc.internal.pageSize.getWidth() - 28, 20, 1.5, 1.5, 'S');
+
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
-  doc.setTextColor(255, 255, 255);
-  doc.text('CERTIFICADO OFICIAL DE MANTENIMIENTO PREVENTIVO', 105, y + 8, { align: 'center' });
-  doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  doc.setTextColor(226, 232, 240);
-  doc.text('Garantía Oficial de Mano de Obra y Repuestos OEM Nor Celis Automotriz', 105, y + 14, { align: 'center' });
+  doc.setTextColor(...COMPANY_DATA.colors.azulEmpresarial);
+  doc.text(`VEHÍCULO: ${params.vehicleName} (${params.vehicleYear})`, 18, y + 6);
+  doc.text(`BANCO: ${params.bankName.toUpperCase()}   •   TASA TEA: ${params.teaPercent}%`, 18, y + 12);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(71, 85, 105);
+  doc.text(`Precio: S/ ${params.vehiclePriceSoles.toLocaleString()}  •  Inicial: S/ ${params.downPaymentSoles.toLocaleString()} (${params.downPaymentPercent}%)  •  Saldo: S/ ${params.loanAmountSoles.toLocaleString()}`, 18, y + 17);
 
-  y += 24;
+  y += 25;
 
-  // Vehicle Information
-  doc.setFillColor(BRAND.slateLight[0], BRAND.slateLight[1], BRAND.slateLight[2]);
-  doc.roundedRect(14, y, 182, 26, 2, 2, 'F');
+  // Cuota mensual destacada
+  doc.setFillColor(...COMPANY_DATA.colors.azulEmpresarial);
+  doc.roundedRect(14, y, doc.internal.pageSize.getWidth() - 28, 14, 1.5, 1.5, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...COMPANY_DATA.colors.blanco);
+  doc.text(`CUOTA MENSUAL ESTIMADA (${params.loanTermMonths} MESES):`, 18, y + 9);
+  doc.setFontSize(13);
+  doc.setTextColor(...COMPANY_DATA.colors.naranjaEmpresarial);
+  doc.text(`S/ ${params.monthlyPaymentSoles.toLocaleString()}`, doc.internal.pageSize.getWidth() - 20, y + 9.5, { align: 'right' });
+
+  y += 20;
+
+  // Cifra en letras de la cuota
+  const letrasCuota = numeroALetras(params.monthlyPaymentSoles, 'PEN');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(...COMPANY_DATA.colors.azulEmpresarial);
+  doc.text(letrasCuota, 14, y);
+
+  y += 10;
+
+  drawOfficialFooterAndTerms(doc, y, 1, 1);
+
+  const fileName = `Simulacion_Credito_${params.bankName}_${docNumber}.pdf`;
+  downloadPdfSafely(doc, fileName);
+  return fileName;
+}
+
+// --------------------------------------------------------------------------
+// CERTIFICADO DE MANTENIMIENTO TALLER PDF
+// --------------------------------------------------------------------------
+export function generateMaintenanceCertificatePdf(
+  record: MaintenanceRecord,
+  vehicle?: ActiveGarageVehicle
+): string {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const docNumber = generarCorrelativoOficial();
+  const fechaEmision = formatearFecha();
+  const fechaVencimiento = obtenerFechaVencimiento7Dias();
+
+  drawOfficialHeader(doc, 'Certificado de Servicio', docNumber, fechaEmision, fechaVencimiento);
+
+  let y = 42;
+
+  // Detalles del servicio
+  doc.setFillColor(...COMPANY_DATA.colors.slateBg);
+  doc.roundedRect(14, y, doc.internal.pageSize.getWidth() - 28, 30, 1.5, 1.5, 'F');
+  doc.setDrawColor(...COMPANY_DATA.colors.borderGrey);
+  doc.roundedRect(14, y, doc.internal.pageSize.getWidth() - 28, 30, 1.5, 1.5, 'S');
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8.5);
-  doc.setTextColor(BRAND.primaryColor[0], BRAND.primaryColor[1], BRAND.primaryColor[2]);
-  doc.text('DATOS DEL VEHÍCULO CERTIFICADO', 20, y + 6);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(71, 85, 105);
-  doc.text(`Vehículo: ${vehicle?.brand || 'Toyota'} ${vehicle?.model || 'RAV4 Hybrid'} (${vehicle?.year || 2025})`, 20, y + 12);
-  doc.text(`Placa de Rodaje: ${record.vehiclePlate || 'ABC-123'}`, 20, y + 18);
-  doc.text(`Kilometraje Registrado: ${record.mileage.toLocaleString()} km`, 20, y + 23);
-
-  doc.text(`Fecha del Servicio: ${record.date}`, 110, y + 12);
-  doc.text(`Técnico Responsable: ${record.technician}`, 110, y + 18);
-  doc.text(`Sede: Taller Oficial Cajamarca (Av. Vía Evitamiento Sur 6003)`, 110, y + 23);
-
-  y += 32;
-
-  // Work Summary
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(BRAND.primaryColor[0], BRAND.primaryColor[1], BRAND.primaryColor[2]);
-  doc.text(`LABORES REALIZADAS EN SERVICIO: ${record.serviceType.toUpperCase()}`, 14, y);
-
-  y += 5;
-  record.workSummary.forEach((work) => {
-    doc.setFillColor(255, 255, 255);
-    doc.setDrawColor(BRAND.borderGrey[0], BRAND.borderGrey[1], BRAND.borderGrey[2]);
-    doc.rect(14, y, 182, 8, 'S');
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
-    doc.setTextColor(22, 101, 52); // green check
-    doc.text('✓', 18, y + 5.5);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(15, 23, 42);
-    doc.text(work, 25, y + 5.5);
-
-    y += 8;
-  });
-
-  y += 8;
-
-  // Stamped Warranty Validation Box
-  doc.setFillColor(240, 253, 244); // green 50
-  doc.roundedRect(14, y, 182, 24, 2, 2, 'F');
-  doc.setDrawColor(34, 197, 94);
-  doc.roundedRect(14, y, 182, 24, 2, 2, 'S');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(21, 128, 61);
-  doc.text('VALIDEZ DE GARANTÍA NOR CELIS AUTOMOTRIZ', 18, y + 7);
+  doc.setTextColor(...COMPANY_DATA.colors.azulEmpresarial);
+  doc.text(`SERVICIO: ${record.serviceType.toUpperCase()}`, 18, y + 7);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(51, 65, 85);
-  doc.text('Este certificado acredita que el mantenimiento se ejecutó conforme a los estándares de fábrica con fluidos y repuestos 100% genuinos. La garantía de mano de obra cubre 6 meses o 10,000 km adicionales.', 18, y + 13, { maxWidth: 172 });
+  doc.text(`Vehículo: ${vehicle?.brand || 'Toyota'} ${vehicle?.model || 'RAV4'}   •   Placa: ${record.vehiclePlate}`, 18, y + 13);
+  doc.text(`Kilometraje Registrado: ${record.mileage.toLocaleString()} KM   •   Taller: ${record.workshop || 'Sede Cajamarca'}`, 18, y + 18);
+  doc.text(`Técnico Responsable: ${record.technician}   •   Garantía: ${record.warrantyCertified ? 'Certificada 6 Meses o 10,000 km' : 'Garantía Estándar'}`, 18, y + 23);
 
-  drawFooter(doc, 1, 1);
+  y += 36;
 
-  const fileName = `Certificado_Mantenimiento_${record.vehiclePlate}_${code}.pdf`;
+  // Resumen Financiero
+  doc.setFillColor(...COMPANY_DATA.colors.azulEmpresarial);
+  doc.roundedRect(14, y, doc.internal.pageSize.getWidth() - 28, 12, 1.5, 1.5, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...COMPANY_DATA.colors.blanco);
+  doc.text('TOTAL DE LA ORDEN DE SERVICIO (INC. IGV):', 18, y + 8);
+  doc.setFontSize(11);
+  doc.setTextColor(...COMPANY_DATA.colors.naranjaEmpresarial);
+  doc.text(`S/ ${record.costSoles.toFixed(2)}`, doc.internal.pageSize.getWidth() - 20, y + 8, { align: 'right' });
+
+  y += 18;
+
+  const letrasCosto = numeroALetras(record.costSoles, 'PEN');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(...COMPANY_DATA.colors.azulEmpresarial);
+  doc.text(letrasCosto, 14, y);
+
+  y += 10;
+
+  drawOfficialFooterAndTerms(doc, y, 1, 1);
+
+  const fileName = `Certificado_Mantenimiento_${record.vehiclePlate}_${docNumber}.pdf`;
   downloadPdfSafely(doc, fileName);
   return fileName;
 }
