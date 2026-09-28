@@ -212,7 +212,6 @@ export const Header: React.FC = () => {
               <div className="hidden xl:block">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-[#9D9D9C] flex items-center gap-1.5 font-body">
                   <span>Mi Garaje</span>
-                  <span className="w-2 h-2 rounded-full bg-[#F07F00]"></span>
                 </div>
                 <div className="text-xs font-bold text-[#212955] max-w-[125px] truncate font-body">
                   {activeGarage.model}

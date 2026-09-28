@@ -13,6 +13,7 @@ export const PartPdpView: React.FC = () => {
     toggleWishlist,
     isInWishlist,
     setCurrentView,
+    openQuickQuote,
     showToast,
     autoParts,
   } = useApp();
@@ -39,13 +40,18 @@ export const PartPdpView: React.FC = () => {
     part.compatibleVehicle.toLowerCase().includes(activeGarage.model.toLowerCase().split(' ')[0]);
 
   // Comprehensive compatibility list
-  const compatibilityList = [
+  const defaultCompatibilityList = [
     { brand: 'Toyota', model: 'RAV4 (5ta Gen / XA50)', years: '2019 - 2025', engine: '2.5L Hybrid (A25A-FXS) / 2.0L Gasolina' },
     { brand: 'Toyota', model: 'Corolla Cross', years: '2021 - 2025', engine: '1.8L Hybrid / 2.0L Dynamic Force' },
     { brand: 'Toyota', model: 'Camry', years: '2018 - 2024', engine: '2.5L DOHC Dual VVT-i' },
     { brand: 'Toyota', model: 'Hilux Revo / Rocco', years: '2016 - 2024', engine: '2.4L / 2.8L 1GD-FTV Turbo Diésel' },
     { brand: 'Lexus', model: 'NX 250 / NX 350h', years: '2022 - 2025', engine: '2.5L HEV E-Four' },
   ];
+
+  const activeCompatibilityList =
+    part.vehicleCompatibility && part.vehicleCompatibility.length > 0
+      ? part.vehicleCompatibility
+      : defaultCompatibilityList;
 
   const handleAddToCart = () => {
     addToCart({
@@ -270,23 +276,41 @@ export const PartPdpView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <button
                   onClick={handleAddToCart}
-                  className="bg-primary hover:bg-primary-container text-white py-3.5 px-6 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.02]"
+                  className="bg-primary hover:bg-primary-container text-white py-3.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.02] cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-base">shopping_cart</span>
                   Añadir al Carrito
                 </button>
 
+                <button
+                  onClick={() => openQuickQuote({
+                    type: 'part',
+                    id: part.id,
+                    title: `${part.name} - ${part.brand}`,
+                    skuOrCode: part.sku,
+                    priceSoles: part.priceSoles,
+                    priceUsd: part.priceUsd,
+                    image: part.image,
+                    specs: `${part.brand} • ${part.badge || part.category}`,
+                  })}
+                  className="bg-[#F07F00] hover:bg-[#d97300] text-white py-3.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.02] cursor-pointer"
+                  title="Generar cotización comercial en PDF"
+                >
+                  <span className="material-symbols-outlined text-base">request_quote</span>
+                  Cotizar (PDF)
+                </button>
+
                 <a
-                  href={`https://wa.me/51987654321?text=Hola%20Nor%20Celis,%20consulto%20stock%20del%20repuesto%20${part.name}%20(SKU:%20${part.sku})`}
+                  href={`https://wa.me/51965171717?text=Hola%20Nor%20Celis,%20consulto%20stock%20del%20repuesto%20${encodeURIComponent(part.name)}%20(SKU:%20${part.sku})`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-[#25D366] hover:bg-[#20ba59] text-white py-3.5 px-6 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.02]"
+                  className="bg-[#25D366] hover:bg-[#20ba59] text-white py-3.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.02] cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-base">chat</span>
-                  Consultar por WhatsApp
+                  WhatsApp
                 </a>
               </div>
 
@@ -346,7 +370,7 @@ export const PartPdpView: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-surface-container text-on-surface">
-                  {compatibilityList.map((row, i) => (
+                  {activeCompatibilityList.map((row, i) => (
                     <tr key={i} className="hover:bg-surface-container-low transition-colors">
                       <td className="py-3 px-3 font-bold text-primary">{row.brand}</td>
                       <td className="py-3 px-3 font-medium">{row.model}</td>
@@ -357,6 +381,24 @@ export const PartPdpView: React.FC = () => {
                 </tbody>
               </table>
             </div>
+
+            {part.crossOemCodes && part.crossOemCodes.length > 0 && (
+              <div className="pt-3 border-t border-surface-container">
+                <span className="text-[11px] font-bold text-outline uppercase block mb-1.5">
+                  Códigos de Referencia Cruzada OEM:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {part.crossOemCodes.map((code, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2 py-0.5 rounded-md bg-surface-container text-primary font-mono text-[11px] font-bold border border-surface-container-high"
+                    >
+                      {code}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Technical Specs (5 cols) */}
@@ -372,29 +414,51 @@ export const PartPdpView: React.FC = () => {
               </div>
               <div className="flex justify-between py-1.5 border-b border-surface-container">
                 <span className="text-outline">País de Procedencia:</span>
-                <span className="font-bold text-on-surface">Alemania / Japón (Certificado)</span>
+                <span className="font-bold text-on-surface">
+                  {part.technicalSpecs?.origin || 'Alemania / Japón / USA (Certificado)'}
+                </span>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-surface-container">
-                <span className="text-outline">Compuesto de Fricción:</span>
-                <span className="font-bold text-on-surface">Cerámica Avanzada Low-Metallic</span>
-              </div>
+              {part.technicalSpecs?.dryBoilingPoint && (
+                <div className="flex justify-between py-1.5 border-b border-surface-container">
+                  <span className="text-outline">Pto. Ebullición Seco:</span>
+                  <span className="font-bold text-emerald-700">{part.technicalSpecs.dryBoilingPoint}</span>
+                </div>
+              )}
+              {part.technicalSpecs?.wetBoilingPoint && (
+                <div className="flex justify-between py-1.5 border-b border-surface-container">
+                  <span className="text-outline">Pto. Ebullición Húmedo:</span>
+                  <span className="font-bold text-primary">{part.technicalSpecs.wetBoilingPoint}</span>
+                </div>
+              )}
+              {part.technicalSpecs?.viscosity && (
+                <div className="flex justify-between py-1.5 border-b border-surface-container">
+                  <span className="text-outline">Viscosidad:</span>
+                  <span className="font-bold text-on-surface">{part.technicalSpecs.viscosity}</span>
+                </div>
+              )}
               <div className="flex justify-between py-1.5 border-b border-surface-container">
                 <span className="text-outline">Norma de Homologación:</span>
-                <span className="font-bold text-emerald-700">ECE-R90 &amp; DOT FMVSS 135</span>
+                <span className="font-bold text-emerald-700">
+                  {part.technicalSpecs?.homologationStandard || 'ECE-R90 & DOT FMVSS 135'}
+                </span>
               </div>
               <div className="flex justify-between py-1.5 border-b border-surface-container">
                 <span className="text-outline">Garantía Escrita:</span>
-                <span className="font-bold text-on-surface">12 Meses o 20,000 km</span>
+                <span className="font-bold text-on-surface">
+                  {part.technicalSpecs?.warrantyText || '12 Meses o 20,000 km'}
+                </span>
               </div>
               <div className="flex justify-between py-1.5">
-                <span className="text-outline">Vida Útil Estimada:</span>
-                <span className="font-bold text-on-surface">45,000 - 60,000 km en condiciones urbanas</span>
+                <span className="text-outline">Intervalo / Vida Útil:</span>
+                <span className="font-bold text-on-surface">
+                  {part.technicalSpecs?.lifespanOrInterval || '40,000 - 60,000 km según condiciones de uso'}
+                </span>
               </div>
             </div>
 
             <div className="bg-surface-container-low p-4 rounded-2xl border border-surface-container text-xs text-outline space-y-1">
               <strong className="text-primary block font-bold">Sellado y Holograma de Seguridad</strong>
-              Cada caja incluye código QR de autenticidad verificable en la red oficial de Nor Celis para evitar falsificaciones en el mercado peruano.
+              Cada empaque incluye código QR de autenticidad verificable en la red oficial de Nor Celis para evitar falsificaciones en el mercado peruano.
             </div>
           </div>
         </div>

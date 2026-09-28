@@ -5,6 +5,21 @@ import { SafeImage } from '../components/SafeImage';
 import { FocalZoomImage } from '../components/FocalZoomImage';
 import { FALLBACK_IMAGES } from '../utils/imageAssets';
 
+const normalizeSearchText = (str: string): string => {
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\w\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+const STOPWORDS = new Set([
+  'de', 'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas',
+  'y', 'o', 'en', 'para', 'con', 'por', 'al', 'del'
+]);
+
 export const PartsCatalogView: React.FC = () => {
   const {
     activeGarage,
@@ -16,6 +31,7 @@ export const PartsCatalogView: React.FC = () => {
     showToast,
     setCurrentView,
     setSelectedPartSku,
+    selectedPartSku,
     catalogCategoryFilter,
     setCatalogCategoryFilter,
     catalogBrandFilter,
@@ -99,15 +115,33 @@ export const PartsCatalogView: React.FC = () => {
   const CATEGORIES = [
     { id: 'llantas', label: 'Llantas & Aros Off-Road', icon: 'tire_repair' },
     { id: 'accesorios4x4', label: 'Accesorios & Equipamiento 4x4', icon: 'shield_with_heart' },
-    { id: 'lubricantes', label: 'Aceites & Lubricantes de Motor', icon: 'oil_barrel' },
-    { id: 'seguridad', label: 'Láminas de Seguridad & Polarizados', icon: 'security' },
+    { id: 'audio', label: 'Audio, Video & Pantallas HD', icon: 'speaker' },
+    { id: 'interior', label: 'Accesorios de Interior & Pisos 3D', icon: 'airline_seat_recline_extra' },
+    { id: 'herramientas', label: 'Herramientas, Scanners & Taller', icon: 'handyman' },
     { id: 'detailing', label: 'Car Care, PPF & Detailing', icon: 'auto_fix_high' },
+    { id: 'motos', label: 'Motos, Cascos & Equipamiento', icon: 'two_wheeler' },
+    { id: 'lubricantes', label: 'Aceites & Lubricantes de Motor', icon: 'oil_barrel' },
+    { id: 'seguridad', label: 'Láminas de Seguridad & Alarmas', icon: 'security' },
     { id: 'frenos', label: 'Frenos, Discos & Pastillas OEM', icon: 'album' },
     { id: 'suspension', label: 'Suspensión, Lift Kits & Amortiguadores', icon: 'car_repair' },
     { id: 'filtros', label: 'Filtros & Mantenimiento Preventivo', icon: 'filter_alt' },
     { id: 'baterias', label: 'Baterías AGM & Sistema Eléctrico', icon: 'battery_charging_full' },
     { id: 'motor', label: 'Bujías & Componentes de Motor', icon: 'speed' },
+    { id: 'iluminacion', label: 'Iluminación & Barras LED', icon: 'light_mode' },
   ];
+
+  // Auto-scroll al producto seleccionado si proviene de un clic en el Mega Menú
+  useEffect(() => {
+    if (selectedPartSku) {
+      const timer = setTimeout(() => {
+        const el = document.getElementById(`part-card-${selectedPartSku}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedPartSku, catalogCategoryFilter]);
 
   // Brands: Official OEM & Alternative / Chinese Brands
   const ALL_PART_BRANDS = useMemo(() => [
@@ -126,7 +160,22 @@ export const PartsCatalogView: React.FC = () => {
     { id: 'Denso Corporation', label: 'Denso Corporation', segment: 'oficial', badge: 'Japón' },
     { id: 'Aisin Seiki', label: 'Aisin Seiki', segment: 'oficial', badge: 'Japón' },
     { id: 'K&N Engineering', label: 'K&N Engineering', segment: 'oficial', badge: 'USA' },
+    { id: 'Pioneer', label: 'Pioneer Multimedia', segment: 'oficial', badge: 'Japón' },
+    { id: 'Sony Automotive', label: 'Sony Automotive', segment: 'oficial', badge: 'Japón' },
+    { id: 'JBL Harman', label: 'JBL Harman Sound', segment: 'oficial', badge: 'USA' },
+    { id: 'Launch Tech', label: 'Launch Diagnostics', segment: 'oficial', badge: 'OBD2 Pro' },
+    { id: 'Kärcher', label: 'Kärcher High Pressure', segment: 'oficial', badge: 'Alemania' },
+    { id: 'EGR Australia', label: 'EGR Australia 4x4', segment: 'oficial', badge: 'Australia' },
+    { id: 'Allen Sports', label: 'Allen Sports Racks', segment: 'oficial', badge: 'USA' },
+    { id: 'Gorilla Automotive', label: 'Gorilla Automotive', segment: 'oficial', badge: 'USA' },
+    { id: 'WeatherTech OEM', label: 'WeatherTech OEM', segment: 'oficial', badge: 'USA' },
+    { id: 'Sparco Corsa', label: 'Sparco Corsa Racing', segment: 'oficial', badge: 'Italia' },
+    { id: 'LS2 Helmets', label: 'LS2 Helmets DOT', segment: 'oficial', badge: 'España' },
+    { id: 'Alpinestars OEM', label: 'Alpinestars Protection', segment: 'oficial', badge: 'Italia' },
+    { id: 'Liqui Moly', label: 'Liqui Moly Pro-Line', segment: 'oficial', badge: 'Alemania' },
+    { id: 'Philips Automotive', label: 'Philips Automotive LED', segment: 'oficial', badge: 'Holanda' },
     // Marcas Alternativas & Chinas Garantizadas
+    { id: 'Baseus Auto', label: 'Baseus Auto Electronics', segment: 'alternativa', badge: 'Tech A+' },
     { id: 'Triangle Tire', label: 'Triangle Tire', segment: 'alternativa', badge: 'Marca China A+' },
     { id: 'Sailun Tire', label: 'Sailun Tire', segment: 'alternativa', badge: 'Marca China A+' },
     { id: 'Longji Brakes', label: 'Longji Brakes', segment: 'alternativa', badge: 'Marca China A+' },
@@ -180,27 +229,42 @@ export const PartsCatalogView: React.FC = () => {
     });
   }, [ALL_PART_BRANDS, brandSegment, brandSearchTerm]);
 
-  // Main Filter & Sort Logic
+  // Main Filter & Sort Logic with token-based normalized search
   const filteredParts = useMemo(() => {
     return autoParts
       .filter((part) => {
-        // Segmento: Oficial vs Alternativa / China
-        if (brandSegment === 'oficial' && part.brandType === 'alternativa') {
-          return false;
-        }
-        if (brandSegment === 'alternativa' && part.brandType !== 'alternativa' && part.brandOrigin !== 'china') {
-          return false;
-        }
+        // El producto específicamente seleccionado desde el Mega Menú se mantiene siempre visible
+        const isTargetPart = Boolean(selectedPartSku && part.sku === selectedPartSku);
 
-        // Multi-Categoría (si está vacío muestra todas)
-        if (selectedCategories.length > 0) {
-          if (!selectedCategories.includes(part.category)) {
+        // Segmento: Oficial vs Alternativa / China
+        if (!isTargetPart) {
+          if (brandSegment === 'oficial' && part.brandType === 'alternativa') {
+            return false;
+          }
+          if (brandSegment === 'alternativa' && part.brandType !== 'alternativa' && part.brandOrigin !== 'china') {
             return false;
           }
         }
 
+        // Multi-Categoría (si está vacío muestra todas)
+        if (selectedCategories.length > 0 && !isTargetPart) {
+          if (!selectedCategories.includes(part.category)) {
+            // Soporte cruzado para líquidos de frenos bajo 'frenos' y 'lubricantes'
+            const isBrakeFluid =
+              part.sku.includes('DOT4') ||
+              part.sku.includes('DOT51') ||
+              part.name.toLowerCase().includes('líquido de frenos') ||
+              part.name.toLowerCase().includes('liquido de frenos');
+            if (isBrakeFluid && (selectedCategories.includes('frenos') || selectedCategories.includes('lubricantes'))) {
+              // Permitido
+            } else {
+              return false;
+            }
+          }
+        }
+
         // Multi-Marca (si está vacío muestra todas)
-        if (selectedBrands.length > 0) {
+        if (selectedBrands.length > 0 && !isTargetPart) {
           const matchBrand = selectedBrands.some((b) => {
             return (
               part.brand.toLowerCase().includes(b.toLowerCase()) ||
@@ -211,17 +275,17 @@ export const PartsCatalogView: React.FC = () => {
         }
 
         // Solo ofertas
-        if (onlyOffers && !part.discount) {
+        if (onlyOffers && !part.discount && !isTargetPart) {
           return false;
         }
 
         // Precio Máximo
-        if (part.priceSoles > priceMax) {
+        if (part.priceSoles > priceMax && !isTargetPart) {
           return false;
         }
 
         // Compatibilidad con Garaje Activo
-        if (onlyCompatible) {
+        if (onlyCompatible && !isTargetPart) {
           const garBrand = activeGarage.brand.toLowerCase();
           const garModel = activeGarage.model.toLowerCase();
           const compText = (part.compatibleVehicle || '').toLowerCase();
@@ -234,22 +298,49 @@ export const PartsCatalogView: React.FC = () => {
           if (!isComp) return false;
         }
 
-        // Búsqueda de texto (Nombre, SKU, OEM, Marca, Compatibilidad)
+        // Búsqueda inteligente por palabras clave normalizadas (sin problemas por tildes o signos)
         if (searchFilter.trim() !== '') {
-          const q = searchFilter.toLowerCase();
-          const match =
-            part.name.toLowerCase().includes(q) ||
-            part.sku.toLowerCase().includes(q) ||
-            part.oemCode.toLowerCase().includes(q) ||
-            part.brand.toLowerCase().includes(q) ||
-            part.compatibleVehicle.toLowerCase().includes(q) ||
-            part.features.some((f) => f.toLowerCase().includes(q));
-          if (!match) return false;
+          const normQuery = normalizeSearchText(searchFilter);
+
+          // Coincidencia directa por SKU o código OEM
+          if (
+            normalizeSearchText(part.sku).includes(normQuery) ||
+            normalizeSearchText(part.oemCode).includes(normQuery) ||
+            (part.crossOemCodes && part.crossOemCodes.some((c) => normalizeSearchText(c).includes(normQuery)))
+          ) {
+            return true;
+          }
+
+          // Si es el ítem seleccionado, preservarlo
+          if (isTargetPart) {
+            return true;
+          }
+
+          const queryTokens = normQuery
+            .split(' ')
+            .filter((tok) => tok.length > 1 && !STOPWORDS.has(tok));
+
+          if (queryTokens.length > 0) {
+            const crossCodesText = (part.crossOemCodes || []).join(' ');
+            const techSpecsText = part.technicalSpecs
+              ? Object.values(part.technicalSpecs).join(' ')
+              : '';
+            const searchableText = normalizeSearchText(
+              `${part.name} ${part.sku} ${part.oemCode} ${crossCodesText} ${part.brand} ${part.category} ${part.compatibleVehicle || ''} ${(part.features || []).join(' ')} ${techSpecsText}`
+            );
+            const matchesAll = queryTokens.every((tok) => searchableText.includes(tok));
+            if (!matchesAll) return false;
+          }
         }
 
         return true;
       })
       .sort((a, b) => {
+        // El producto seleccionado desde el Mega Menú se posiciona en primer lugar
+        if (selectedPartSku) {
+          if (a.sku === selectedPartSku) return -1;
+          if (b.sku === selectedPartSku) return 1;
+        }
         if (sortBy === 'price-asc') return a.priceSoles - b.priceSoles;
         if (sortBy === 'price-desc') return b.priceSoles - a.priceSoles;
         if (sortBy === 'rating-desc') return b.rating - a.rating;
@@ -267,6 +358,7 @@ export const PartsCatalogView: React.FC = () => {
     searchFilter,
     sortBy,
     activeGarage,
+    selectedPartSku,
   ]);
 
   const handleResetFilters = () => {
@@ -1158,10 +1250,16 @@ export const PartsCatalogView: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               {filteredParts.map((part) => {
                 const inWish = isInWishlist(part.id);
+                const isSelectedFromMenu = Boolean(selectedPartSku && part.sku === selectedPartSku);
                 return (
                   <div
                     key={part.id}
-                    className="bg-white rounded-3xl border border-[#9D9D9C]/30 hover:border-[#212955]/40 hover:shadow-lg transition-all flex flex-col justify-between overflow-hidden group"
+                    id={`part-card-${part.sku}`}
+                    className={`bg-white rounded-3xl transition-all flex flex-col justify-between overflow-hidden group ${
+                      isSelectedFromMenu
+                        ? 'ring-4 ring-[#F07F00] shadow-2xl border-2 border-[#F07F00] scale-[1.01]'
+                        : 'border border-[#9D9D9C]/30 hover:border-[#212955]/40 hover:shadow-lg'
+                    }`}
                   >
                     {/* Photo area with Quick Zoom Button */}
                     <div
@@ -1177,11 +1275,16 @@ export const PartsCatalogView: React.FC = () => {
                         className="max-h-36 object-contain transition-transform duration-500 ease-out group-hover:scale-110 hover:scale-110"
                         loading="lazy"
                       />
-                      {part.badge && (
+                      {isSelectedFromMenu ? (
+                        <span className="absolute top-3 left-3 bg-[#F07F00] text-white text-[10px] font-black px-2.5 py-1 rounded-md shadow-md z-10 flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[12px]">check_circle</span>
+                          Seleccionado desde Menú
+                        </span>
+                      ) : part.badge ? (
                         <span className="absolute top-3 left-3 bg-[#212955] text-white text-[10px] font-extrabold px-2.5 py-1 rounded-md shadow-sm">
                           {part.badge}
                         </span>
-                      )}
+                      ) : null}
                       {part.discount && (
                         <span className="absolute bottom-3 left-3 bg-[#F07F00] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">
                           {part.discount}
@@ -1244,19 +1347,20 @@ export const PartsCatalogView: React.FC = () => {
 
                         <h3
                           onClick={() => openPartDetail(part.sku)}
-                          className="font-bold text-sm text-[#212955] group-hover:text-[#F07F00] transition-colors line-clamp-2 cursor-pointer leading-snug"
+                          className="font-bold text-sm text-[#212955] group-hover:text-[#F07F00] transition-colors line-clamp-2 cursor-pointer leading-snug h-10 flex items-start"
+                          title={part.name}
                         >
                           {part.name}
                         </h3>
 
-                        <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                          <span className="material-symbols-outlined text-[14px] text-emerald-600">verified</span>
+                        <div className="flex items-center gap-1.5 text-xs text-gray-500 h-5">
+                          <span className="material-symbols-outlined text-[14px] text-emerald-600 shrink-0">verified</span>
                           <span className="truncate text-[11px] font-medium">
                             {part.compatibleVehicle}
                           </span>
                         </div>
 
-                        <div className="flex flex-wrap gap-1 pt-1">
+                        <div className="flex flex-wrap gap-1 pt-1 h-6 overflow-hidden">
                           {part.features.slice(0, 2).map((feat, idx) => (
                             <span
                               key={idx}
@@ -1270,26 +1374,28 @@ export const PartsCatalogView: React.FC = () => {
 
                       {/* Price & Action Button */}
                       <div className="pt-3 border-t border-gray-100 space-y-2.5">
-                        <div className="flex items-baseline justify-between">
-                          <div>
-                            <div className="flex items-baseline gap-1.5">
-                              <span className="font-headline font-black text-lg text-[#212955] font-mono">
+                        <div className="flex items-end justify-between gap-2 h-[48px]">
+                          <div className="flex flex-col justify-end shrink-0 whitespace-nowrap">
+                            <div className="flex items-baseline gap-2 whitespace-nowrap">
+                              <span className="font-headline font-black text-lg text-[#212955] font-mono leading-none whitespace-nowrap">
                                 S/ {part.priceSoles.toLocaleString()}
                               </span>
-                              {part.oldPriceSoles && (
-                                <span className="text-xs text-[#9D9D9C] line-through font-mono">
+                              {part.oldPriceSoles ? (
+                                <span className="text-xs text-[#9D9D9C] line-through font-mono leading-none whitespace-nowrap">
                                   S/ {part.oldPriceSoles.toLocaleString()}
                                 </span>
-                              )}
+                              ) : null}
                             </div>
-                            <span className="text-[10px] text-gray-400 font-mono">
+                            <span className="text-[10px] text-gray-400 font-mono block leading-tight mt-1 whitespace-nowrap">
                               (${part.priceUsd} USD aprox.)
                             </span>
                           </div>
 
-                          <div className="text-right">
-                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                          <div className="text-right min-w-0 max-w-[135px] flex flex-col justify-end items-end pb-0.5">
+                            <span
+                              className="text-[11px] font-bold text-emerald-600 leading-tight block text-right line-clamp-2"
+                              title={part.stockText || 'En Stock'}
+                            >
                               {part.stockText || 'En Stock'}
                             </span>
                           </div>

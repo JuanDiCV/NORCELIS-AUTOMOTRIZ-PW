@@ -32,6 +32,8 @@ interface SubCategoryItem {
   category?: string;
   brand?: string;
   view?: ViewMode;
+  sku?: string;
+  vehicleId?: string;
 }
 
 interface SubCategoryBlock {
@@ -56,6 +58,8 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
     setCurrentView,
     navigateToPartsCatalog,
     showToast,
+    setSelectedPartSku,
+    setSelectedVehicleId,
   } = useApp();
 
   const [activeDeptId, setActiveDeptId] = useState<string>('automotriz');
@@ -81,13 +85,26 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
   if (!isOpen) return null;
 
   const handleItemClick = (item: SubCategoryItem) => {
-    if (item.view) {
+    if (item.vehicleId) {
+      setSelectedVehicleId(item.vehicleId);
+      setCurrentView('vehicle-pdp');
+      showToast(`Cargando ficha técnica de ${item.name}`);
+    } else if (item.sku) {
+      setSelectedPartSku(item.sku);
+      // Filter catalog in subcategory and highlight the item front-and-center
+      navigateToPartsCatalog(
+        item.category || 'todos',
+        item.brand || 'todos',
+        ''
+      );
+      showToast(`Destacando "${item.name}" en el catálogo`);
+    } else if (item.view) {
       setCurrentView(item.view);
     } else {
       navigateToPartsCatalog(
         item.category || 'todos',
         item.brand || 'todos',
-        item.query || item.name
+        item.query || ''
       );
     }
     onClose();
@@ -140,44 +157,44 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
         // Fila 1
         {
           title: 'Audio y video',
-          seeAllQuery: { category: 'todos', query: 'audio' },
+          seeAllQuery: { category: 'audio', query: '' },
           items: [
-            { name: 'Autoradios', query: 'autoradio', category: 'todos' },
-            { name: 'Cámaras', query: 'camara', category: 'seguridad' },
-            { name: 'Manos libres', query: 'manos libres', category: 'todos' },
-            { name: 'Parlantes', query: 'parlante', category: 'todos' },
+            { name: 'Autoradios', query: 'autoradio', category: 'audio', sku: 'PIO-DMH-8550' },
+            { name: 'Cámaras', query: 'camara', category: 'seguridad', sku: 'CAM-SNY-1080' },
+            { name: 'Manos libres', query: 'manos libres', category: 'audio', sku: 'BT-HF-PD30' },
+            { name: 'Parlantes', query: 'parlante', category: 'audio', sku: 'JBL-STG-624' },
           ],
         },
         {
           title: 'Llantas y Aros',
           seeAllQuery: { category: 'llantas' },
           items: [
-            { name: 'Accesorios', query: 'accesorio aro', category: 'llantas' },
-            { name: 'Aros', query: 'aro', category: 'llantas', brand: 'BLACK RHINO' },
-            { name: 'Compresores', query: 'compresor', category: 'herramientas' },
-            { name: 'Llantas', category: 'llantas', brand: 'Mickey Thompson' },
+            { name: 'Accesorios', query: 'tuercas seguridad', category: 'llantas', sku: 'SEC-NUT-M12' },
+            { name: 'Aros', query: 'aro black rhino', category: 'llantas', brand: 'BLACK RHINO', sku: 'BR-ARM-1795' },
+            { name: 'Compresores', query: 'compresor', category: 'herramientas', sku: 'CMP-HD-150' },
+            { name: 'Llantas', category: 'llantas', brand: 'Mickey Thompson', sku: 'MT-BOSS-265' },
           ],
         },
         {
           title: 'Accesorios de exterior',
           seeAllQuery: { category: 'accesorios4x4' },
           items: [
-            { name: 'Cubreautos', query: 'cubreauto', category: 'accesorios4x4' },
-            { name: 'Otros accesorios exteriores', query: 'exterior', category: 'accesorios4x4' },
-            { name: 'Portaequipajes', query: 'portaequipaje', category: 'accesorios4x4' },
-            { name: 'Portabicicletas', query: 'portabicicleta', category: 'accesorios4x4' },
-            { name: 'Amarres', query: 'amarre eslinga', category: 'accesorios4x4' },
+            { name: 'Cubreautos', query: 'cubreauto', category: 'accesorios4x4', sku: 'CVR-TRIC-SUV' },
+            { name: 'Otros accesorios exteriores', query: 'deflector', category: 'accesorios4x4', sku: 'DEF-EGR-HLX' },
+            { name: 'Portaequipajes', query: 'barras techo', category: 'accesorios4x4', sku: 'BAR-AERO-ALU' },
+            { name: 'Portabicicletas', query: 'portabicicletas', category: 'accesorios4x4', sku: 'BIK-RCK-3P' },
+            { name: 'Amarres', query: 'eslinga cinetica', category: 'accesorios4x4', sku: 'REC-SLG-12T' },
           ],
         },
         {
           title: 'Repuestos y Autopartes',
-          seeAllQuery: { category: 'repuestos' },
+          seeAllQuery: { category: 'motor' },
           items: [
-            { name: 'Baterías', category: 'baterias' },
-            { name: 'Cargadores', query: 'cargador bateria', category: 'baterias' },
-            { name: 'Focos', query: 'foco led', category: 'iluminacion' },
-            { name: 'Plumillas', query: 'plumilla', category: 'repuestos' },
-            { name: 'Otros repuestos', category: 'repuestos' },
+            { name: 'Baterías', category: 'baterias', sku: 'BOS-S5-70' },
+            { name: 'Cargadores', query: 'cargador bateria', category: 'baterias', sku: 'CHG-BAT-10A' },
+            { name: 'Focos', query: 'foco led', category: 'iluminacion', sku: 'PHL-LED-H411' },
+            { name: 'Plumillas', query: 'plumilla', category: 'filtros', sku: 'BSH-AERO-2616' },
+            { name: 'Otros repuestos', query: 'bujias', category: 'motor', sku: 'NGK-LFR-04' },
           ],
         },
 
@@ -186,49 +203,49 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
           title: 'Limpieza y Detailing',
           seeAllQuery: { category: 'detailing' },
           items: [
-            { name: 'Aromatizantes', query: 'aromatizante', category: 'detailing' },
-            { name: 'Brillo', query: 'brillo cera', category: 'detailing' },
-            { name: 'Hidrolavadoras', query: 'hidrolavadora', category: 'herramientas' },
-            { name: 'Lavado de carrocería', query: 'shampoo', category: 'detailing' },
-            { name: 'Lavado de llantas', query: 'desengrasante llantas', category: 'detailing' },
-            { name: 'Lavado de vidrios', query: 'limpiavidrios', category: 'detailing' },
-            { name: 'Limpieza interior', query: 'limpiador interior', category: 'detailing' },
-            { name: 'Paños', query: 'microfibra pano', category: 'detailing' },
+            { name: 'Aromatizantes', query: 'aromatizante', category: 'detailing', sku: 'CAL-SCN-CHR' },
+            { name: 'Brillo', query: 'cera rapida', category: 'detailing', sku: '3M-QCK-WAX' },
+            { name: 'Hidrolavadoras', query: 'hidrolavadora', category: 'herramientas', sku: 'KRC-HYD-K2C' },
+            { name: 'Lavado de carrocería', query: 'shampoo', category: 'detailing', sku: 'MEG-GLD-189' },
+            { name: 'Lavado de llantas', query: 'desengrasante', category: 'detailing', sku: 'SNX-BST-100' },
+            { name: 'Lavado de vidrios', query: 'rain-x', category: 'detailing', sku: 'RNX-GLS-500' },
+            { name: 'Limpieza interior', query: 'limpiador interior', category: 'detailing', sku: '3M-QCK-WAX' },
+            { name: 'Paños', query: 'microfibra', category: 'detailing', sku: 'MCF-EDG-450' },
           ],
         },
         {
           title: 'Accesorios de interior',
-          seeAllQuery: { category: 'todos', query: 'interior' },
+          seeAllQuery: { category: 'interior' },
           items: [
-            { name: 'Cortinas', query: 'cortina parasol', category: 'todos' },
-            { name: 'Cubreasientos', query: 'funda asiento', category: 'todos' },
-            { name: 'Cubrevolantes', query: 'cubrevolante', category: 'todos' },
-            { name: 'Pisos', query: 'piso termoformado', category: 'todos' },
-            { name: 'Organizadores', query: 'organizador maletera', category: 'todos' },
-            { name: 'Accesorios de celular', query: 'soporte celular cargador', category: 'todos' },
-            { name: 'Otros accesorios', query: 'accesorio interior', category: 'todos' },
+            { name: 'Cortinas', query: 'parasol', category: 'interior', sku: 'SOL-RET-SIL' },
+            { name: 'Cubreasientos', query: 'fundas asiento', category: 'interior', sku: 'FND-ASNT-TC' },
+            { name: 'Cubrevolantes', query: 'cubrevolante', category: 'interior', sku: 'VOL-ERG-RED' },
+            { name: 'Pisos', query: 'pisos termoformados', category: 'interior', sku: 'MAT-3D-HLX' },
+            { name: 'Organizadores', query: 'organizador', category: 'interior', sku: 'ORG-MLT-60L' },
+            { name: 'Accesorios de celular', query: 'soporte celular', category: 'interior', sku: 'MAG-CHG-15W' },
+            { name: 'Otros accesorios', query: 'interior', category: 'interior', sku: 'ORG-MLT-60L' },
           ],
         },
         {
           title: 'Motos y accesorios',
-          seeAllQuery: { category: 'todos', query: 'moto' },
+          seeAllQuery: { category: 'motos' },
           items: [
-            { name: 'Motos', query: 'moto', category: 'todos' },
-            { name: 'Cascos', query: 'casco', category: 'todos' },
-            { name: 'Guantes', query: 'guantes moto', category: 'todos' },
-            { name: 'Accesorios', query: 'accesorios moto', category: 'todos' },
-            { name: 'Protectores', query: 'protector moto', category: 'todos' },
+            { name: 'Motos', query: 'moto', category: 'motos', sku: 'MOT-HND-190' },
+            { name: 'Cascos', query: 'casco integral', category: 'motos', sku: 'CSK-INT-ECE' },
+            { name: 'Guantes', query: 'guantes moto', category: 'motos', sku: 'GNT-CRB-TC' },
+            { name: 'Accesorios', query: 'soporte celular moto', category: 'motos', sku: 'SOP-MOT-ALU' },
+            { name: 'Protectores', query: 'sliders moto', category: 'motos', sku: 'SLD-MOT-CNC' },
           ],
         },
         {
           title: 'Herramientas y equipos mecánicos',
           seeAllQuery: { category: 'herramientas' },
           items: [
-            { name: 'Galoneras', query: 'galonera bidon', category: 'herramientas' },
-            { name: 'Gatas', query: 'gata hidraulica', category: 'herramientas' },
-            { name: 'Herramientas manuales', query: 'maletin llaves', category: 'herramientas' },
-            { name: 'Herramientas neumáticas', query: 'pistola impacto', category: 'herramientas' },
-            { name: 'Scanners', query: 'scanner obd2', category: 'herramientas' },
+            { name: 'Galoneras', query: 'galonera jerry can', category: 'herramientas', sku: 'JRY-CAN-20L' },
+            { name: 'Gatas', query: 'gata hidraulica', category: 'herramientas', sku: 'GAT-HYD-3TN' },
+            { name: 'Herramientas manuales', query: 'maletin herramientas', category: 'herramientas', sku: 'MAL-HRR-150' },
+            { name: 'Herramientas neumáticas', query: 'pistola impacto', category: 'herramientas', sku: 'IMP-PST-850' },
+            { name: 'Scanners', query: 'scanner launch', category: 'herramientas', sku: 'OBD-LNC-THK' },
           ],
         },
 
@@ -237,27 +254,28 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
           title: 'Baterías y Accesorios',
           seeAllQuery: { category: 'baterias' },
           items: [
-            { name: 'Accesorios', query: 'bornes cables bateria', category: 'baterias' },
-            { name: 'Baterías', query: 'bateria agm 12v', category: 'baterias' },
+            { name: 'Accesorios', query: 'cables pasacorriente', category: 'baterias', sku: 'CBL-PAS-1000' },
+            { name: 'Baterías', query: 'bateria bosch', category: 'baterias', sku: 'BOS-S5-70' },
           ],
         },
         {
           title: 'Líquidos y lubricantes',
           seeAllQuery: { category: 'lubricantes' },
           items: [
-            { name: 'Aceites', category: 'lubricantes', brand: 'Mobil' },
-            { name: 'Aditivos', query: 'aditivo motor', category: 'lubricantes' },
-            { name: 'Anticorrosivos', query: 'anticorrosivo', category: 'lubricantes' },
-            { name: 'Refrigerantes', query: 'refrigerante oat', category: 'lubricantes' },
+            { name: 'Aceites', category: 'lubricantes', brand: 'Mobil', sku: 'MOB-ESP-5W30' },
+            { name: 'Líquidos de Frenos DOT 4 / 5.1', query: 'frenos', category: 'frenos', sku: 'BRM-DOT4-500' },
+            { name: 'Aditivos', query: 'aditivo', category: 'lubricantes', sku: 'LIQ-INJ-500' },
+            { name: 'Anticorrosivos', query: 'anticorrosivo', category: 'lubricantes', sku: 'WD4-SPEC-400' },
+            { name: 'Refrigerantes', query: 'refrigerante', category: 'lubricantes', sku: 'TOY-LLC-5050' },
           ],
         },
         {
           title: 'Seguridad',
           seeAllQuery: { category: 'seguridad' },
           items: [
-            { name: 'Antirrobos', query: 'traba volante pedal', category: 'seguridad' },
-            { name: 'Alarmas', query: 'alarma sensor', category: 'seguridad' },
-            { name: 'Botiquines', query: 'botiquin extintor', category: 'seguridad' },
+            { name: 'Antirrobos', query: 'traba volante pedal', category: 'seguridad', sku: 'TRB-PED-SEC' },
+            { name: 'Alarmas', query: 'alarma sensor', category: 'seguridad', sku: 'ALM-VIP-570' },
+            { name: 'Botiquines', query: 'botiquin extintor', category: 'seguridad', sku: 'BOT-EXT-MTC' },
             { name: 'Seguro vehicular', view: 'financing' },
           ],
         },
@@ -265,8 +283,8 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
           title: 'Equipamiento 4x4 & Servicios',
           seeAllQuery: { category: 'accesorios4x4' },
           items: [
-            { name: 'Barras antivuelco KEKO', brand: 'KEKO', category: 'accesorios4x4' },
-            { name: 'Tapas retráctiles de tolva', brand: 'KEKO', category: 'accesorios4x4' },
+            { name: 'Barras antivuelco KEKO', brand: 'KEKO', category: 'accesorios4x4', sku: 'KKO-BAR-K3' },
+            { name: 'Tapas retráctiles de tolva', brand: 'KEKO', category: 'accesorios4x4', sku: 'KKO-ROL-ALU' },
             { name: 'Mantenimiento Preventivo Taller', view: 'services' },
             { name: 'Alineamiento Láser 3D', view: 'services' },
           ],
@@ -290,40 +308,41 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
           title: 'Frenos y Discos',
           seeAllQuery: { category: 'frenos' },
           items: [
-            { name: 'Pastillas de freno cerámicas', category: 'frenos', brand: 'Brembo' },
-            { name: 'Discos de freno ranurados / ventilados', category: 'frenos' },
-            { name: 'Zapatas y tambores traseros', category: 'frenos' },
-            { name: 'Líquido de frenos DOT 4 / DOT 5.1', category: 'lubricantes' },
+            { name: 'Pastillas de freno cerámicas', category: 'frenos', brand: 'Brembo Official', sku: 'TOY-BRK-04465' },
+            { name: 'Discos de freno ranurados / ventilados', category: 'frenos', sku: 'AIS-RT-42' },
+            { name: 'Zapatas y tambores traseros', category: 'frenos', sku: 'BRM-ZAP-42' },
+            { name: 'Líquido de frenos Brembo DOT 4', category: 'frenos', brand: 'Brembo Official', sku: 'BRM-DOT4-500' },
+            { name: 'Líquido de frenos Racing DOT 5.1', category: 'frenos', brand: 'Brembo Official', sku: 'BRM-DOT51-500' },
           ],
         },
         {
           title: 'Suspensión y Dirección',
           seeAllQuery: { category: 'suspension' },
           items: [
-            { name: 'Amortiguadores Heavy-Duty +2"', category: 'suspension', brand: 'TRAKKO® AUTORUS' },
-            { name: 'Resortes reforzados y ballestas', category: 'suspension' },
-            { name: 'Rótulas, terminales y bieletas', category: 'suspension' },
-            { name: 'Bujes de poliuretano', category: 'suspension' },
+            { name: 'Amortiguadores Heavy-Duty +2"', category: 'suspension', brand: 'TRAKKO® AUTORUS', sku: 'TRK-SHK-R02' },
+            { name: 'Resortes reforzados y ballestas', category: 'suspension', sku: 'TRK-RES-HD2' },
+            { name: 'Rótulas, terminales y bieletas', category: 'suspension', sku: '555-ROT-DIR' },
+            { name: 'Bujes de poliuretano', category: 'suspension', sku: 'PU-BUJ-MIN' },
           ],
         },
         {
           title: 'Filtros y Afinamiento',
           seeAllQuery: { category: 'filtros' },
           items: [
-            { name: 'Filtros de aceite OEM', category: 'filtros', brand: 'TOYOTA Genuino' },
-            { name: 'Filtros de aire lavables de alto flujo', category: 'filtros', brand: 'K&N' },
-            { name: 'Filtros de combustible diesel racor', category: 'filtros' },
-            { name: 'Filtros de cabina antipolen', category: 'filtros' },
+            { name: 'Filtros de aceite OEM', category: 'filtros', brand: 'TOYOTA Genuino', sku: 'TOY-FLT-04152' },
+            { name: 'Filtros de aire lavables de alto flujo', category: 'filtros', brand: 'K&N', sku: 'KN-FLT-3324' },
+            { name: 'Filtros de combustible diesel racor', category: 'filtros', sku: 'DNS-FLT-RAC' },
+            { name: 'Filtros de cabina antipolen', category: 'filtros', sku: 'TOY-CAB-CARB' },
           ],
         },
         {
           title: 'Encendido y Eléctrico',
           seeAllQuery: { category: 'baterias' },
           items: [
-            { name: 'Baterías AGM Start-Stop 12V', category: 'baterias' },
-            { name: 'Alternadores y arrancadores', category: 'repuestos' },
-            { name: 'Bujías de iridio / precalentadores', category: 'repuestos' },
-            { name: 'Fusibles y relés automotrices', category: 'repuestos' },
+            { name: 'Baterías AGM Start-Stop 12V', category: 'baterias', sku: 'BOS-S5-70' },
+            { name: 'Alternadores y arrancadores', category: 'motor', sku: 'DNS-ALT-130A' },
+            { name: 'Bujías de iridio / precalentadores', category: 'motor', sku: 'TOY-SPK-90919' },
+            { name: 'Fusibles y relés automotrices', category: 'motor', sku: 'LIT-FUS-120P' },
           ],
         },
       ],
@@ -344,40 +363,40 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
           title: 'Protección de Tolva',
           seeAllQuery: { category: 'accesorios4x4' },
           items: [
-            { name: 'Barras antivuelco KEKO K3', category: 'accesorios4x4', brand: 'KEKO' },
-            { name: 'Tapas retráctiles de aluminio Roll Cover', category: 'accesorios4x4', brand: 'KEKO' },
-            { name: 'Lonas marítimas con cierre rápido', category: 'accesorios4x4' },
-            { name: 'Protectores de tolva Bedliner', category: 'accesorios4x4' },
+            { name: 'Barras antivuelco KEKO K3', category: 'accesorios4x4', brand: 'KEKO', sku: 'KKO-BAR-K3' },
+            { name: 'Tapas retráctiles de aluminio Roll Cover', category: 'accesorios4x4', brand: 'KEKO', sku: 'KKO-ROL-ALU' },
+            { name: 'Lonas marítimas con cierre rápido', category: 'accesorios4x4', sku: 'KKO-LON-GRX' },
+            { name: 'Protectores de tolva Bedliner', category: 'accesorios4x4', sku: 'BED-LIN-HLX' },
           ],
         },
         {
           title: 'Acceso y Protección Inferior',
           seeAllQuery: { category: 'accesorios4x4' },
           items: [
-            { name: 'Estribos laterales tubulares', category: 'accesorios4x4', brand: 'KEKO' },
-            { name: 'Placas de protección de cárter (Skid Plates)', category: 'accesorios4x4' },
-            { name: 'Defensas delanteras Bull Bar', category: 'accesorios4x4' },
-            { name: 'Enganches y tiros de remolque', category: 'accesorios4x4' },
+            { name: 'Estribos laterales tubulares', category: 'accesorios4x4', brand: 'KEKO', sku: 'KKO-EST-TUB' },
+            { name: 'Placas de protección de cárter (Skid Plates)', category: 'accesorios4x4', sku: 'SKD-PLT-6MM' },
+            { name: 'Defensas delanteras Bull Bar', category: 'accesorios4x4', sku: 'BUL-BAR-FOR' },
+            { name: 'Enganches y tiros de remolque', category: 'accesorios4x4', sku: 'ENG-TIR-350' },
           ],
         },
         {
           title: 'Rescate y Expedición',
           seeAllQuery: { category: 'accesorios4x4' },
           items: [
-            { name: 'Snorkels Safari sellados', category: 'accesorios4x4' },
-            { name: 'Winches de recuperación 12,000 lbs', category: 'accesorios4x4' },
-            { name: 'Planchas de desatasco Maxtrax', category: 'accesorios4x4' },
-            { name: 'Compresores de aire On-Board', category: 'herramientas' },
+            { name: 'Snorkels Safari sellados', category: 'accesorios4x4', sku: 'SNK-SAF-HLX' },
+            { name: 'Winches de recuperación 12,000 lbs', category: 'accesorios4x4', sku: 'WNC-12K-PLS' },
+            { name: 'Planchas de desatasco Maxtrax', category: 'accesorios4x4', sku: 'MAX-TRX-MK2' },
+            { name: 'Compresores de aire On-Board', category: 'herramientas', sku: 'CMP-HD-150' },
           ],
         },
         {
           title: 'Iluminación Off-Road',
           seeAllQuery: { category: 'iluminacion' },
           items: [
-            { name: 'Barras LED curvas de alta potencia', category: 'iluminacion' },
-            { name: 'Faros neblineros de profundidad', category: 'iluminacion' },
-            { name: 'Luces de trabajo traseras y roca', category: 'iluminacion' },
-            { name: 'Soportes de montaje en techo', category: 'iluminacion' },
+            { name: 'Barras LED curvas de alta potencia', category: 'iluminacion', sku: 'HY-LED-180W' },
+            { name: 'Faros neblineros de profundidad', category: 'iluminacion', sku: 'HLL-LMP-500' },
+            { name: 'Luces de trabajo traseras y roca', category: 'iluminacion', sku: 'BAJ-RCK-4P' },
+            { name: 'Soportes de montaje en techo', category: 'accesorios4x4', sku: 'BAR-AERO-ALU' },
           ],
         },
       ],
@@ -397,30 +416,30 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
           title: 'Llantas por Tipo de Terreno',
           seeAllQuery: { category: 'llantas' },
           items: [
-            { name: 'All-Terrain (A/T) - Mixtas 50/50', category: 'llantas', brand: 'Mickey Thompson' },
-            { name: 'Mud-Terrain (M/T) - Barro y Rocas', category: 'llantas', brand: 'Mickey Thompson' },
-            { name: 'Rugged Terrain (R/T) - Híbridas', category: 'llantas', brand: 'Mickey Thompson' },
-            { name: 'Highway Terrain (H/T) - Carretera', category: 'llantas' },
+            { name: 'All-Terrain (A/T) - Mixtas 50/50', category: 'llantas', brand: 'Mickey Thompson', sku: 'MT-BOSS-265' },
+            { name: 'Mud-Terrain (M/T) - Barro y Rocas', category: 'llantas', brand: 'Mickey Thompson', sku: 'MT-LEGEND-285' },
+            { name: 'Rugged Terrain (R/T) - Híbridas', category: 'llantas', brand: 'Mickey Thompson', sku: 'MT-RTX-275' },
+            { name: 'Highway Terrain (H/T) - Carretera', category: 'llantas', sku: 'TRI-TR928-17' },
           ],
         },
         {
           title: 'Aros de Aleación Off-Road',
           seeAllQuery: { category: 'llantas' },
           items: [
-            { name: 'Aros Black Rhino R17"', category: 'llantas', brand: 'BLACK RHINO' },
-            { name: 'Aros Black Rhino R18" / R20"', category: 'llantas', brand: 'BLACK RHINO' },
-            { name: 'Aros Beadlock simulados', category: 'llantas', brand: 'BLACK RHINO' },
-            { name: 'Tuercas de seguridad antirrobo', category: 'llantas' },
+            { name: 'Aros Black Rhino R17"', category: 'llantas', brand: 'BLACK RHINO', sku: 'BR-BOX-1780' },
+            { name: 'Aros Black Rhino R18" / R20"', category: 'llantas', brand: 'BLACK RHINO', sku: 'BR-ARM-1890' },
+            { name: 'Aros Beadlock simulados', category: 'llantas', brand: 'BLACK RHINO', sku: 'BR-ARM-1795' },
+            { name: 'Tuercas de seguridad antirrobo', category: 'llantas', sku: 'SEC-NUT-M12' },
           ],
         },
         {
           title: 'Accesorios y Calibración',
           seeAllQuery: { category: 'herramientas' },
           items: [
-            { name: 'Medidores de presión digital', category: 'herramientas' },
-            { name: 'Desinfladores rápidos de neumáticos', category: 'herramientas' },
-            { name: 'Kits de reparación de pinchazos', category: 'herramientas' },
-            { name: 'Espaciadores de rueda certificados', category: 'llantas' },
+            { name: 'Medidores de presión digital', category: 'herramientas', sku: 'ARB-MED-DIG' },
+            { name: 'Desinfladores rápidos de neumáticos', category: 'herramientas', sku: 'DES-RAP-ARB' },
+            { name: 'Kits de reparación de pinchazos', category: 'herramientas', sku: 'KIT-PIN-HD' },
+            { name: 'Espaciadores de rueda certificados', category: 'llantas', sku: 'ESP-RUE-15' },
           ],
         },
         {
@@ -450,38 +469,38 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
           title: 'Lavado y Descontaminación',
           seeAllQuery: { category: 'detailing' },
           items: [
-            { name: 'Shampoo pH Neutro con cera', category: 'detailing' },
-            { name: 'Descontaminante férrico de aros', category: 'detailing' },
-            { name: 'Barras de arcilla (Clay Bar)', category: 'detailing' },
-            { name: 'Lanza de espuma Snow Foam', category: 'herramientas' },
+            { name: 'Shampoo pH Neutro con cera', category: 'detailing', sku: 'MEG-GLD-189' },
+            { name: 'Descontaminante férrico de aros', category: 'detailing', sku: 'IRN-X-500' },
+            { name: 'Barras de arcilla (Clay Bar)', category: 'detailing', sku: '3M-CLY-BAR' },
+            { name: 'Lanza de espuma Snow Foam', category: 'herramientas', sku: 'SNO-FOM-LNC' },
           ],
         },
         {
           title: 'Pulido y Protección Cerámica',
           seeAllQuery: { category: 'detailing' },
           items: [
-            { name: 'Sellador Cerámico 3M 9H', category: 'detailing', brand: '3M' },
-            { name: 'Compuestos pulidores de corte y acabado', category: 'detailing' },
-            { name: 'Pads de pulido de espuma y lana', category: 'detailing' },
-            { name: 'Ceras en pasta carnauba premium', category: 'detailing' },
+            { name: 'Sellador Cerámico 3M 9H', category: 'detailing', brand: '3M', sku: '3M-CER-9HKT' },
+            { name: 'Compuestos pulidores de corte y acabado', category: 'detailing', sku: '3M-RUB-946' },
+            { name: 'Pads de pulido de espuma y lana', category: 'detailing', sku: 'PAD-POL-5IN' },
+            { name: 'Ceras en pasta carnauba premium', category: 'detailing', sku: '3M-QCK-WAX' },
           ],
         },
         {
           title: 'Cuidado Interior y Cueros',
           seeAllQuery: { category: 'detailing' },
           items: [
-            { name: 'Acondicionador de cuero mate', category: 'detailing' },
-            { name: 'Limpiador de plásticos y tablero UV', category: 'detailing' },
-            { name: 'Limpiador de tapices y alfombras', category: 'detailing' },
-            { name: 'Desinfectante antibacteriano de ozono', category: 'detailing' },
+            { name: 'Acondicionador de cuero mate', category: 'detailing', sku: '3M-LTH-COND' },
+            { name: 'Limpiador de plásticos y tablero UV', category: 'detailing', sku: '3M-QCK-WAX' },
+            { name: 'Limpiador de tapices y alfombras', category: 'detailing', sku: 'SON-APC-500' },
+            { name: 'Desinfectante antibacteriano de ozono', category: 'detailing', sku: 'OZO-GEN-12V' },
           ],
         },
         {
           title: 'Láminas y PPF',
           seeAllQuery: { category: 'seguridad' },
           items: [
-            { name: 'Láminas de seguridad nanocerámica LLumar', category: 'seguridad', brand: 'LLumar' },
-            { name: 'Film de protección de pintura PPF 3M', category: 'detailing', brand: '3M' },
+            { name: 'Láminas de seguridad nanocerámica LLumar', category: 'seguridad', brand: 'LLumar', sku: 'LLM-SEC-12MIL' },
+            { name: 'Film de protección de pintura PPF 3M', category: 'detailing', brand: '3M', sku: '3M-PPF-PRO' },
             { name: 'Polarizado con permiso PNP', view: 'services' },
             { name: 'Restauración de faros opacos', view: 'services' },
           ],
@@ -548,8 +567,8 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
           title: 'Pickups 4x4',
           seeAllQuery: { view: 'cars' },
           items: [
-            { name: 'Toyota Hilux 2025 4x4 D-Cab', view: 'cars' },
-            { name: 'Nissan Frontier PRO-4X', view: 'cars' },
+            { name: 'Toyota Hilux 2025 4x4 D-Cab', vehicleId: 'veh-hilux-2020', view: 'cars' },
+            { name: 'Nissan Frontier PRO-4X', vehicleId: 'veh-frontier-2025', view: 'cars' },
             { name: 'Ford Ranger XLT / Wildtrak', view: 'cars' },
             { name: 'Mitsubishi L200 Triton', view: 'cars' },
           ],
@@ -559,7 +578,7 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
           seeAllQuery: { view: 'cars' },
           items: [
             { name: 'Toyota Land Cruiser Prado', view: 'cars' },
-            { name: 'Toyota RAV4 Híbrida', view: 'cars' },
+            { name: 'Toyota RAV4 Híbrida', vehicleId: 'veh-rav4-2025', view: 'cars' },
             { name: 'Nissan X-Trail e-POWER', view: 'cars' },
             { name: 'Ford Explorer 4WD', view: 'cars' },
           ],

@@ -6,6 +6,8 @@ import { GarageModal } from './components/GarageModal';
 import { TestDriveModal } from './components/TestDriveModal';
 import { Viewer360Modal } from './components/Viewer360Modal';
 import { PdfPreviewModal } from './components/PdfPreviewModal';
+import { QuickQuoteModal } from './components/QuickQuoteModal';
+import { FloatingHub } from './components/FloatingHub';
 import { AdvisorChatbox } from './components/AdvisorChatbox';
 import { HomeView } from './views/HomeView';
 import { CarsCatalogView } from './views/CarsCatalogView';
@@ -76,6 +78,7 @@ const MainContent: React.FC = () => {
       <GarageModal />
       <TestDriveModal />
       <Viewer360Modal />
+      <QuickQuoteModal />
       <PdfPreviewModal data={pdfModalData} onClose={closePdfModal} onShowToast={showToast} />
       <AdminPinModal
         isOpen={isAdminPinModalOpen}
@@ -88,6 +91,9 @@ const MainContent: React.FC = () => {
         }}
         currentPin={adminPin}
       />
+
+      {/* Floating Speed Dial Hub (Cotización Principal Naranja, Asesor Virtual, WhatsApp) */}
+      <FloatingHub />
 
       {/* Floating Automotive Advisor Chatbox & WhatsApp */}
       <AdvisorChatbox />

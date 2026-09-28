@@ -68,6 +68,46 @@ export interface Vehicle {
   brandOrigin?: 'tradicional' | 'china';
 }
 
+export interface PartTechnicalSpecs {
+  origin?: string;
+  materialOrComposition?: string;
+  homologationStandard?: string;
+  warrantyText?: string;
+  lifespanOrInterval?: string;
+  dryBoilingPoint?: string;
+  wetBoilingPoint?: string;
+  viscosity?: string;
+  dimensionsOrFitment?: string;
+  amperageOrPower?: string;
+  additionalAttributes?: Record<string, string>;
+}
+
+export interface VehicleCompatibilityEntry {
+  brand: string;
+  model: string;
+  years: string;
+  engine: string;
+  chassisCode?: string;
+  notes?: string;
+}
+
+export interface CatalogSubfamily {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  brands?: string[];
+  icon?: string;
+}
+
+export interface CatalogFamily {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  subfamilies: CatalogSubfamily[];
+}
+
 export interface AutoPart {
   id: string;
   name: string;
@@ -86,6 +126,10 @@ export interface AutoPart {
     | 'lubricantes'
     | 'detailing'
     | 'seguridad'
+    | 'audio'
+    | 'interior'
+    | 'herramientas'
+    | 'motos'
     | string;
   priceSoles: number;
   priceUsd: number;
@@ -100,6 +144,11 @@ export interface AutoPart {
   image: string;
   brandType?: 'oficial' | 'alternativa';
   brandOrigin?: 'tradicional' | 'china';
+  familyId?: string;
+  subfamilyId?: string;
+  technicalSpecs?: PartTechnicalSpecs;
+  crossOemCodes?: string[];
+  vehicleCompatibility?: VehicleCompatibilityEntry[];
 }
 
 export interface WorkshopService {

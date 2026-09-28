@@ -1341,22 +1341,22 @@ export const CarsCatalogView: React.FC = () => {
 
                       {/* Price and Action Buttons */}
                       <div className="border-t border-surface-container pt-3 space-y-3">
-                        <div className="flex items-baseline justify-between">
-                          <div>
+                        <div className="flex items-end justify-between gap-2 min-h-[48px]">
+                          <div className="flex flex-col justify-end shrink-0 whitespace-nowrap">
                             {car.oldPriceSoles && (
-                              <span className="text-xs text-outline line-through mr-1 font-mono">
+                              <span className="text-xs text-outline line-through font-mono leading-none block mb-1 whitespace-nowrap">
                                 S/ {car.oldPriceSoles.toLocaleString()}
                               </span>
                             )}
-                            <div className="font-headline font-extrabold text-xl text-primary">
+                            <div className="font-headline font-extrabold text-xl text-primary font-mono leading-none whitespace-nowrap">
                               S/ {car.priceSoles.toLocaleString()}
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="text-xs font-mono text-outline">
+                          <div className="text-right shrink-0 whitespace-nowrap">
+                            <div className="text-xs font-mono text-outline leading-tight">
                               ~${car.priceUsd.toLocaleString()} USD
                             </div>
-                            <div className="text-xs font-bold text-secondary">
+                            <div className="text-xs font-bold text-secondary leading-tight mt-0.5">
                               Cuotas S/ {car.monthlySoles}/mes
                             </div>
                           </div>

@@ -519,7 +519,6 @@ export const HomeView: React.FC = () => {
                     {part.stockText && (
                       <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between text-[10px] bg-white/90 backdrop-blur-xs px-2 py-0.5 rounded-md text-emerald-800 font-bold border border-emerald-200">
                         <span className="flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                           {part.stockText}
                         </span>
                         <span className="font-mono text-outline">SKU: {part.sku}</span>
@@ -549,18 +548,18 @@ export const HomeView: React.FC = () => {
 
                     {/* Price and Add to Cart Action */}
                     <div className="pt-2 border-t border-surface-container space-y-2.5">
-                      <div className="flex items-baseline justify-between">
-                        <div>
+                      <div className="flex items-end justify-between gap-2 min-h-[46px]">
+                        <div className="flex flex-col justify-end shrink-0 whitespace-nowrap">
                           {part.oldPriceSoles && (
-                            <span className="text-[11px] text-outline line-through block">
+                            <span className="text-[11px] text-outline line-through block leading-none font-mono mb-1 whitespace-nowrap">
                               S/ {part.oldPriceSoles.toLocaleString()}
                             </span>
                           )}
-                          <span className="font-headline font-black text-lg text-primary">
+                          <span className="font-headline font-black text-lg text-primary font-mono leading-none whitespace-nowrap">
                             S/ {part.priceSoles.toLocaleString()}
                           </span>
                         </div>
-                        <span className="text-[10px] text-secondary font-bold bg-secondary-container/10 px-2 py-0.5 rounded-md">
+                        <span className="text-[10px] text-secondary font-bold bg-secondary-container/10 px-2 py-0.5 rounded-md shrink-0 whitespace-nowrap">
                           Instalación +S/ 45
                         </span>
                       </div>
@@ -873,22 +872,22 @@ export const HomeView: React.FC = () => {
 
                     {/* Price & Actions */}
                     <div className="border-t border-surface-container pt-3">
-                      <div className="flex items-baseline justify-between">
-                        <div>
+                      <div className="flex items-end justify-between gap-2 min-h-[46px]">
+                        <div className="flex flex-col justify-end shrink-0 whitespace-nowrap">
                           {car.oldPriceSoles && (
-                            <span className="text-[11px] text-outline line-through block">
+                            <span className="text-[11px] text-outline line-through block leading-none font-mono mb-1 whitespace-nowrap">
                               S/ {car.oldPriceSoles.toLocaleString()}
                             </span>
                           )}
-                          <div className="font-headline font-extrabold text-lg text-primary">
+                          <div className="font-headline font-extrabold text-lg text-primary font-mono leading-none whitespace-nowrap">
                             S/ {car.priceSoles.toLocaleString()}
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-[10px] text-outline font-mono">
+                        <div className="text-right shrink-0 whitespace-nowrap">
+                          <div className="text-[10px] text-outline font-mono leading-tight">
                             ~${car.priceUsd.toLocaleString()} USD
                           </div>
-                          <div className="text-xs font-bold text-secondary">
+                          <div className="text-xs font-bold text-secondary leading-tight mt-0.5">
                             Cuotas S/ {car.monthlySoles}/mes
                           </div>
                         </div>

@@ -32,12 +32,15 @@ export const AdvisorChatbox: React.FC = () => {
     setIsTestDriveModalOpen,
     setIsGarageModalOpen,
     navigateToPartsCatalog,
+    openQuickQuote,
+    isAdvisorChatOpen,
+    setIsAdvisorChatOpen,
     showToast,
   } = useApp();
 
-  const [isOpen, setIsOpen] = useState(false);
+  const isOpen = isAdvisorChatOpen;
+  const setIsOpen = setIsAdvisorChatOpen;
   const [isMinimized, setIsMinimized] = useState(false);
-  const [showWelcomeTooltip, setShowWelcomeTooltip] = useState(true);
   const [selectedModel, setSelectedModel] = useState<'gemini-3.8-flash' | 'gemini-3.1-flash-lite'>('gemini-3.8-flash');
   
   const [inputMessage, setInputMessage] = useState('');
@@ -114,12 +117,6 @@ Estoy listo para orientarte en toda nuestra plataforma web:
     }
   }, [isOpen, isMinimized]);
 
-  // Hide initial welcome tooltip after 10 seconds or when opened
-  useEffect(() => {
-    if (isOpen) {
-      setShowWelcomeTooltip(false);
-    }
-  }, [isOpen]);
 
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || inputMessage).trim();
@@ -387,81 +384,7 @@ Contamos con stock en tiempo real de marcas líderes:
 
   return (
     <>
-      {/* FLOATING ADVISOR LAUNCHER & WHATSAPP DOCK */}
-      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3 pointer-events-auto">
-        {/* Welcome Tooltip Popup on initial visit */}
-        {showWelcomeTooltip && !isOpen && (
-          <div className="relative bg-[#212955] text-white text-xs py-3 px-4 rounded-2xl shadow-2xl border border-[#F07F00]/50 max-w-xs animate-in fade-in slide-in-from-bottom-3 duration-300">
-            <button
-              onClick={() => setShowWelcomeTooltip(false)}
-              className="absolute -top-2 -right-2 bg-white/20 hover:bg-white/40 text-white rounded-full p-1 w-5 h-5 flex items-center justify-center text-[10px] shadow cursor-pointer"
-              title="Cerrar sugerencia"
-            >
-              ✕
-            </button>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="font-headline font-black text-[#F07F00] text-sm uppercase tracking-wider">
-                Asesor en Línea
-              </span>
-            </div>
-            <p className="text-slate-200 text-xs leading-snug font-sans">
-              ¿Deseas cotizar un 0 KM 2025, consultar repuestos <strong className="text-white font-bold">Mickey Thompson</strong> o simular cuotas? ¡Escríbeme!
-            </p>
-          </div>
-        )}
-
-        <div className="flex items-center gap-3">
-          {/* Direct WhatsApp Human Advisor */}
-          <a
-            href="https://wa.me/51965171717?text=Hola%20Nor%20Celis,%20deseo%20asesoria%20personalizada"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 bg-[#25D366] hover:bg-[#20ba59] text-white px-3.5 py-3 rounded-full shadow-xl font-bold text-xs transition-transform hover:scale-105 group"
-            title="Hablar con Asesor Humano en WhatsApp"
-          >
-            <span className="material-symbols-outlined text-xl">chat</span>
-            <span className="hidden md:inline font-semibold">WhatsApp</span>
-          </a>
-
-          {/* AI Advisor Floating Button */}
-          <button
-            onClick={() => {
-              setIsOpen((prev) => !prev);
-              setIsMinimized(false);
-            }}
-            className={`flex items-center gap-2.5 px-4 py-3 rounded-full shadow-2xl transition-all duration-200 group border cursor-pointer ${
-              isOpen
-                ? 'bg-[#F07F00] text-white border-white/30 shadow-[#F07F00]/30 scale-105'
-                : 'bg-[#212955] hover:bg-[#181e40] text-white border-white/20 shadow-2xl hover:scale-105'
-            }`}
-            title="Abrir Asesor Automotriz Virtual Nor Celis"
-            aria-label="Abrir Chatbox Asesor Nor Celis"
-          >
-            <div className="relative">
-              <span className="material-symbols-outlined text-2xl group-hover:rotate-6 transition-transform text-white">
-                {isOpen ? 'chat_bubble' : 'support_agent'}
-              </span>
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 border-2 border-[#212955] rounded-full animate-pulse" />
-            </div>
-            <div className="text-left hidden sm:block">
-              <div className="text-[10px] uppercase font-headline font-black text-[#F07F00] leading-none tracking-wider">
-                Asesor Virtual
-              </div>
-              <div className="text-xs font-black tracking-wide leading-tight text-white font-headline">
-                Don Celis
-              </div>
-            </div>
-            {isOpen ? (
-              <span className="material-symbols-outlined text-sm opacity-90 text-white">expand_more</span>
-            ) : (
-              <span className="material-symbols-outlined text-sm opacity-90 group-hover:translate-x-0.5 transition-transform text-white">
-                arrow_upward
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
+      {/* CHATBOX WINDOW */}
 
       {/* CHATBOX WINDOW */}
       {isOpen && (

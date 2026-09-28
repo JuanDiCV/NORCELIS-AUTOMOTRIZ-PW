@@ -3,6 +3,17 @@ import { ViewMode, ActiveGarageVehicle, CartItem, WishlistItem, Vehicle, AutoPar
 import { INITIAL_ACTIVE_GARAGE, AVAILABLE_GARAGE_VEHICLES, VEHICLES_DATA, AUTO_PARTS_DATA, WORKSHOP_SERVICES_DATA, INITIAL_HERO_SLIDES } from '../data/mockData';
 import { PdfModalData } from '../components/PdfPreviewModal';
 
+export interface QuickQuoteItem {
+  type: 'vehicle' | 'part' | 'service' | 'custom';
+  id?: string;
+  title: string;
+  skuOrCode: string;
+  priceSoles: number;
+  priceUsd?: number;
+  image?: string;
+  specs?: string;
+}
+
 interface AppContextType {
   currentView: ViewMode;
   setCurrentView: (view: ViewMode) => void;
@@ -22,6 +33,14 @@ interface AppContextType {
   setIsViewer360Open: (open: boolean) => void;
   isTestDriveModalOpen: boolean;
   setIsTestDriveModalOpen: (open: boolean) => void;
+  isQuickQuoteOpen: boolean;
+  setIsQuickQuoteOpen: (open: boolean) => void;
+  quickQuoteItem: QuickQuoteItem | null;
+  openQuickQuote: (item?: QuickQuoteItem) => void;
+  closeQuickQuote: () => void;
+  isAdvisorChatOpen: boolean;
+  setIsAdvisorChatOpen: (open: boolean) => void;
+  toggleAdvisorChat: () => void;
   pdfModalData: PdfModalData | null;
   openPdfModal: (data: PdfModalData) => void;
   closePdfModal: () => void;
@@ -231,6 +250,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isViewer360Open, setIsViewer360Open] = useState(false);
   const [isTestDriveModalOpen, setIsTestDriveModalOpen] = useState(false);
   const [pdfModalData, setPdfModalData] = useState<PdfModalData | null>(null);
+  const [isQuickQuoteOpen, setIsQuickQuoteOpen] = useState(false);
+  const [quickQuoteItem, setQuickQuoteItem] = useState<QuickQuoteItem | null>(null);
+
+  const openQuickQuote = (item?: QuickQuoteItem) => {
+    if (item) {
+      setQuickQuoteItem(item);
+    }
+    setIsQuickQuoteOpen(true);
+  };
+
+  const closeQuickQuote = () => {
+    setIsQuickQuoteOpen(false);
+  };
+
+  const [isAdvisorChatOpen, setIsAdvisorChatOpen] = useState(false);
+  const toggleAdvisorChat = () => setIsAdvisorChatOpen((prev) => !prev);
 
   const openPdfModal = (data: PdfModalData) => {
     setPdfModalData(data);
@@ -558,7 +593,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const saved = localStorage.getItem('norcelis_custom_parts');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length >= AUTO_PARTS_DATA.length) {
+          const hasDot51 = parsed.some((p: AutoPart) => p.sku === 'BRM-DOT51-500');
+          if (hasDot51) return parsed;
+        }
       }
     } catch (e) {
       console.error('Error loading auto parts from localStorage', e);
@@ -1006,6 +1044,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsViewer360Open,
         isTestDriveModalOpen,
         setIsTestDriveModalOpen,
+        isQuickQuoteOpen,
+        setIsQuickQuoteOpen,
+        quickQuoteItem,
+        openQuickQuote,
+        closeQuickQuote,
+        isAdvisorChatOpen,
+        setIsAdvisorChatOpen,
+        toggleAdvisorChat,
         pdfModalData,
         openPdfModal,
         closePdfModal,

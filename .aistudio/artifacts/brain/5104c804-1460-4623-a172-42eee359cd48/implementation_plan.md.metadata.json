@@ -1,6 +1,6 @@
 {
-  "summary":  "Plan de arquitectura modular y adaptación técnica de la web de Nor Celis para despliegue en Hostinger y enlace seguro con la Intranet existente. Incluye capa centralizada de configuración de endpoints, servicios desacoplados para fácil integración con APIs de WordPress/PHP, directivas de servidor (.htaccess para Hostinger/Apache/LiteSpeed) y botón de acceso a la Intranet con redirección corporativa.",
-  "updatedAt":  "2026-09-28T04:50:44.732991449Z",
+  "summary":  "Plan para integrar un botón flotante de cotización rápida y reorganizar los accesos flotantes (Asesor Virtual IA, WhatsApp Oficial y Cotización Rápida) en un Speed Dial / Hub Flotante elegante, evitando obstrucción visual en pantallas móviles y desktop.",
+  "updatedAt":  "2026-09-28T17:34:30.433162835Z",
   "requestFeedback":  true,
   "userFacing":  true
 }

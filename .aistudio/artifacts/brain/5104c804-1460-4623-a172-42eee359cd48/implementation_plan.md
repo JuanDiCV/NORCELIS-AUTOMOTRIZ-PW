@@ -1,49 +1,42 @@
-# Plan de Implementación: Adaptación a Hostinger y Arquitectura Modular por Servicios para Nor Celis
+# Plan de Implementación: Hub de Canales Flotantes con Cotización Rápida
 
-Este plan estructura la base de código de la aplicación para que sea 100% adaptable a la infraestructura actual de Nor Celis Automotriz en Hostinger, reemplazando la web pública de WordPress y enlazando de forma transparente y segura con su Intranet corporativa preexistente.
+Implementaremos un sistema unificado y ordenado de accesos flotantes que integra:
+1. **Asesor Virtual IA (Norcelis Assistant)**
+2. **Atención Directa por WhatsApp**
+3. **Nuevo Botón Flotante de Cotización Rápida (Naranja Norcelis con Modal y PDF / WhatsApp)**
 
----
-
-## 1. Configuración Centralizada de Entornos y Hostinger (`src/config/siteConfig.ts`)
-- **Propósito**: Desacoplar todas las URLs fijas, endpoints de API y enlaces corporativos para que el equipo técnico pueda modificarlos en un único archivo sin tener que buscar en múltiples componentes.
-- **Detalle de configuración**:
-  - `INTRANET_URL`: URL oficial de la Intranet en Hostinger (ej. `https://intranet.norcelis.pe` o `https://norcelis.pe/intranet`), editable y configurable.
-  - `WORDPRESS_API_BASE`: Endpoint base para la API REST de WordPress (`/wp-json/wp/v2/` o `/wp-json/norcelis/v1/`) si se desea consumir publicaciones, vehículos o citas en el futuro.
-  - `COMPANY_INFO`: Datos institucionales de Nor Celis (RUC, dirección fiscal en Cajamarca, teléfonos de central, WhatsApp oficial de soporte y ventas).
-  - `HOSTINGER_DEPLOY_TARGET`: Configuración del `basePath` y modo de despliegue en `public_html`.
+Garantizando que nunca se superpongan ni obstruyan el contenido de la web o en dispositivos móviles.
 
 ---
 
-## 2. Capa Modular de Servicios (`src/services/`)
-- **Propósito**: Ordenar el código separando la lógica de datos de la interfaz visual, permitiendo que la web funcione actualmente con almacenamiento reactivo local y pueda conectarse a la base de datos de Hostinger / WordPress con solo cambiar un interruptor en el servicio.
-- **Módulos a crear**:
-  1. `src/services/apiClient.ts`: Cliente HTTP estándar con gestión de peticiones, timeout y manejo uniforme de respuestas.
-  2. `src/services/intranetService.ts`: Gestor de enlace y redirección segura hacia la Intranet corporativa en Hostinger, con validación de destino y registro de accesos.
-  3. `src/services/vehiclesService.ts`: Capa de datos para vehículos seminuevos y 0km, preparada para alternar entre almacenamiento local o consulta a MySQL/REST API de Hostinger.
-  4. `src/services/partsService.ts`: Capa de datos para repuestos OEM y accesorios.
-  5. `src/services/workshopService.ts`: Capa de gestión para citas de taller, cotizaciones y estados de mantenimiento.
-  6. `src/services/authService.ts`: Abstracción para control de sesiones, roles (`admin` / `customer`) y credenciales de acceso.
+### Componentes y Cambios Clave
+
+#### 1. Nuevo Modal de Cotización Rápida (`src/components/QuickQuoteModal.tsx`)
+- Selector inteligente del ítem a cotizar:
+  - Vehículos 0km / Seminuevos (Toyota Hilux, Land Cruiser, Fortuner, Rav4, Corolla Cross, etc.)
+  - Repuestos o autopartes (Líquidos de frenos DOT 4/5.1 Brembo, filtros OEM, amortiguadores, etc.)
+  - Servicio de taller / mantenimiento preventivo
+- Formulario ágil con validación de datos (Nombre, Teléfono / WhatsApp, DNI / RUC, Ciudad de entrega como Cajamarca o Jaén).
+- Opciones de acción inmediata:
+  - **Generar y descargar cotización formal en PDF** con membrete oficial de Norcelis Motors.
+  - **Enviar cotización directa a un asesor por WhatsApp** con el desglose prellenado.
+
+#### 2. Reorganización del Floating Hub (`src/components/AdvisorChatbox.tsx` o `src/components/FloatingActionsHub.tsx`)
+- En lugar de 3 botones flotantes dispersos o apilados verticalmente que tapen el contenido:
+  - Un **Hub Flotante Unificado / Speed Dial** en la esquina inferior derecha (`bottom-6 right-6`).
+  - En estado compacto: Botón principal elegante o píldora accesible con micro-indicadores de estado ("Cotizar", "WhatsApp", "Asesor IA").
+  - Al abrir o interactuar: Despliega ordenadamente las 3 acciones con sus etiquetas tooltips accesibles:
+    - **Cotización Rápida** (Botón naranja ámbar distintivo `#ea580c` / `#f97316` con ícono de documento / cotización).
+    - **WhatsApp Oficial** (Botón verde `#22c55e` con ícono de WhatsApp y enlace directo).
+    - **Asesor Virtual IA** (Botón azul marino / índigo con el bot animado de Norcelis).
+  - Al abrir el chat del asesor IA, los botones flotantes se minimizan o retraen automáticamente para no tapar la ventana del chat.
+
+#### 3. Integración en `App.tsx` y Contexto
+- Conexión del modal de cotización rápida con el estado global de la app (permitiendo cotizar desde cualquier vista o con el vehículo / repuesto preseleccionado si el usuario está viendo uno).
 
 ---
 
-## 3. Botón de Acceso Seguro y Redirección Directa a la Intranet
-- **Ubicación e Integración**:
-  - **Header / Menú de Usuario**: Botón o ítem distinguido "Intranet Corporativa" con insignia institucional Nor Celis para personal autorizado y colaboradores.
-  - **Footer**: Enlace formal en la columna institucional/técnica con tooltip explicativo.
-  - **Modal de Redirección Segura (`IntranetRedirectModal`)**: Al hacer clic, ofrece un breve diálogo de confirmación corporativa ("Acceso a la Intranet Nor Celis en Hostinger") con apertura directa o redirección segura, asegurando que los colaboradores no pierdan su sesión y accedan al entorno privado de la empresa.
-
----
-
-## 4. Archivos de Despliegue para Hostinger (`public/.htaccess` y Guía de Despliegue)
-- **Soporte SPA en Hostinger (Apache / LiteSpeed)**:
-  - Creación del archivo `public/.htaccess` que se compilará automáticamente en la carpeta `dist/` para resolver el error 404 común en servidores de Hostinger cuando un usuario recarga una ruta interna en React SPA (RewriteEngine on, RewriteRule ^index\.html$ - [L], RewriteCond %{REQUEST_FILENAME} !-f, RewriteRule . /index.html [L]).
-  - Optimización de cabeceras de caché para assets estáticos (CSS, JS, imágenes SVG/WebP) y compresión GZIP.
-- **Documentación de Despliegue (`DEPLOYMENT_HOSTINGER.md`)**:
-  - Guía clara paso a paso para el administrador de sistemas de Nor Celis: cómo compilar con `npm run build`, subir el contenido de `dist/` al `public_html` de Hostinger sin sobreescribir la carpeta o subdominio de la Intranet, y conservar los correos corporativos y certificados SSL de Hostinger.
-
----
-
-## 5. Verificación y Pruebas
-- Validación de compilación (`compile_applet`) y análisis de sintaxis (`lint_applet`).
-- Verificación del comportamiento del botón de acceso a la Intranet tanto para colaboradores como en el Footer.
-- Comprobación del correcto aislamiento del carrito y favoritos según las reglas implementadas previamente.
+### Verificación
+- Prueba en resoluciones móviles (`< 640px`) y desktop (`> 1024px`).
+- Verificación de que no haya colisión visual con el footer, chats o modales.
+- Ejecución de compilación y linter (`compile_applet` y `lint_applet`).
