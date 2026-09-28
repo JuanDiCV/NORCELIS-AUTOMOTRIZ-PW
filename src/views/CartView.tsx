@@ -16,13 +16,14 @@ export const CartView: React.FC = () => {
     setCurrentView,
     showToast,
     addToCart,
+    user,
   } = useApp();
 
   const [deliveryMethod, setDeliveryMethod] = useState<'shipping' | 'pickup'>('shipping');
   const [selectedShalomDestination, setSelectedShalomDestination] = useState<string>('cajamarca-local');
   const [shalomDeliveryType, setShalomDeliveryType] = useState<'domicilio' | 'agencia'>('domicilio');
-  const [customerAddress, setCustomerAddress] = useState<string>('Jr. Dos de Mayo 450, Cajamarca');
-  const [customerDniRuc, setCustomerDniRuc] = useState<string>('45892147');
+  const [customerAddress, setCustomerAddress] = useState<string>('');
+  const [customerDniRuc, setCustomerDniRuc] = useState<string>(user.isLoggedIn && user.docNumber ? user.docNumber : '');
 
   const [couponCode, setCouponCode] = useState('NORCELIS5');
   const [couponApplied, setCouponApplied] = useState(true);
@@ -148,15 +149,29 @@ export const CartView: React.FC = () => {
           <span className="material-symbols-outlined text-4xl text-outline">shopping_cart</span>
           <h3 className="font-headline font-bold text-lg text-on-surface">Tu carrito está vacío</h3>
           <p className="text-xs text-outline max-w-sm mx-auto">
-            Explora repuestos con compatibilidad OEM o servicios de taller y añádelos con un clic.
+            Aún no has agregado repuestos ni servicios al carrito de compras. Explora repuestos con compatibilidad OEM o servicios de taller y añádelos con un clic.
           </p>
-          <div className="pt-2">
+          {!user.isLoggedIn && (
+            <p className="text-xs text-[#F07F00] font-medium">
+              Inicia sesión o crea una cuenta para sincronizar y gestionar tus pedidos.
+            </p>
+          )}
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
             <button
               onClick={() => setCurrentView('parts')}
               className="bg-primary hover:bg-primary-container text-white text-xs font-bold px-6 py-3 min-h-[44px] rounded-xl transition-all cursor-pointer inline-flex items-center justify-center gap-2"
             >
               Ir al Catálogo de Repuestos
             </button>
+            {!user.isLoggedIn && (
+              <button
+                onClick={() => setCurrentView('login')}
+                className="bg-surface-container-high hover:bg-surface-container-highest text-[#212955] text-xs font-bold px-5 py-3 min-h-[44px] rounded-xl transition-all cursor-pointer inline-flex items-center justify-center gap-2 border border-gray-200"
+              >
+                <span className="material-symbols-outlined text-base">login</span>
+                Iniciar Sesión / Registrarse
+              </button>
+            )}
           </div>
         </div>
       ) : (

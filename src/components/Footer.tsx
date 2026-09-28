@@ -1,9 +1,10 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { NorCelisLogo } from './NorCelisLogo';
+import { SITE_CONFIG } from '../config/siteConfig';
 
 export const Footer: React.FC = () => {
-  const { setCurrentView, setSelectedPartSku, showToast, setIsAdminPinModalOpen } = useApp();
+  const { user, setCurrentView, setSelectedPartSku, showToast, setIsAdminPinModalOpen, setIsAdminUnlocked } = useApp();
 
   return (
     <footer className="bg-[#F07F00] text-[#212955] border-t-2 border-[#d97300] mt-16 shadow-2xl">
@@ -299,16 +300,26 @@ export const Footer: React.FC = () => {
             <button onClick={() => setCurrentView('about')} className="min-h-[44px] inline-flex items-center px-1.5 underline hover:text-[#F07F00] font-semibold cursor-pointer">
               Sobre Nosotros &amp; Garantías
             </button>
-            <span className="hidden sm:inline">•</span>
-            <button
-              type="button"
-              onClick={() => setIsAdminPinModalOpen(true)}
-              className="min-h-[44px] inline-flex items-center gap-1 px-1.5 opacity-80 hover:opacity-100 hover:text-[#F07F00] font-medium cursor-pointer transition-opacity text-[11px]"
-              title="Acceso restringido para administración"
-            >
-              <span className="material-symbols-outlined text-[13px]">lock</span>
-              <span>Administración</span>
-            </button>
+            {user.isLoggedIn && user.role === 'admin' && (
+              <>
+                <span className="hidden sm:inline">•</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAdminUnlocked(true);
+                    setCurrentView('admin');
+                  }}
+                  className="min-h-[44px] inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#212955] hover:bg-[#181e40] text-amber-300 hover:text-white font-bold cursor-pointer transition-all text-xs border border-amber-400/40 shadow-sm"
+                  title="Acceso restringido para administración"
+                >
+                  <span className="material-symbols-outlined text-[15px] text-[#F07F00]">admin_panel_settings</span>
+                  <span>Panel Administración</span>
+                  <span className="bg-[#F07F00] text-white text-[9px] font-black px-1.5 py-0.2 rounded uppercase tracking-wider">
+                    Admin
+                  </span>
+                </button>
+              </>
+            )}
           </div>
 
           <div className="flex items-center gap-3">

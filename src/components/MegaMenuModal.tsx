@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { ViewMode } from '../types';
+import { SITE_CONFIG } from '../config/siteConfig';
 import {
   AutoPartsIcon,
   VehicleIcon,

@@ -11,6 +11,7 @@ import {
 } from '../utils/maintenanceHelper';
 import { MaintenanceRecord } from '../types';
 import { generateMaintenanceCertificatePdf, generateWishlistQuotePdf } from '../utils/pdfGenerator';
+import { SITE_CONFIG } from '../config/siteConfig';
 
 export const AccountView: React.FC = () => {
   const { user, logoutUser, setCurrentView, showToast, setIsGarageModalOpen } = useApp();
@@ -242,33 +243,53 @@ export const AccountView: React.FC = () => {
         {/* User Profile Header Card */}
         <div className="bg-white rounded-3xl p-6 md:p-8 border border-surface-container shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-primary text-white flex items-center justify-center font-headline font-black text-2xl shadow-lg ring-4 ring-primary/10">
-              CM
+            <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center font-headline font-black text-2xl shadow-lg ring-4 shrink-0 ${
+              user.role === 'admin'
+                ? 'bg-gradient-to-br from-[#F07F00] to-[#212955] text-white ring-[#F07F00]/20'
+                : 'bg-primary text-white ring-primary/10'
+            }`}>
+              {user.name ? user.name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase() : 'NC'}
             </div>
             <div className="space-y-1">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl font-headline font-extrabold text-primary">
-                  {profileData.fullName}
+                  {user.name || profileData.fullName}
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full bg-secondary-container/15 text-secondary text-xs font-bold border border-secondary-container/30 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-sm">stars</span>
-                  Club VIP Oro
-                </span>
+                {user.role === 'admin' ? (
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#F07F00] text-white text-xs font-black uppercase tracking-wider flex items-center gap-1 shadow-xs">
+                    <span className="material-symbols-outlined text-sm">verified_user</span>
+                    Administrador Maestro
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full bg-secondary-container/15 text-secondary text-xs font-bold border border-secondary-container/30 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-sm">stars</span>
+                    Club VIP Oro
+                  </span>
+                )}
               </div>
-              <p className="text-xs text-outline flex items-center gap-3">
-                <span>{profileData.email}</span>
+              <p className="text-xs text-outline flex flex-wrap items-center gap-2 sm:gap-3">
+                <span>{user.email || profileData.email}</span>
                 <span>•</span>
-                <span>DNI: {profileData.dni}</span>
+                <span>{user.docType || 'DNI'}: {user.docNumber || profileData.dni}</span>
                 <span>•</span>
-                <span>Cliente desde 2022</span>
+                <span>{user.role === 'admin' ? 'Acceso de Seguridad Nivel 1' : 'Cliente desde 2022'}</span>
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            {user.role === 'admin' && (
+              <button
+                onClick={() => setCurrentView('admin')}
+                className="flex-1 md:flex-none bg-gradient-to-r from-[#F07F00] to-[#d97300] hover:brightness-110 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-base">admin_panel_settings</span>
+                Panel de Administración
+              </button>
+            )}
             <button
               onClick={() => setIsGarageModalOpen(true)}
-              className="flex-1 md:flex-none bg-surface-container-low hover:bg-surface-container text-primary font-bold text-xs px-4 py-2.5 rounded-xl border border-surface-container transition-colors flex items-center justify-center gap-1.5"
+              className="flex-1 md:flex-none bg-surface-container-low hover:bg-surface-container text-primary font-bold text-xs px-4 py-2.5 rounded-xl border border-surface-container transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <span className="material-symbols-outlined text-base">directions_car</span>
               Cambiar Garaje Activo
@@ -277,9 +298,8 @@ export const AccountView: React.FC = () => {
               onClick={() => {
                 logoutUser();
                 setCurrentView('login');
-                showToast('Sesión cerrada correctamente');
               }}
-              className="bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs px-4 py-2.5 rounded-xl border border-red-200 transition-colors flex items-center gap-1.5"
+              className="bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs px-4 py-2.5 rounded-xl border border-red-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <span className="material-symbols-outlined text-base">logout</span>
               Cerrar Sesión

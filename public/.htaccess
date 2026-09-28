@@ -1,0 +1,114 @@
+# ==============================================================================
+# CONFIGURACIÓN APACHE / LITESPEED - HOSTINGER
+# Single Page Application (SPA) - Nor Celis Automotriz
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. OPCIONES DE SEGURIDAD Y EXPLORACIÓN
+# ------------------------------------------------------------------------------
+# Deshabilita el listado público de directorios (evita ver carpetas sin index)
+Options -Indexes
+
+# Establecer la codificación de caracteres predeterminada a UTF-8
+AddDefaultCharset UTF-8
+
+# Bloquear acceso a archivos sensibles o de configuración (.env, .git, .json de config)
+<FilesMatch "^\.(env|git|htaccess|htpasswd)|package(-lock)?\.json|tsconfig\.json$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# ------------------------------------------------------------------------------
+# 2. MOTOR DE REESCRITURA Y ENRUTAMIENTO SPA (VITE / REACT)
+# ------------------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Forzar conexión segura HTTPS (recomendado en Hostinger con SSL Let's Encrypt)
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # EXCLUSIÓN: No interceptar subdirectorios existentes (ej. Intranet en Hostinger)
+  RewriteRule ^intranet(/.*)?$ - [L]
+
+  # Excluir llamadas directas a WordPress (si convive en el mismo hosting)
+  RewriteRule ^(wp-admin|wp-content|wp-includes|wp-json)(/.*)?$ - [L]
+
+  # Si la petición corresponde a un archivo físico existente (CSS, JS, imágenes, etc.), servirlo
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  # Si la petición corresponde a una carpeta física existente, servirla
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Todas las demás rutas de navegación SPA se redirigen al index.html
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# ------------------------------------------------------------------------------
+# 3. POLÍTICA DE CACHÉ INTELIGENTE (PREVIENE PANTALLAS EN BLANCO EN DESPLIEGUES)
+# ------------------------------------------------------------------------------
+<IfModule mod_expires.c>
+  ExpiresActive On
+
+  # index.html SIEMPRE fresco: garantiza que los clientes reciban las actualizaciones al instante
+  ExpiresByType text/html "access plus 0 seconds"
+
+  # Recursos con hash en el nombre (generados por Vite en /assets/): caché larga e inmutable
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType text/javascript "access plus 1 year"
+  
+  # Imágenes y multimedia
+  ExpiresByType image/avif "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/x-icon "access plus 1 year"
+
+  # Tipografías web
+  ExpiresByType font/woff2 "access plus 1 year"
+  ExpiresByType font/woff "access plus 1 year"
+  ExpiresByType application/font-woff2 "access plus 1 year"
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Para el index.html: no guardar en caché para detectar nuevos builds de Vite
+  <Files "index.html">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires 0
+  </Files>
+
+  # Para archivos estáticos con hash (carpeta assets)
+  <FilesMatch "\.(js|css|webp|avif|png|jpg|jpeg|svg|woff2|woff)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # Cabeceras de seguridad HTTP
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set X-XSS-Protection "1; mode=block"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# ------------------------------------------------------------------------------
+# 4. COMPRESIÓN GZIP / DEFLATE (LITESPEED / APACHE)
+# ------------------------------------------------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html
+  AddOutputFilterByType DEFLATE text/plain
+  AddOutputFilterByType DEFLATE text/xml
+  AddOutputFilterByType DEFLATE text/css
+  AddOutputFilterByType DEFLATE text/javascript
+  AddOutputFilterByType DEFLATE application/javascript
+  AddOutputFilterByType DEFLATE application/json
+  AddOutputFilterByType DEFLATE application/xml
+  AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>

@@ -1,100 +1,49 @@
-# Plan de Auditoría y Operatividad al 100% del Panel de Administración Nor Celis
+# Plan de Implementación: Adaptación a Hostinger y Arquitectura Modular por Servicios para Nor Celis
 
-Auditoría integral, resolución de advertencias de ejecución y optimización de operatividad en todos los módulos del Panel de Administración: **Banners & Carrusel**, **Catálogo de Vehículos**, **Autopartes OEM**, **Ofertas & Campañas Comerciales**, **Reportes & Contabilidad CSV**, y **Seguridad & Respaldos**. Se garantiza persistencia completa en almacenamiento local (`localStorage`) y capacidad de restauración a datos de demostración de fábrica.
-
----
-
-## User Review & Critical Decisions
-
-> [!IMPORTANT]
-> **Decisiones confirmadas por el usuario:**
-> 1. **Alcance**: Revisión integral y operativa de **todos los módulos** del panel (sin excepción).
-> 2. **Persistencia**: Almacenamiento persistente en navegador (`localStorage`) con botón seguro para **restaurar datos originales de demostración** en cualquier momento.
+Este plan estructura la base de código de la aplicación para que sea 100% adaptable a la infraestructura actual de Nor Celis Automotriz en Hostinger, reemplazando la web pública de WordPress y enlazando de forma transparente y segura con su Intranet corporativa preexistente.
 
 ---
 
-### 1. Overview & Core Concept
-
-- **Qué hace**: Provee un panel de control empresarial 100% interactivo y funcional donde el administrador puede gestionar el inventario de vehículos nuevos/seminuevos, catálogo de repuestos y accesorios, diapositivas del carrusel publicitario, campañas promocionales activas, reportes contables/Kardex y credenciales de acceso con PIN.
-- **Público Objetivo**: Administradores de Nor Celis Automotriz, gestores de inventario y personal comercial que actualizan precios, promociones, stock y banners de la tienda virtual.
-- **Valor Clave**: Garantizar que cada botón, modal, formulario, filtro, carga de imagen, importación/exportación y conmutador funcione de forma inmediata, persistente y sin errores en consola ni llamadas prohibidas a `window.alert`/`window.confirm`.
-
----
-
-### 2. User Experience & Visual Design
-
-#### A. Módulos Auditados y Optimizados
-
-1. **Módulo 1: Banners & Carrusel Principal (`banners`)**:
-   - Creación de nuevos slides con badges personalizados, titulares en Bebas Neue, selector de imagen de producto cutout PNG y gradientes de fondo empresariales (`#212955` y `#F07F00`).
-   - Edición en caliente, duplicación rápida, reordenamiento arriba/abajo y conmutador instantáneo de activación.
-   - Previsualización en vivo dentro del formulario para verificar contraste y legibilidad.
-
-2. **Módulo 2: Catálogo de Vehículos (`cars`)**:
-   - Formulario completo para alta y edición de vehículos (marca, modelo, año, condición nuevo/seminuevo, precios en USD y S/, kilometraje, motor, tracción, transmisión, colores, fotos y equipamiento).
-   - Filtros dinámicos por texto de búsqueda, marca, condición y transmisión; conmutador de vista tabla compacta o cuadrícula visual de tarjetas.
-   - Acciones rápidas de cambio de estado (*Disponible*, *Reservado*, *Vendido*), duplicación de ficha y exportación CSV.
-
-3. **Módulo 3: Autopartes & Repuestos OEM (`autoparts`)**:
-   - Creación y edición con campos de SKU, marca, categoría, precio regular y oferta, stock en tiempo real, compatibilidad vehicular y selector de imagen con previsualización.
-   - Ajuste rápido de stock en línea y cambio rápido de imagen sin abrir el formulario completo.
-   - Exportación de catálogo de partes en formato CSV.
-
-4. **Módulo 4: Campañas & Ofertas Comerciales (`offers`)**:
-   - *Mejora operativa clave*: Se incorpora persistencia en `localStorage` (`norcelis_commercial_offers`) y modal de **Crear/Editar Campaña Comercial** (título, insignia/badge de descuento, descripción, beneficio y sección destino), permitiendo crear y modificar campañas además de pausarlas o activarlas.
-
-5. **Módulo 5: Centro de Reportes & Contabilidad (`reports`)**:
-   - Verificación de la suite `AccountingExportCenter`: exportación en CSV con codificación UTF-8 BOM para Excel de ventas, órdenes de taller, leads de cotización, inventario de vehículos/repuestos y resumen contable consolidado.
-   - Filtros de rango de fechas y estados.
-
-6. **Módulo 6: Seguridad & Respaldos (`security`)**:
-   - Actualización de PIN de acceso de 4 dígitos con validación y confirmación.
-   - Descarga de copia de seguridad integral en JSON (vehículos, partes, banners y ofertas).
-   - Restauración de copia desde archivo JSON con manejo de errores mediante notificaciones toast (sustituyendo cualquier llamada a `alert()`).
-   - Botón de restablecimiento de datos de fábrica con modal de confirmación en UI corporativa (evitando `window.confirm`).
+## 1. Configuración Centralizada de Entornos y Hostinger (`src/config/siteConfig.ts`)
+- **Propósito**: Desacoplar todas las URLs fijas, endpoints de API y enlaces corporativos para que el equipo técnico pueda modificarlos en un único archivo sin tener que buscar en múltiples componentes.
+- **Detalle de configuración**:
+  - `INTRANET_URL`: URL oficial de la Intranet en Hostinger (ej. `https://intranet.norcelis.pe` o `https://norcelis.pe/intranet`), editable y configurable.
+  - `WORDPRESS_API_BASE`: Endpoint base para la API REST de WordPress (`/wp-json/wp/v2/` o `/wp-json/norcelis/v1/`) si se desea consumir publicaciones, vehículos o citas en el futuro.
+  - `COMPANY_INFO`: Datos institucionales de Nor Celis (RUC, dirección fiscal en Cajamarca, teléfonos de central, WhatsApp oficial de soporte y ventas).
+  - `HOSTINGER_DEPLOY_TARGET`: Configuración del `basePath` y modo de despliegue en `public_html`.
 
 ---
 
-### 3. Key Product Decisions & Trade-Offs
-
-- **Decisión 1: Eliminar `window.alert()` y `window.confirm()`**:
-  - *Enfoque*: Reemplazar diálogos nativos del navegador por el sistema de notificaciones `showToast()` y un modal de confirmación visual integrado con diseño corporativo Nor Celis.
-  - *Por qué*: Cumple estrictamente con las directrices de entorno iFrame y evita bloqueos de hilo en el navegador.
-- **Decisión 2: Sincronización bidireccional en `localStorage`**:
-  - *Enfoque*: Centralizar todas las entidades mutables en `AppContext` y `localStorage` con claves prefijadas (`norcelis_*`), incluyendo la lista de ofertas comerciales.
-  - *Por qué*: Los cambios persisten tras recargar la página, facilitando pruebas completas de administración sin requerir backend complejo.
-- **Decisión 3: Limpieza y validación en importación JSON**:
-  - *Enfoque*: La importación de copias de seguridad validará la estructura de los datos e integrará ofertas, banners, vehículos y partes, actualizando el estado de la aplicación de inmediato.
+## 2. Capa Modular de Servicios (`src/services/`)
+- **Propósito**: Ordenar el código separando la lógica de datos de la interfaz visual, permitiendo que la web funcione actualmente con almacenamiento reactivo local y pueda conectarse a la base de datos de Hostinger / WordPress con solo cambiar un interruptor en el servicio.
+- **Módulos a crear**:
+  1. `src/services/apiClient.ts`: Cliente HTTP estándar con gestión de peticiones, timeout y manejo uniforme de respuestas.
+  2. `src/services/intranetService.ts`: Gestor de enlace y redirección segura hacia la Intranet corporativa en Hostinger, con validación de destino y registro de accesos.
+  3. `src/services/vehiclesService.ts`: Capa de datos para vehículos seminuevos y 0km, preparada para alternar entre almacenamiento local o consulta a MySQL/REST API de Hostinger.
+  4. `src/services/partsService.ts`: Capa de datos para repuestos OEM y accesorios.
+  5. `src/services/workshopService.ts`: Capa de gestión para citas de taller, cotizaciones y estados de mantenimiento.
+  6. `src/services/authService.ts`: Abstracción para control de sesiones, roles (`admin` / `customer`) y credenciales de acceso.
 
 ---
 
-### 4. Technical Architecture & Data Strategy
+## 3. Botón de Acceso Seguro y Redirección Directa a la Intranet
+- **Ubicación e Integración**:
+  - **Header / Menú de Usuario**: Botón o ítem distinguido "Intranet Corporativa" con insignia institucional Nor Celis para personal autorizado y colaboradores.
+  - **Footer**: Enlace formal en la columna institucional/técnica con tooltip explicativo.
+  - **Modal de Redirección Segura (`IntranetRedirectModal`)**: Al hacer clic, ofrece un breve diálogo de confirmación corporativa ("Acceso a la Intranet Nor Celis en Hostinger") con apertura directa o redirección segura, asegurando que los colaboradores no pierdan su sesión y accedan al entorno privado de la empresa.
 
-```
-┌────────────────────────────────────────────────────────┐
-│                   AdminDashboardView                   │
-│                                                        │
-│  ┌────────────┬─────────────┬─────────────┬──────────┐ │
-│  │  Banners   │  Vehículos  │  Autopartes │ Ofertas  │ │
-│  │ (Carousel) │ (Inventory) │ (OEM Parts) │(Campaign)│ │
-│  └──────┬─────┴──────┬──────┴──────┬──────┴────┬─────┘ │
-│         │            │             │           │       │
-│  ┌──────┴─────┬──────┴──────┬──────┴─────┬─────┴─────┐ │
-│  │  Reportes  │  Seguridad  │ Modal Conf.│  Toasts   │ │
-│  │ (CSV/Excel)│(PIN/Backup) │ (No alert) │Feedback UI│ │
-│  └────────────┴─────────────┴────────────┴───────────┘ │
-└───────────────────────────┬────────────────────────────┘
-                            │
-              ┌─────────────▼─────────────┐
-              │     AppContext Provider   │
-              │  (Vehicles, Slides, Parts,│
-              │   Offers, PIN, Re-seed)   │
-              └─────────────┬─────────────┘
-                            │
-              ┌─────────────▼─────────────┐
-              │   Browser LocalStorage    │
-              │   • norcelis_custom_*     │
-              │   • norcelis_promo_slides │
-              │   • norcelis_offers       │
-              └───────────────────────────┘
-```
+---
+
+## 4. Archivos de Despliegue para Hostinger (`public/.htaccess` y Guía de Despliegue)
+- **Soporte SPA en Hostinger (Apache / LiteSpeed)**:
+  - Creación del archivo `public/.htaccess` que se compilará automáticamente en la carpeta `dist/` para resolver el error 404 común en servidores de Hostinger cuando un usuario recarga una ruta interna en React SPA (RewriteEngine on, RewriteRule ^index\.html$ - [L], RewriteCond %{REQUEST_FILENAME} !-f, RewriteRule . /index.html [L]).
+  - Optimización de cabeceras de caché para assets estáticos (CSS, JS, imágenes SVG/WebP) y compresión GZIP.
+- **Documentación de Despliegue (`DEPLOYMENT_HOSTINGER.md`)**:
+  - Guía clara paso a paso para el administrador de sistemas de Nor Celis: cómo compilar con `npm run build`, subir el contenido de `dist/` al `public_html` de Hostinger sin sobreescribir la carpeta o subdominio de la Intranet, y conservar los correos corporativos y certificados SSL de Hostinger.
+
+---
+
+## 5. Verificación y Pruebas
+- Validación de compilación (`compile_applet`) y análisis de sintaxis (`lint_applet`).
+- Verificación del comportamiento del botón de acceso a la Intranet tanto para colaboradores como en el Footer.
+- Comprobación del correcto aislamiento del carrito y favoritos según las reglas implementadas previamente.

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { NorCelisLogo } from './NorCelisLogo';
 import { MegaMenuModal } from './MegaMenuModal';
+import { SITE_CONFIG } from '../config/siteConfig';
 import {
   AutoPartsIcon,
   VehicleIcon,
@@ -255,20 +256,53 @@ export const Header: React.FC = () => {
 
             {/* User Account / Profile */}
             <button
-              onClick={() => setCurrentView('account')}
+              onClick={() => setCurrentView(user.isLoggedIn ? 'account' : 'login')}
               className={`flex items-center gap-2.5 min-h-[48px] p-1.5 pl-2 pr-3 rounded-xl transition-colors text-left cursor-pointer ${
-                currentView === 'account' ? 'bg-[#212955]/10 ring-2 ring-[#212955]' : 'hover:bg-surface-container'
+                currentView === 'account' || currentView === 'login'
+                  ? 'bg-[#212955]/10 ring-2 ring-[#212955]'
+                  : 'hover:bg-surface-container'
               }`}
-              title="Mi Cuenta & Dashboard"
+              title={user.isLoggedIn ? 'Mi Cuenta & Dashboard' : 'Iniciar Sesión / Registro'}
               aria-label="Mi Cuenta y Garaje"
             >
-              <div className="w-10 h-10 rounded-full bg-[#212955] text-white flex items-center justify-center font-bold text-xs ring-2 ring-surface-container shrink-0 shadow-xs font-headline tracking-wider">
-                CM
-              </div>
-              <div className="hidden lg:block">
-                <div className="text-[10px] text-[#9D9D9C] font-normal font-body">Mi Cuenta</div>
-                <div className="text-xs font-bold text-[#212955] font-body">Hola, Carlos</div>
-              </div>
+              {user.isLoggedIn ? (
+                <>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs ring-2 ring-surface-container shrink-0 shadow-xs font-headline tracking-wider ${
+                    user.role === 'admin'
+                      ? 'bg-gradient-to-br from-[#F07F00] to-[#212955] text-white ring-[#F07F00]/50'
+                      : 'bg-[#212955] text-white'
+                  }`}>
+                    {user.name
+                      ? user.name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
+                      : 'NC'}
+                  </div>
+                  <div className="hidden lg:block">
+                    <div className="text-[10px] text-[#9D9D9C] font-normal font-body flex items-center gap-1">
+                      <span>Mi Cuenta</span>
+                      {user.role === 'admin' && (
+                        <span className="bg-[#F07F00] text-white text-[8px] font-black px-1 rounded uppercase tracking-wider">
+                          Admin
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs font-bold text-[#212955] font-body max-w-[110px] truncate">
+                      Hola, {user.name.split(' ')[0] || 'Usuario'}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-10 h-10 rounded-full bg-surface-container-high text-[#212955] flex items-center justify-center font-bold text-base shrink-0 shadow-xs">
+                    <span className="material-symbols-outlined text-xl">person</span>
+                  </div>
+                  <div className="hidden lg:block">
+                    <div className="text-[10px] text-[#9D9D9C] font-normal font-body">Bienvenido</div>
+                    <div className="text-xs font-bold text-[#F07F00] font-body">
+                      Iniciar Sesión
+                    </div>
+                  </div>
+                </>
+              )}
             </button>
           </div>
         </div>

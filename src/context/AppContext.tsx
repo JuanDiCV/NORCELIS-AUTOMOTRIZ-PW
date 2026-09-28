@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { ViewMode, ActiveGarageVehicle, CartItem, WishlistItem, Vehicle, AutoPart, WorkshopService, HeroSlide } from '../types';
-import { INITIAL_ACTIVE_GARAGE, AVAILABLE_GARAGE_VEHICLES, INITIAL_CART_ITEMS, INITIAL_WISHLIST_DATA, VEHICLES_DATA, AUTO_PARTS_DATA, WORKSHOP_SERVICES_DATA, INITIAL_HERO_SLIDES } from '../data/mockData';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { ViewMode, ActiveGarageVehicle, CartItem, WishlistItem, Vehicle, AutoPart, WorkshopService, HeroSlide, AppUser, UserRole, StoredUserAccount } from '../types';
+import { INITIAL_ACTIVE_GARAGE, AVAILABLE_GARAGE_VEHICLES, VEHICLES_DATA, AUTO_PARTS_DATA, WORKSHOP_SERVICES_DATA, INITIAL_HERO_SLIDES } from '../data/mockData';
 import { PdfModalData } from '../components/PdfPreviewModal';
 
 interface AppContextType {
@@ -92,13 +92,23 @@ interface AppContextType {
   setIsAdminPinModalOpen: (open: boolean) => void;
   resetToDefaultData: () => void;
 
-  user: {
+  user: AppUser;
+  loginUser: (name: string, email: string, role?: UserRole) => void;
+  loginWithCredentials: (
+    emailOrDoc: string,
+    password: string
+  ) => { success: boolean; message: string; user?: AppUser };
+  registerAccount: (data: {
     name: string;
     email: string;
-    isLoggedIn: boolean;
-  };
-  loginUser: (name: string, email: string) => void;
+    password: string;
+    docType: string;
+    docNumber: string;
+    phone: string;
+    vehicle?: { brand: string; model: string; year: string };
+  }) => { success: boolean; message: string; user?: AppUser };
   logoutUser: () => void;
+  registeredAccounts: StoredUserAccount[];
 
   catalogCategoryFilter: string;
   setCatalogCategoryFilter: (cat: string) => void;
@@ -230,16 +240,195 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setPdfModalData(null);
   };
 
-  const [cartItems, setCartItems] = useState<CartItem[]>(INITIAL_CART_ITEMS);
-  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>(INITIAL_WISHLIST_DATA);
+  // Cart & Wishlist initialized empty for unauthenticated visitors and new accounts
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+    try {
+      const savedUserStr = localStorage.getItem('norcelis_current_auth_user');
+      if (savedUserStr) {
+        const savedUser = JSON.parse(savedUserStr);
+        if (savedUser && savedUser.isLoggedIn && savedUser.id) {
+          const userCart = localStorage.getItem(`norcelis_cart_${savedUser.id}`);
+          if (userCart) return JSON.parse(userCart);
+        }
+      }
+    } catch (e) {}
+    return [];
+  });
+
+  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>(() => {
+    try {
+      const savedUserStr = localStorage.getItem('norcelis_current_auth_user');
+      if (savedUserStr) {
+        const savedUser = JSON.parse(savedUserStr);
+        if (savedUser && savedUser.isLoggedIn && savedUser.id) {
+          const userWishlist = localStorage.getItem(`norcelis_wishlist_${savedUser.id}`);
+          if (userWishlist) return JSON.parse(userWishlist);
+        }
+      }
+    } catch (e) {}
+    return [];
+  });
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const [user, setUser] = useState({
-    name: 'Carlos Mendoza',
-    email: 'carlos.mendoza@norcelis.pe',
-    isLoggedIn: true,
+  // Predefined system accounts
+  const INITIAL_PRESET_ACCOUNTS: StoredUserAccount[] = [
+    {
+      id: 'usr_admin_master',
+      name: 'Dirección General & Admin',
+      email: 'admin@norcelis.pe',
+      passwordHash: 'AdminSecure2025!',
+      role: 'admin',
+      docType: 'DNI',
+      docNumber: '09876543',
+      phone: '976543210',
+      createdAt: '2025-01-01T08:00:00.000Z',
+    },
+    {
+      id: 'usr_cust_carlos',
+      name: 'Carlos Mendoza',
+      email: 'carlos.mendoza@norcelis.pe',
+      passwordHash: 'ClienteSeguro2025!',
+      role: 'customer',
+      docType: 'DNI',
+      docNumber: '74819203',
+      phone: '987654321',
+      createdAt: '2025-01-15T10:00:00.000Z',
+      vehicle: {
+        brand: 'Toyota',
+        model: 'RAV4 Hybrid',
+        year: '2025',
+      },
+    },
+  ];
+
+  const [registeredAccounts, setRegisteredAccounts] = useState<StoredUserAccount[]>(() => {
+    try {
+      const saved = localStorage.getItem('norcelis_registered_accounts');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const hasAdmin = parsed.some((acc: StoredUserAccount) => acc.role === 'admin');
+          if (!hasAdmin) {
+            return [INITIAL_PRESET_ACCOUNTS[0], ...parsed];
+          }
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.error('Error loading registered accounts', e);
+    }
+    return INITIAL_PRESET_ACCOUNTS;
   });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('norcelis_registered_accounts', JSON.stringify(registeredAccounts));
+    } catch (e) {
+      console.error('Error saving registered accounts', e);
+    }
+  }, [registeredAccounts]);
+
+  const [user, setUser] = useState<AppUser>(() => {
+    try {
+      const saved = localStorage.getItem('norcelis_current_auth_user');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed.name === 'string') {
+          return parsed;
+        }
+      }
+    } catch (e) {}
+    // Default guest session (unauthenticated) - Starts with NO active session!
+    return {
+      id: 'usr_guest',
+      name: 'Invitado',
+      email: '',
+      role: 'customer',
+      isLoggedIn: false,
+    };
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('norcelis_current_auth_user', JSON.stringify(user));
+    } catch (e) {}
+  }, [user]);
+
+  // Track previous authenticated user ID to prevent race conditions or cross-account leakage
+  const prevUserIdRef = useRef<string | null>(null);
+
+  // Sync cart and wishlist whenever active authenticated user changes (login, logout, new registration)
+  useEffect(() => {
+    const currentUserId = user.isLoggedIn && user.id ? user.id : null;
+
+    // Initial mount check
+    if (prevUserIdRef.current === null) {
+      prevUserIdRef.current = currentUserId || 'guest';
+      if (!currentUserId) {
+        setCartItems([]);
+        setWishlistItems([]);
+        try {
+          localStorage.removeItem('norcelis_cart_guest');
+          localStorage.removeItem('norcelis_wishlist_guest');
+        } catch (e) {}
+      }
+      return;
+    }
+
+    // Account change or logout detected
+    if (prevUserIdRef.current !== (currentUserId || 'guest')) {
+      prevUserIdRef.current = currentUserId || 'guest';
+
+      if (user.isLoggedIn && user.id) {
+        // Authenticated user: load their specific saved cart and wishlist
+        try {
+          const userCart = localStorage.getItem(`norcelis_cart_${user.id}`);
+          setCartItems(userCart ? JSON.parse(userCart) : []);
+        } catch {
+          setCartItems([]);
+        }
+        try {
+          const userWishlist = localStorage.getItem(`norcelis_wishlist_${user.id}`);
+          setWishlistItems(userWishlist ? JSON.parse(userWishlist) : []);
+        } catch {
+          setWishlistItems([]);
+        }
+      } else {
+        // Unauthenticated visitor / guest / logged out: strictly empty cart and favorites!
+        setCartItems([]);
+        setWishlistItems([]);
+        try {
+          localStorage.removeItem('norcelis_cart_guest');
+          localStorage.removeItem('norcelis_wishlist_guest');
+        } catch (e) {}
+      }
+    }
+  }, [user.isLoggedIn, user.id]);
+
+  // Persist cartItems ONLY when a valid user is logged in
+  useEffect(() => {
+    try {
+      if (user.isLoggedIn && user.id) {
+        localStorage.setItem(`norcelis_cart_${user.id}`, JSON.stringify(cartItems));
+      } else {
+        // For unauthenticated visitors, do NOT store persistent cart items
+        localStorage.removeItem('norcelis_cart_guest');
+      }
+    } catch (e) {}
+  }, [cartItems, user.isLoggedIn, user.id]);
+
+  // Persist wishlistItems ONLY when a valid user is logged in
+  useEffect(() => {
+    try {
+      if (user.isLoggedIn && user.id) {
+        localStorage.setItem(`norcelis_wishlist_${user.id}`, JSON.stringify(wishlistItems));
+      } else {
+        // For unauthenticated visitors, do NOT store persistent wishlist items
+        localStorage.removeItem('norcelis_wishlist_guest');
+      }
+    } catch (e) {}
+  }, [wishlistItems, user.isLoggedIn, user.id]);
 
   const [catalogCategoryFilter, setCatalogCategoryFilter] = useState<string>('todos');
   const [catalogBrandFilter, setCatalogBrandFilter] = useState<string>('todos');
@@ -411,11 +600,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setPromoSlides(INITIAL_HERO_SLIDES);
     setAutoParts(AUTO_PARTS_DATA);
     setAdminPinState('1234');
+    setCartItems([]);
+    setWishlistItems([]);
     try {
       localStorage.removeItem('norcelis_custom_vehicles');
       localStorage.removeItem('norcelis_promo_slides');
       localStorage.removeItem('norcelis_custom_parts');
       localStorage.removeItem('norcelis_admin_pin');
+      localStorage.removeItem('norcelis_cart_guest');
+      localStorage.removeItem('norcelis_wishlist_guest');
     } catch (e) {}
     showToast('Catálogo, repuestos y banners restablecidos a valores originales');
   };
@@ -580,14 +773,216 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('Todos los ítems de deseos fueron movidos al carrito');
   };
 
-  const loginUser = (name: string, email: string) => {
-    setUser({ name, email, isLoggedIn: true });
-    showToast(`¡Bienvenido de vuelta, ${name}!`);
+  const loginUser = (name: string, email: string, role: UserRole = 'customer') => {
+    const matched = registeredAccounts.find((acc) => acc.email.toLowerCase() === email.toLowerCase());
+    const newUser: AppUser = {
+      id: matched?.id || `usr_${Date.now()}`,
+      name,
+      email,
+      role: matched?.role || role,
+      docType: matched?.docType,
+      docNumber: matched?.docNumber,
+      phone: matched?.phone,
+      isLoggedIn: true,
+      createdAt: matched?.createdAt || new Date().toISOString(),
+    };
+    prevUserIdRef.current = newUser.id;
+    try {
+      const userCart = localStorage.getItem(`norcelis_cart_${newUser.id}`);
+      setCartItems(userCart ? JSON.parse(userCart) : []);
+    } catch {
+      setCartItems([]);
+    }
+    try {
+      const userWishlist = localStorage.getItem(`norcelis_wishlist_${newUser.id}`);
+      setWishlistItems(userWishlist ? JSON.parse(userWishlist) : []);
+    } catch {
+      setWishlistItems([]);
+    }
+    setUser(newUser);
+    if (newUser.role === 'admin') {
+      setIsAdminUnlocked(true);
+      showToast(`¡Sesión iniciada con privilegios de Administrador!`);
+    } else {
+      setIsAdminUnlocked(false);
+      showToast(`¡Bienvenido de vuelta, ${name}!`);
+    }
+  };
+
+  const loginWithCredentials = (
+    emailOrDoc: string,
+    password: string
+  ): { success: boolean; message: string; user?: AppUser } => {
+    const term = emailOrDoc.trim().toLowerCase();
+    const account = registeredAccounts.find(
+      (acc) => acc.email.toLowerCase() === term || acc.docNumber.toLowerCase() === term
+    );
+
+    if (!account) {
+      return {
+        success: false,
+        message: 'No existe ninguna cuenta registrada con este correo o número de documento.',
+      };
+    }
+
+    if (account.passwordHash !== password) {
+      return {
+        success: false,
+        message: 'Contraseña incorrecta. Por favor intente nuevamente.',
+      };
+    }
+
+    const authUser: AppUser = {
+      id: account.id,
+      name: account.name,
+      email: account.email,
+      role: account.role,
+      docType: account.docType,
+      docNumber: account.docNumber,
+      phone: account.phone,
+      isLoggedIn: true,
+      createdAt: account.createdAt,
+    };
+
+    prevUserIdRef.current = authUser.id;
+    try {
+      const userCart = localStorage.getItem(`norcelis_cart_${authUser.id}`);
+      setCartItems(userCart ? JSON.parse(userCart) : []);
+    } catch {
+      setCartItems([]);
+    }
+    try {
+      const userWishlist = localStorage.getItem(`norcelis_wishlist_${authUser.id}`);
+      setWishlistItems(userWishlist ? JSON.parse(userWishlist) : []);
+    } catch {
+      setWishlistItems([]);
+    }
+
+    setUser(authUser);
+    if (account.role === 'admin') {
+      setIsAdminUnlocked(true);
+      showToast(`¡Acceso de Administrador verificado! Bienvenido, ${account.name}.`);
+    } else {
+      setIsAdminUnlocked(false);
+      showToast(`¡Bienvenido de vuelta, ${account.name}!`);
+    }
+
+    return {
+      success: true,
+      message: 'Inicio de sesión exitoso',
+      user: authUser,
+    };
+  };
+
+  const registerAccount = (data: {
+    name: string;
+    email: string;
+    password: string;
+    docType: string;
+    docNumber: string;
+    phone: string;
+    vehicle?: { brand: string; model: string; year: string };
+  }): { success: boolean; message: string; user?: AppUser } => {
+    const cleanEmail = data.email.trim().toLowerCase();
+    const cleanDoc = data.docNumber.trim();
+
+    // Check duplicate email
+    if (registeredAccounts.some((acc) => acc.email.toLowerCase() === cleanEmail)) {
+      return {
+        success: false,
+        message: 'Ya existe una cuenta registrada con este correo electrónico.',
+      };
+    }
+
+    // Check duplicate document
+    if (registeredAccounts.some((acc) => acc.docNumber === cleanDoc)) {
+      return {
+        success: false,
+        message: `Ya existe una cuenta registrada con este número de ${data.docType}.`,
+      };
+    }
+
+    const newAccount: StoredUserAccount = {
+      id: `usr_cust_${Date.now()}`,
+      name: data.name.trim(),
+      email: cleanEmail,
+      passwordHash: data.password,
+      role: 'customer',
+      docType: data.docType,
+      docNumber: cleanDoc,
+      phone: data.phone.trim(),
+      createdAt: new Date().toISOString(),
+      vehicle: data.vehicle,
+    };
+
+    setRegisteredAccounts((prev) => [...prev, newAccount]);
+
+    // If customer entered vehicle info, also register to active garage
+    if (data.vehicle && data.vehicle.brand && data.vehicle.model) {
+      addGarageVehicle({
+        brand: data.vehicle.brand,
+        model: data.vehicle.model,
+        year: parseInt(data.vehicle.year) || 2025,
+        engine: '1.8L - 2.5L Gasolina / Híbrido',
+        plate: `PER-${Math.floor(100 + Math.random() * 900)}`,
+        vin: `93H${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+      });
+    }
+
+    // Brand new account: start with 0 saved favorites and 0 cart items
+    prevUserIdRef.current = newAccount.id;
+    setCartItems([]);
+    setWishlistItems([]);
+    try {
+      localStorage.setItem(`norcelis_cart_${newAccount.id}`, JSON.stringify([]));
+      localStorage.setItem(`norcelis_wishlist_${newAccount.id}`, JSON.stringify([]));
+      localStorage.removeItem('norcelis_cart_guest');
+      localStorage.removeItem('norcelis_wishlist_guest');
+    } catch (e) {}
+
+    const authUser: AppUser = {
+      id: newAccount.id,
+      name: newAccount.name,
+      email: newAccount.email,
+      role: 'customer',
+      docType: newAccount.docType,
+      docNumber: newAccount.docNumber,
+      phone: newAccount.phone,
+      isLoggedIn: true,
+      createdAt: newAccount.createdAt,
+    };
+
+    setUser(authUser);
+    setIsAdminUnlocked(false);
+    showToast(`¡Cuenta creada con éxito! Bienvenido a Nor Celis, ${authUser.name}.`);
+
+    return {
+      success: true,
+      message: 'Cuenta creada con éxito',
+      user: authUser,
+    };
   };
 
   const logoutUser = () => {
-    setUser({ name: '', email: '', isLoggedIn: false });
-    showToast('Sesión cerrada');
+    const guestUser: AppUser = {
+      id: 'usr_guest',
+      name: 'Invitado',
+      email: '',
+      role: 'customer',
+      isLoggedIn: false,
+    };
+    prevUserIdRef.current = 'guest';
+    // Clear in-memory cart and wishlist on logout
+    setCartItems([]);
+    setWishlistItems([]);
+    try {
+      localStorage.removeItem('norcelis_current_auth_user');
+      localStorage.removeItem('norcelis_cart_guest');
+      localStorage.removeItem('norcelis_wishlist_guest');
+    } catch (e) {}
+    setUser(guestUser);
+    setIsAdminUnlocked(false);
+    showToast('Sesión cerrada correctamente');
   };
 
   return (
@@ -653,7 +1048,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         services: WORKSHOP_SERVICES_DATA,
         user,
         loginUser,
+        loginWithCredentials,
+        registerAccount,
         logoutUser,
+        registeredAccounts,
         catalogCategoryFilter,
         setCatalogCategoryFilter,
         catalogBrandFilter,

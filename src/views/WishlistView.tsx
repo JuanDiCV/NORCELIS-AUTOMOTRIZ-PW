@@ -13,6 +13,7 @@ export const WishlistView: React.FC = () => {
     setCurrentView,
     setSelectedVehicleId,
     showToast,
+    user,
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'all' | 'vehicle' | 'part' | 'service'>('all');
@@ -65,7 +66,8 @@ export const WishlistView: React.FC = () => {
                 return;
               }
               try {
-                const fileName = generateWishlistQuotePdf(filteredItems.length > 0 ? filteredItems : wishlistItems, 'Juan Carlos Mendoza');
+                const clientName = user.isLoggedIn && user.name ? user.name : 'Cliente Nor Celis';
+                const fileName = generateWishlistQuotePdf(filteredItems.length > 0 ? filteredItems : wishlistItems, clientName);
                 showToast(`Cotización oficial en PDF generada: ${fileName}`);
               } catch (e) {
                 showToast('Descargando cotización formal en PDF...');
@@ -188,15 +190,35 @@ export const WishlistView: React.FC = () => {
           <span className="material-symbols-outlined text-4xl text-outline">favorite_border</span>
           <h3 className="font-headline font-bold text-lg text-on-surface">Tu lista de deseos está vacía</h3>
           <p className="text-xs text-outline max-w-sm mx-auto">
-            Explora nuestro catálogo de vehículos 2025 o repuestos originales y guarda tus preferidos haciendo clic en el corazón.
+            Aún no has guardado vehículos, repuestos o servicios en tus favoritos. Explora nuestro catálogo y guarda tus preferidos haciendo clic en el corazón.
           </p>
-          <div className="pt-2">
+          {!user.isLoggedIn && (
+            <p className="text-xs text-[#F07F00] font-medium">
+              Inicia sesión o crea una cuenta para sincronizar tus favoritos en cualquier dispositivo.
+            </p>
+          )}
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
             <button
               onClick={() => setCurrentView('parts')}
-              className="bg-primary hover:bg-primary-container text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all"
+              className="bg-primary hover:bg-primary-container text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all cursor-pointer"
             >
               Explorar Repuestos OEM
             </button>
+            <button
+              onClick={() => setCurrentView('cars')}
+              className="bg-surface-container-high hover:bg-surface-container-highest text-[#212955] text-xs font-bold px-5 py-2.5 rounded-xl transition-all border border-gray-200 cursor-pointer"
+            >
+              Ver Vehículos
+            </button>
+            {!user.isLoggedIn && (
+              <button
+                onClick={() => setCurrentView('login')}
+                className="bg-white hover:bg-gray-50 text-[#F07F00] text-xs font-bold px-5 py-2.5 rounded-xl transition-all border border-[#F07F00]/30 flex items-center gap-1.5 cursor-pointer shadow-xs"
+              >
+                <span className="material-symbols-outlined text-base">login</span>
+                Iniciar Sesión
+              </button>
+            )}
           </div>
         </div>
       ) : (

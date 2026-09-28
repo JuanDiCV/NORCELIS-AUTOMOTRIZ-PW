@@ -719,9 +719,9 @@ export const HomeView: React.FC = () => {
           </div>
 
           {/* Workshop & Detailing Hero Feature Banner */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-primary text-white p-8 sm:p-10 rounded-3xl shadow-xl overflow-hidden relative">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-gradient-to-br from-slate-900 via-neutral-900 to-slate-950 text-white p-8 sm:p-10 rounded-3xl shadow-2xl border border-white/10 overflow-hidden relative">
             <div className="lg:col-span-7 space-y-4 z-10">
-              <span className="text-xs uppercase font-bold tracking-widest text-secondary-container">
+              <span className="text-xs uppercase font-bold tracking-widest text-[#F07F00]">
                 Taller Oficial &amp; Centro de Mantenimiento Nor Celis
               </span>
               <h3 className="font-headline font-extrabold text-2xl sm:text-3xl text-white">
@@ -742,14 +742,34 @@ export const HomeView: React.FC = () => {
             </div>
 
             <div className="lg:col-span-5 z-10">
-              <div className="rounded-2xl overflow-hidden shadow-2xl border border-white/20 group">
-                <SafeImage
-                  src="https://images.unsplash.com/photo-1607860108855-64acf2078ed9?auto=format&fit=crop&w=800&q=80"
-                  fallbackSrc={FALLBACK_IMAGES.serviceDetailing}
-                  typeHint="service"
-                  alt="Taller Nor Celis"
-                  className="w-full h-56 sm:h-64 object-cover transition-transform duration-500 ease-out group-hover:scale-110 hover:scale-110 cursor-pointer"
-                />
+              <div
+                onClick={() => setCurrentView('services')}
+                className="w-full h-56 sm:h-64 rounded-2xl p-6 bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/15 hover:border-[#F07F00]/50 shadow-2xl flex flex-col items-center justify-center text-center group transition-all duration-300 cursor-pointer relative overflow-hidden"
+              >
+                {/* Subtle ambient light */}
+                <div className="absolute -top-10 -right-10 w-36 h-36 bg-[#F07F00]/15 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
+                <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+
+                {/* Garage Icon Emblem */}
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-[#F07F00] to-[#d97300] text-white flex items-center justify-center shadow-xl shadow-[#F07F00]/30 mb-3.5 group-hover:scale-110 group-hover:rotate-1 transition-all duration-300">
+                  <span className="material-symbols-outlined text-4xl sm:text-5xl">garage</span>
+                </div>
+
+                <div className="space-y-1 relative z-10">
+                  <h4 className="font-headline font-bold text-base sm:text-lg text-white group-hover:text-[#F07F00] transition-colors flex items-center justify-center gap-1.5">
+                    <span>Garaje &amp; Bahías de Taller</span>
+                  </h4>
+                  <p className="text-xs text-white/70 max-w-xs leading-relaxed">
+                    Equipamiento oficial, elevadores hidráulicos y diagnóstico por escáner OEM.
+                  </p>
+                </div>
+
+                <div className="mt-3.5 flex items-center gap-2 relative z-10">
+                  <span className="text-[11px] font-bold text-[#F07F00] bg-[#F07F00]/15 px-3 py-1 rounded-full border border-[#F07F00]/30 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#F07F00] animate-pulse"></span>
+                    <span>Bahías de Servicio Activas</span>
+                  </span>
+                </div>
               </div>
             </div>
           </div>

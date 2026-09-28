@@ -192,3 +192,34 @@ export interface NextMaintenanceForecast {
   brandIntervalText: string;
   estimatedMonthlyKm: number;
 }
+
+export type UserRole = 'admin' | 'customer';
+
+export interface AppUser {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  docType?: string;
+  docNumber?: string;
+  phone?: string;
+  isLoggedIn: boolean;
+  createdAt?: string;
+}
+
+export interface StoredUserAccount {
+  id: string;
+  name: string;
+  email: string;
+  passwordHash: string;
+  role: UserRole;
+  docType: string;
+  docNumber: string;
+  phone: string;
+  createdAt: string;
+  vehicle?: {
+    brand: string;
+    model: string;
+    year: string;
+  };
+}
