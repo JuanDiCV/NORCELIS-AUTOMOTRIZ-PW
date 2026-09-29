@@ -4,7 +4,17 @@ import { NorCelisLogo } from './NorCelisLogo';
 import { SITE_CONFIG } from '../config/siteConfig';
 
 export const Footer: React.FC = () => {
-  const { user, setCurrentView, setSelectedPartSku, showToast, setIsAdminPinModalOpen, setIsAdminUnlocked } = useApp();
+  const {
+    user,
+    setCurrentView,
+    setSelectedPartSku,
+    showToast,
+    setIsAdminPinModalOpen,
+    setIsAdminUnlocked,
+    navigateToTracking,
+    navigateToTerms,
+    setIsGarageModalOpen,
+  } = useApp();
 
   return (
     <footer className="bg-[#F07F00] text-[#212955] border-t-2 border-[#d97300] mt-16 shadow-2xl">
@@ -227,7 +237,7 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <button
-                  onClick={() => setCurrentView('parts')}
+                  onClick={() => setIsGarageModalOpen(true)}
                   className="hover:text-[#212955] transition-colors"
                 >
                   Búsqueda por Chasis / Número VIN
@@ -287,51 +297,131 @@ export const Footer: React.FC = () => {
         </div>
       </div>
 
-      {/* Bottom Bar in Deep Blue #212955 */}
-      <div className="border-t border-[#212955]/20 py-6 px-gutter bg-[#212955] text-xs text-white/80">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-center md:text-left">
-            <span>© 2025 Nor Celis Automotriz S.A.C. RUC: 20541982311. Todos los derechos reservados.</span>
-            <span className="hidden sm:inline">•</span>
-            <button onClick={() => setCurrentView('claims')} className="min-h-[44px] inline-flex items-center px-1.5 underline hover:text-[#F07F00] font-semibold cursor-pointer">
-              Libro de Reclamaciones
-            </button>
-            <span className="hidden sm:inline">•</span>
-            <button onClick={() => setCurrentView('about')} className="min-h-[44px] inline-flex items-center px-1.5 underline hover:text-[#F07F00] font-semibold cursor-pointer">
-              Sobre Nosotros &amp; Garantías
-            </button>
+      {/* Bottom Bar in Deep Blue #212955 (Organized, Modern & Hierarchical) */}
+      <div className="border-t border-black/15 py-8 px-gutter bg-[#1b2247] text-white">
+        <div className="max-w-7xl mx-auto space-y-6">
+          {/* Top Row: Categorized Quick Action & Minimalist Legal Nav */}
+          <div className="flex flex-wrap items-center justify-between gap-4 pb-5 border-b border-white/10">
+            {/* Left: Quick Access & Clean Links */}
+            <div className="flex flex-wrap items-center gap-x-3.5 gap-y-2 text-xs">
+              <button
+                type="button"
+                onClick={() => navigateToTracking()}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F07F00] hover:bg-[#d97300] text-white font-bold text-xs transition-colors cursor-pointer"
+                title="Seguimiento en tiempo real con Shalom Express"
+              >
+                <span className="material-symbols-outlined text-[15px]">local_shipping</span>
+                <span>Rastrear Pedido</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigateToTerms('terms')}
+                className="text-white/70 hover:text-[#F07F00] transition-colors cursor-pointer font-medium"
+              >
+                Términos y Condiciones
+              </button>
+
+              <span className="text-white/20 select-none hidden sm:inline">•</span>
+
+              <button
+                type="button"
+                onClick={() => navigateToTerms('privacy')}
+                className="text-white/70 hover:text-[#F07F00] transition-colors cursor-pointer font-medium"
+              >
+                Privacidad (Ley 29733)
+              </button>
+
+              <span className="text-white/20 select-none hidden sm:inline">•</span>
+
+              <button
+                type="button"
+                onClick={() => navigateToTerms('warranty')}
+                className="text-white/70 hover:text-[#F07F00] transition-colors cursor-pointer font-medium"
+              >
+                Garantías OEM
+              </button>
+
+              <span className="text-white/20 select-none hidden sm:inline">•</span>
+
+              <button
+                type="button"
+                onClick={() => setCurrentView('claims')}
+                className="text-white/70 hover:text-[#F07F00] transition-colors cursor-pointer font-medium"
+              >
+                Libro de Reclamaciones
+              </button>
+
+              <span className="text-white/20 select-none hidden sm:inline">•</span>
+
+              <button
+                type="button"
+                onClick={() => setCurrentView('about')}
+                className="text-white/70 hover:text-[#F07F00] transition-colors cursor-pointer font-medium"
+              >
+                Sobre Nosotros
+              </button>
+            </div>
+
+            {/* Right: Admin Access Button if authorized */}
             {user.isLoggedIn && user.role === 'admin' && (
-              <>
-                <span className="hidden sm:inline">•</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsAdminUnlocked(true);
-                    setCurrentView('admin');
-                  }}
-                  className="min-h-[44px] inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#212955] hover:bg-[#181e40] text-amber-300 hover:text-white font-bold cursor-pointer transition-all text-xs border border-amber-400/40 shadow-sm"
-                  title="Acceso restringido para administración"
-                >
-                  <span className="material-symbols-outlined text-[15px] text-[#F07F00]">admin_panel_settings</span>
-                  <span>Panel Administración</span>
-                  <span className="bg-[#F07F00] text-white text-[9px] font-black px-1.5 py-0.2 rounded uppercase tracking-wider">
-                    Admin
-                  </span>
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAdminUnlocked(true);
+                  setCurrentView('admin');
+                }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 hover:text-white font-semibold cursor-pointer transition-colors text-xs border border-amber-400/30"
+                title="Acceso restringido para administración"
+              >
+                <span>Panel Admin</span>
+              </button>
             )}
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="text-[11px] font-bold text-white">Pagos Seguros:</span>
-            <div className="flex items-center gap-1.5 font-mono text-[10px] bg-white/15 px-2.5 py-1 rounded-lg border border-white/20">
-              <span className="text-white font-extrabold">VISA</span>
-              <span className="text-white/40">•</span>
-              <span className="text-white font-extrabold">MC</span>
-              <span className="text-white/40">•</span>
-              <span className="text-white font-extrabold">CULQI</span>
-              <span className="text-white/40">•</span>
-              <span className="text-[#F07F00] font-extrabold">YAPE</span>
+          {/* Bottom Row: Corporate Attribution & Payment Trust Seals */}
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-6 pt-1">
+            {/* Legal corporate info */}
+            <div className="space-y-1.5 text-center lg:text-left">
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 text-xs font-semibold text-white/90">
+                <span>© 2025 Nor Celis Automotriz S.A.C.</span>
+                <span className="text-white/30">•</span>
+                <span className="font-mono text-white/80">RUC: 20541982311</span>
+                <span className="text-white/30">•</span>
+                <span className="text-white/70">Concesionario Oficial &amp; Taller Multimarca</span>
+              </div>
+              <p className="text-[11px] text-white/60">
+                Sede Central: Av. Vía de Evitamiento Sur N° 6003, Cajamarca, Perú. Envíos garantizados con Shalom Express y Olva Courier.
+              </p>
+            </div>
+
+            {/* Trust Seals & Payment Methods */}
+            <div className="flex flex-col sm:flex-row items-center gap-4 shrink-0">
+              <div className="flex items-center gap-2 text-[11px] text-white/70 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
+                <span className="material-symbols-outlined text-sm text-emerald-400">lock</span>
+                <span>Cifrado SSL 256-Bit</span>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <span className="text-[11px] font-bold text-white/80">Pagos Seguros:</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-[10px] bg-white text-[#1a1f71] px-2 py-1 rounded-md shadow-xs font-sans tracking-wider">
+                    VISA
+                  </span>
+                  <span className="font-bold text-[10px] bg-white text-[#eb001b] px-2 py-1 rounded-md shadow-xs font-sans tracking-wider">
+                    MC
+                  </span>
+                  <span className="font-bold text-[10px] bg-[#002A8F] text-white px-2 py-1 rounded-md shadow-xs font-mono">
+                    Culqi
+                  </span>
+                  <span className="font-extrabold text-[10px] bg-[#742284] text-white px-2.5 py-1 rounded-md shadow-xs">
+                    Yape
+                  </span>
+                  <span className="font-bold text-[10px] bg-white/15 text-white px-2 py-1 rounded-md border border-white/20">
+                    BCP/BBVA
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -412,4 +412,30 @@ header .top-full .material-symbols-outlined {
   font-size: 18px;
 }
 
+/* 7. Infinite Brand Marquee Carousel */
+@keyframes marquee-infinite {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee-infinite {
+  display: flex;
+  width: max-content;
+  animation: marquee-infinite 35s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-infinite:hover {
+  animation-play-state: paused;
+}
+
+/* Cinematic automotive card glow and contrast transition */
+.cinematic-card-img {
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s ease-out;
+}
+
 

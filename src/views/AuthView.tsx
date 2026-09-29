@@ -16,9 +16,31 @@ export const AuthView: React.FC = () => {
     logoutUser,
     setCurrentView,
     showToast,
+    findAccountForRecovery,
+    updateAccountPassword,
   } = useApp();
 
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [authMode, setAuthMode] = useState<'login' | 'register' | 'recovery'>('login');
+
+  // --- RECOVERY STATE ---
+  const [recoveryStep, setRecoveryStep] = useState<1 | 2 | 3>(1);
+  const [recoveryIdentifier, setRecoveryIdentifier] = useState('');
+  const [recoveryAccountData, setRecoveryAccountData] = useState<{
+    found: boolean;
+    maskedEmail?: string;
+    maskedPhone?: string;
+    accountName?: string;
+    identifier?: string;
+  } | null>(null);
+  const [recoverySecurityCode, setRecoverySecurityCode] = useState('');
+  const [recoveryCodeInput, setRecoveryCodeInput] = useState('');
+  const [recoveryNewPassword, setRecoveryNewPassword] = useState('');
+  const [recoveryConfirmPassword, setRecoveryConfirmPassword] = useState('');
+  const [showRecoveryNewPassword, setShowRecoveryNewPassword] = useState(false);
+  const [showRecoveryConfirmPassword, setShowRecoveryConfirmPassword] = useState(false);
+  const [recoveryError, setRecoveryError] = useState<string | null>(null);
+  const [recoveryResendTimer, setRecoveryResendTimer] = useState<number>(0);
+  const [isProcessingRecovery, setIsProcessingRecovery] = useState(false);
 
   // --- LOGIN STATE ---
   const [loginIdentifier, setLoginIdentifier] = useState('');
@@ -124,6 +146,183 @@ export const AuthView: React.FC = () => {
     setShowRegPassword(true);
     setShowRegConfirmPassword(true);
     showToast('¡Contraseña de alta seguridad generada y aplicada con éxito!');
+  };
+
+  // --- RECOVERY RESEND TIMER ---
+  React.useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (recoveryResendTimer > 0) {
+      interval = setInterval(() => {
+        setRecoveryResendTimer((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [recoveryResendTimer]);
+
+  // --- RECOVERY PASSWORD STRENGTH ---
+  const recoveryPasswordCriteria = useMemo(() => {
+    return {
+      minLength: recoveryNewPassword.length >= 8,
+      hasUpper: /[A-Z]/.test(recoveryNewPassword),
+      hasLower: /[a-z]/.test(recoveryNewPassword),
+      hasNumber: /[0-9]/.test(recoveryNewPassword),
+      hasSymbol: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~`]/.test(recoveryNewPassword),
+    };
+  }, [recoveryNewPassword]);
+
+  const recoveryPasswordStrengthScore = useMemo(() => {
+    const { minLength, hasUpper, hasLower, hasNumber, hasSymbol } = recoveryPasswordCriteria;
+    let score = 0;
+    if (minLength) score += 1;
+    if (hasUpper && hasLower) score += 1;
+    if (hasNumber) score += 1;
+    if (hasSymbol) score += 1;
+    if (recoveryNewPassword.length >= 12 && score === 4) score += 1;
+    return score;
+  }, [recoveryPasswordCriteria, recoveryNewPassword]);
+
+  const recoveryPasswordStrengthMeta = useMemo(() => {
+    if (!recoveryNewPassword) return { label: 'Sin ingresar', color: 'bg-outline/20 text-outline', width: '0%' };
+    if (recoveryPasswordStrengthScore <= 1) {
+      return { label: 'Muy Débil', color: 'bg-red-500 text-red-600', width: '25%' };
+    }
+    if (recoveryPasswordStrengthScore === 2) {
+      return { label: 'Media', color: 'bg-amber-500 text-amber-600', width: '50%' };
+    }
+    if (recoveryPasswordStrengthScore === 3) {
+      return { label: 'Buena', color: 'bg-blue-500 text-blue-600', width: '75%' };
+    }
+    return { label: 'Excelente & Segura', color: 'bg-emerald-500 text-emerald-600', width: '100%' };
+  }, [recoveryPasswordStrengthScore, recoveryNewPassword]);
+
+  const handleStartRecoverySearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setRecoveryError(null);
+    const clean = recoveryIdentifier.trim();
+    if (!clean) {
+      setRecoveryError('Por favor ingresa tu correo electrónico o número de documento.');
+      return;
+    }
+
+    setIsProcessingRecovery(true);
+    setTimeout(() => {
+      setIsProcessingRecovery(false);
+      const result = findAccountForRecovery(clean);
+      if (!result.found) {
+        setRecoveryError('No encontramos ninguna cuenta registrada con este correo o documento. Verifica tus datos o crea una cuenta nueva.');
+        return;
+      }
+
+      const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
+      setRecoverySecurityCode(generatedCode);
+      setRecoveryAccountData(result);
+      setRecoveryCodeInput('');
+      setRecoveryStep(2);
+      setRecoveryResendTimer(60);
+      showToast(`✓ Código de verificación: ${generatedCode} generado para ${result.accountName}`);
+    }, 500);
+  };
+
+  const handleResendRecoveryCode = () => {
+    if (recoveryResendTimer > 0) return;
+    const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
+    setRecoverySecurityCode(generatedCode);
+    setRecoveryResendTimer(60);
+    setRecoveryCodeInput('');
+    setRecoveryError(null);
+    showToast(`✓ Nuevo código de seguridad generado: ${generatedCode}`);
+  };
+
+  const handleVerifyRecoveryCode = (e: React.FormEvent) => {
+    e.preventDefault();
+    setRecoveryError(null);
+    const cleanCode = recoveryCodeInput.trim();
+    if (!cleanCode) {
+      setRecoveryError('Ingresa el código de 6 dígitos enviado.');
+      return;
+    }
+    if (cleanCode !== recoverySecurityCode) {
+      setRecoveryError('El código ingresado es incorrecto. Verifica el número o solicita uno nuevo.');
+      return;
+    }
+
+    setIsProcessingRecovery(true);
+    setTimeout(() => {
+      setIsProcessingRecovery(false);
+      setRecoveryStep(3);
+      showToast('✓ Identidad validada correctamente. Ingresa tu nueva contraseña.');
+    }, 400);
+  };
+
+  const handleSaveNewPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    setRecoveryError(null);
+
+    if (recoveryNewPassword.length < 6) {
+      setRecoveryError('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+    if (recoveryNewPassword !== recoveryConfirmPassword) {
+      setRecoveryError('Las contraseñas no coinciden. Por favor verifícalas.');
+      return;
+    }
+    if (!recoveryAccountData?.identifier) {
+      setRecoveryError('No se pudo identificar la cuenta para actualizar. Inténtalo de nuevo.');
+      return;
+    }
+
+    setIsProcessingRecovery(true);
+    setTimeout(() => {
+      setIsProcessingRecovery(false);
+      const res = updateAccountPassword(recoveryAccountData.identifier!, recoveryNewPassword);
+      if (!res.success) {
+        setRecoveryError(res.message);
+        return;
+      }
+
+      // Automatically log the user in with their brand new credentials
+      const loginRes = loginWithCredentials(recoveryAccountData.identifier!, recoveryNewPassword);
+      if (loginRes.success) {
+        showToast(`¡Contraseña restablecida! Bienvenido, ${recoveryAccountData.accountName}.`);
+        setCurrentView('account');
+      } else {
+        setLoginIdentifier(recoveryAccountData.identifier!);
+        setLoginPassword(recoveryNewPassword);
+        setAuthMode('login');
+      }
+    }, 600);
+  };
+
+  const handleGenerateRecoveryPassword = () => {
+    const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    const lower = 'abcdefghijkmnopqrstuvwxyz';
+    const numbers = '23456789';
+    const symbols = '!@#$%^&*()_-+=?';
+    
+    let generated = '';
+    generated += upper[Math.floor(Math.random() * upper.length)];
+    generated += upper[Math.floor(Math.random() * upper.length)];
+    generated += lower[Math.floor(Math.random() * lower.length)];
+    generated += lower[Math.floor(Math.random() * lower.length)];
+    generated += numbers[Math.floor(Math.random() * numbers.length)];
+    generated += numbers[Math.floor(Math.random() * numbers.length)];
+    generated += symbols[Math.floor(Math.random() * symbols.length)];
+    generated += symbols[Math.floor(Math.random() * symbols.length)];
+
+    const all = upper + lower + numbers + symbols;
+    for (let i = 0; i < 4; i++) {
+      generated += all[Math.floor(Math.random() * all.length)];
+    }
+
+    const shuffled = generated.split('').sort(() => 0.5 - Math.random()).join('');
+    setRecoveryNewPassword(shuffled);
+    setRecoveryConfirmPassword(shuffled);
+    setShowRecoveryNewPassword(true);
+    setShowRecoveryConfirmPassword(true);
+    setRecoveryError(null);
+    showToast('¡Contraseña de alta seguridad generada y lista para aplicar!');
   };
 
   // --- VALIDATE REGISTER FORM ---
@@ -424,8 +623,9 @@ export const AuthView: React.FC = () => {
           ) : (
             <>
               {/* TABS SWITCHER */}
-              <div className="flex bg-surface-container-low p-1.5 rounded-2xl border border-surface-container text-xs font-bold">
+              <div className="flex bg-surface-container-low p-1.5 rounded-2xl border border-surface-container text-xs font-bold gap-1">
                 <button
+                  type="button"
                   onClick={() => {
                     setAuthMode('login');
                     setLoginError(null);
@@ -440,6 +640,7 @@ export const AuthView: React.FC = () => {
                   <span>Iniciar Sesión</span>
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
                     setAuthMode('register');
                     setRegErrors({});
@@ -451,7 +652,25 @@ export const AuthView: React.FC = () => {
                   }`}
                 >
                   <span className="material-symbols-outlined text-base">person_add</span>
-                  <span>Crear Cuenta Nueva</span>
+                  <span>Crear Cuenta</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('recovery');
+                    setRecoveryError(null);
+                    if (loginIdentifier.trim() && !recoveryIdentifier) {
+                      setRecoveryIdentifier(loginIdentifier.trim());
+                    }
+                  }}
+                  className={`flex-1 py-3 rounded-xl transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
+                    authMode === 'recovery'
+                      ? 'bg-[#F07F00] text-white shadow-md'
+                      : 'text-outline hover:text-on-surface'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-base">lock_reset</span>
+                  <span>Recuperar Clave</span>
                 </button>
               </div>
 
@@ -495,10 +714,18 @@ export const AuthView: React.FC = () => {
                         </label>
                         <button
                           type="button"
-                          onClick={() => showToast('Se ha enviado un enlace de recuperación seguro a tu correo registrado')}
-                          className="text-[11px] text-primary hover:underline font-semibold cursor-pointer"
+                          onClick={() => {
+                            setAuthMode('recovery');
+                            setRecoveryStep(1);
+                            setRecoveryError(null);
+                            if (loginIdentifier.trim()) {
+                              setRecoveryIdentifier(loginIdentifier.trim());
+                            }
+                          }}
+                          className="text-[11px] text-[#F07F00] hover:text-[#d97300] hover:underline font-bold cursor-pointer flex items-center gap-1"
                         >
-                          ¿Olvidaste tu contraseña?
+                          <span className="material-symbols-outlined text-[13px]">lock_reset</span>
+                          <span>¿Olvidaste tu contraseña?</span>
                         </button>
                       </div>
                       <div className="relative">
@@ -637,7 +864,7 @@ export const AuthView: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              ) : (
+              ) : authMode === 'register' ? (
                 /* REGISTER FORM */
                 <form onSubmit={handleRegisterSubmit} className="space-y-4">
                   {regErrors.form && (
@@ -1046,6 +1273,545 @@ export const AuthView: React.FC = () => {
                     </button>
                   </div>
                 </form>
+              ) : (
+                /* RECOVERY FLOW - 3 STEPS */
+                <div className="space-y-6">
+                  {/* Step Progress Indicators */}
+                  <div className="bg-surface-container-low p-2.5 rounded-2xl border border-surface-container">
+                    <div className="flex items-center justify-between gap-1">
+                      {/* Step 1 Pill */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (recoveryStep > 1) {
+                            setRecoveryStep(1);
+                            setRecoveryError(null);
+                          }
+                        }}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
+                          recoveryStep === 1
+                            ? 'bg-[#212955] text-white shadow-sm'
+                            : recoveryStep > 1
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                            : 'text-outline hover:text-on-surface'
+                        }`}
+                      >
+                        {recoveryStep > 1 ? (
+                          <span className="material-symbols-outlined text-sm text-emerald-600">check_circle</span>
+                        ) : (
+                          <span className="w-4 h-4 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px]">1</span>
+                        )}
+                        <span className="truncate">1. Identificación</span>
+                      </button>
+
+                      {/* Divider */}
+                      <div className={`h-0.5 w-3 sm:w-6 transition-colors ${recoveryStep >= 2 ? 'bg-emerald-500' : 'bg-surface-container'}`} />
+
+                      {/* Step 2 Pill */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (recoveryStep === 3) {
+                            setRecoveryStep(2);
+                            setRecoveryError(null);
+                          }
+                        }}
+                        disabled={recoveryStep < 2}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-[11px] font-bold transition-all ${
+                          recoveryStep === 2
+                            ? 'bg-[#F07F00] text-white shadow-sm'
+                            : recoveryStep > 2
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 cursor-pointer'
+                            : 'text-outline/50 cursor-not-allowed opacity-60'
+                        }`}
+                      >
+                        {recoveryStep > 2 ? (
+                          <span className="material-symbols-outlined text-sm text-emerald-600">check_circle</span>
+                        ) : (
+                          <span className="w-4 h-4 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px]">2</span>
+                        )}
+                        <span className="truncate">2. Código</span>
+                      </button>
+
+                      {/* Divider */}
+                      <div className={`h-0.5 w-3 sm:w-6 transition-colors ${recoveryStep === 3 ? 'bg-[#F07F00]' : 'bg-surface-container'}`} />
+
+                      {/* Step 3 Pill */}
+                      <div
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-[11px] font-bold transition-all ${
+                          recoveryStep === 3
+                            ? 'bg-[#212955] text-white shadow-sm'
+                            : 'text-outline/50 opacity-60'
+                        }`}
+                      >
+                        <span className="w-4 h-4 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px]">3</span>
+                        <span className="truncate">3. Nueva Clave</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ERROR ALERT */}
+                  {recoveryError && (
+                    <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex items-start gap-2 animate-shake">
+                      <span className="material-symbols-outlined text-base shrink-0 text-red-500">error</span>
+                      <div className="flex-1">
+                        <span className="font-bold block">Atención:</span>
+                        <span>{recoveryError}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* STEP 1: IDENTIFICATION */}
+                  {recoveryStep === 1 && (
+                    <form onSubmit={handleStartRecoverySearch} className="space-y-4">
+                      <div className="space-y-1">
+                        <h4 className="font-headline font-bold text-base text-on-surface flex items-center gap-2">
+                          <span className="material-symbols-outlined text-primary text-xl">contact_support</span>
+                          <span>Identifica tu cuenta de usuario</span>
+                        </h4>
+                        <p className="text-xs text-outline leading-relaxed">
+                          Ingresa el correo electrónico o el número de documento de identidad (DNI o RUC) registrado en Nor Celis Automotriz.
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-on-surface mb-1">
+                          Correo Electrónico o N° Documento (DNI/RUC) *
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={recoveryIdentifier}
+                            onChange={(e) => {
+                              setRecoveryIdentifier(e.target.value);
+                              setRecoveryError(null);
+                            }}
+                            placeholder="ej. carlos.mendoza@norcelis.pe o 74819203"
+                            className="w-full bg-surface-container-low border border-surface-container rounded-xl pl-10 pr-4 py-3 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                            required
+                            autoFocus
+                          />
+                          <span className="material-symbols-outlined absolute left-3 top-3 text-outline text-lg pointer-events-none">
+                            badge
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* QUICK DEMO SELECTOR FOR RECOVERY */}
+                      <div className="p-3.5 bg-surface-container-low rounded-2xl border border-surface-container space-y-2">
+                        <div className="text-[11px] font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-sm text-[#F07F00]">smart_toy</span>
+                          <span>Cuentas de prueba para recuperación rápida:</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRecoveryIdentifier('carlos.mendoza@norcelis.pe');
+                              setRecoveryError(null);
+                            }}
+                            className="p-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-left transition-all cursor-pointer group"
+                          >
+                            <div className="font-bold text-[11px] text-[#212955] group-hover:text-[#F07F00] transition-colors flex items-center justify-between">
+                              <span>Carlos Mendoza (Cliente)</span>
+                              <span className="material-symbols-outlined text-xs">touch_app</span>
+                            </div>
+                            <div className="text-[10px] text-outline font-mono">carlos.mendoza@norcelis.pe</div>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRecoveryIdentifier('admin@norcelis.pe');
+                              setRecoveryError(null);
+                            }}
+                            className="p-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-left transition-all cursor-pointer group"
+                          >
+                            <div className="font-bold text-[11px] text-[#212955] group-hover:text-[#F07F00] transition-colors flex items-center justify-between">
+                              <span>Admin Nor Celis</span>
+                              <span className="material-symbols-outlined text-xs">touch_app</span>
+                            </div>
+                            <div className="text-[10px] text-outline font-mono">admin@norcelis.pe</div>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Submit action */}
+                      <div className="pt-2 space-y-2">
+                        <button
+                          type="submit"
+                          disabled={isProcessingRecovery}
+                          className="w-full bg-[#F07F00] hover:bg-[#d97300] text-white py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                        >
+                          {isProcessingRecovery ? (
+                            <>
+                              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                              <span>Localizando cuenta en la red...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="material-symbols-outlined text-lg">forward_to_inbox</span>
+                              <span>Buscar Cuenta &amp; Enviar Código</span>
+                            </>
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAuthMode('login');
+                            setRecoveryError(null);
+                          }}
+                          className="w-full py-2.5 text-xs font-bold text-outline hover:text-on-surface transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-sm">arrow_back</span>
+                          <span>Recordé mi contraseña, regresar a Iniciar Sesión</span>
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  {/* STEP 2: VERIFY SECURITY CODE */}
+                  {recoveryStep === 2 && (
+                    <form onSubmit={handleVerifyRecoveryCode} className="space-y-4">
+                      <div className="space-y-1">
+                        <h4 className="font-headline font-bold text-base text-on-surface flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[#F07F00] text-xl">mark_email_read</span>
+                          <span>Código de Verificación Temporal</span>
+                        </h4>
+                        <p className="text-xs text-outline leading-relaxed">
+                          Hemos generado un código de 6 dígitos para validar la identidad del titular de la cuenta.
+                        </p>
+                      </div>
+
+                      {/* Target Account Badge */}
+                      {recoveryAccountData && (
+                        <div className="bg-primary/5 border border-primary/15 rounded-2xl p-3.5 flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center font-bold text-sm shrink-0">
+                            <span className="material-symbols-outlined text-lg">verified_user</span>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs font-bold text-on-surface truncate">
+                              {recoveryAccountData.accountName}
+                            </div>
+                            <div className="text-[11px] text-outline flex flex-wrap gap-x-3 gap-y-0.5">
+                              <span>Correo: <strong className="text-on-surface">{recoveryAccountData.maskedEmail}</strong></span>
+                              <span>Teléfono: <strong className="text-on-surface">{recoveryAccountData.maskedPhone}</strong></span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* SIMULATED CODE BANNER */}
+                      <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/30 rounded-2xl p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="text-[11px] font-extrabold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-sm text-[#F07F00]">notifications_active</span>
+                            <span>Código de Seguridad Simulado (SMS / Correo)</span>
+                          </div>
+                          <span className="text-[9px] font-bold bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full uppercase">
+                            Prueba Rápida
+                          </span>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3 rounded-xl border border-amber-200 shadow-2xs">
+                          <div className="text-center sm:text-left">
+                            <div className="text-[10px] text-outline font-semibold">CÓDIGO GENERADO:</div>
+                            <div className="text-2xl font-mono font-black text-[#212955] tracking-widest select-all">
+                              {recoverySecurityCode}
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRecoveryCodeInput(recoverySecurityCode);
+                              setRecoveryError(null);
+                              showToast('✓ Código autocompletado en el formulario');
+                            }}
+                            className="w-full sm:w-auto bg-[#212955] hover:bg-[#181f42] text-white font-bold text-xs py-2 px-3.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                          >
+                            <span className="material-symbols-outlined text-sm">content_paste</span>
+                            <span>Autocompletar Código</span>
+                          </button>
+                        </div>
+                        <p className="text-[10px] text-amber-800 leading-tight">
+                          En un entorno de producción, este código se envía vía SMS al celular y al correo certificado. En esta demo interactiva, puedes pulsar directamente &ldquo;Autocompletar Código&rdquo; para validar.
+                        </p>
+                      </div>
+
+                      {/* Code input */}
+                      <div>
+                        <label className="block text-xs font-bold text-on-surface mb-1 text-center">
+                          Ingresa los 6 dígitos recibidos
+                        </label>
+                        <div className="max-w-xs mx-auto">
+                          <input
+                            type="text"
+                            maxLength={6}
+                            value={recoveryCodeInput}
+                            onChange={(e) => {
+                              const val = e.target.value.replace(/[^0-9]/g, '');
+                              setRecoveryCodeInput(val);
+                              setRecoveryError(null);
+                            }}
+                            placeholder="000000"
+                            className="w-full bg-surface-container-low border-2 border-surface-container rounded-2xl py-3 px-4 text-center font-mono font-black text-2xl tracking-[0.4em] text-[#212955] placeholder:text-slate-300 focus:outline-none focus:border-[#F07F00] focus:ring-2 focus:ring-[#F07F00]/20"
+                            required
+                            autoFocus
+                          />
+                        </div>
+                      </div>
+
+                      {/* Resend timer */}
+                      <div className="text-center pt-1">
+                        {recoveryResendTimer > 0 ? (
+                          <span className="text-xs text-outline font-medium flex items-center justify-center gap-1">
+                            <span className="material-symbols-outlined text-sm animate-spin">timelapse</span>
+                            <span>Reenviar nuevo código en <strong>{recoveryResendTimer}s</strong></span>
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={handleResendRecoveryCode}
+                            className="text-xs text-[#F07F00] hover:text-[#d97300] hover:underline font-bold inline-flex items-center gap-1 cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-sm">cached</span>
+                            <span>Reenviar un nuevo código de seguridad</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="pt-2 space-y-2">
+                        <button
+                          type="submit"
+                          disabled={isProcessingRecovery || recoveryCodeInput.length < 6}
+                          className="w-full bg-[#F07F00] hover:bg-[#d97300] text-white py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                        >
+                          {isProcessingRecovery ? (
+                            <>
+                              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                              <span>Validando código...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="material-symbols-outlined text-lg">check_circle</span>
+                              <span>Verificar Código &amp; Continuar</span>
+                            </>
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRecoveryStep(1);
+                            setRecoveryError(null);
+                          }}
+                          className="w-full py-2.5 text-xs font-bold text-outline hover:text-on-surface transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-sm">arrow_back</span>
+                          <span>Cambiar de cuenta o correo</span>
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  {/* STEP 3: NEW PASSWORD */}
+                  {recoveryStep === 3 && (
+                    <form onSubmit={handleSaveNewPassword} className="space-y-4">
+                      <div className="space-y-1">
+                        <h4 className="font-headline font-bold text-base text-on-surface flex items-center gap-2">
+                          <span className="material-symbols-outlined text-emerald-600 text-xl">lock_open</span>
+                          <span>Establece tu nueva contraseña</span>
+                        </h4>
+                        <p className="text-xs text-outline leading-relaxed">
+                          Ingresa tu nueva clave de acceso para <strong>{recoveryAccountData?.accountName}</strong>. Asegúrate de que sea robusta para proteger tu historial automotriz.
+                        </p>
+                      </div>
+
+                      {/* Automatic Secure Password Generator Button */}
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={handleGenerateRecoveryPassword}
+                          className="text-[11px] font-bold text-primary hover:text-[#F07F00] flex items-center gap-1 cursor-pointer transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-sm">auto_fix_high</span>
+                          <span>Generar contraseña segura automática</span>
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold text-on-surface mb-1">
+                            Nueva Contraseña *
+                          </label>
+                          <div className="relative">
+                            <input
+                              type={showRecoveryNewPassword ? 'text' : 'password'}
+                              value={recoveryNewPassword}
+                              onChange={(e) => {
+                                setRecoveryNewPassword(e.target.value);
+                                setRecoveryError(null);
+                              }}
+                              placeholder="Mínimo 8 caracteres"
+                              className="w-full bg-surface-container-low border border-surface-container rounded-xl pl-3 pr-10 py-2.5 text-xs font-mono font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                              required
+                              autoFocus
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowRecoveryNewPassword(!showRecoveryNewPassword)}
+                              className="absolute right-3 top-2.5 text-outline hover:text-on-surface cursor-pointer"
+                            >
+                              <span className="material-symbols-outlined text-base">
+                                {showRecoveryNewPassword ? 'visibility_off' : 'visibility'}
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-on-surface mb-1">
+                            Confirmar Nueva Contraseña *
+                          </label>
+                          <div className="relative">
+                            <input
+                              type={showRecoveryConfirmPassword ? 'text' : 'password'}
+                              value={recoveryConfirmPassword}
+                              onChange={(e) => {
+                                setRecoveryConfirmPassword(e.target.value);
+                                setRecoveryError(null);
+                              }}
+                              placeholder="Repite la contraseña"
+                              className="w-full bg-surface-container-low border border-surface-container rounded-xl pl-3 pr-10 py-2.5 text-xs font-mono font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                              required
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowRecoveryConfirmPassword(!showRecoveryConfirmPassword)}
+                              className="absolute right-3 top-2.5 text-outline hover:text-on-surface cursor-pointer"
+                            >
+                              <span className="material-symbols-outlined text-base">
+                                {showRecoveryConfirmPassword ? 'visibility_off' : 'visibility'}
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Password Strength Meter */}
+                      <div className="space-y-1.5 pt-1">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="font-semibold text-outline">Seguridad de la clave:</span>
+                          <span className={`font-bold ${recoveryPasswordStrengthMeta.color.split(' ')[1]}`}>
+                            {recoveryPasswordStrengthMeta.label}
+                          </span>
+                        </div>
+                        <div className="w-full h-1.5 bg-surface-container rounded-full overflow-hidden flex gap-1">
+                          <div
+                            className={`h-full transition-all duration-300 rounded-full ${
+                              recoveryPasswordStrengthScore >= 1 ? recoveryPasswordStrengthMeta.color.split(' ')[0] : 'bg-transparent'
+                            }`}
+                            style={{ width: '25%' }}
+                          />
+                          <div
+                            className={`h-full transition-all duration-300 rounded-full ${
+                              recoveryPasswordStrengthScore >= 2 ? recoveryPasswordStrengthMeta.color.split(' ')[0] : 'bg-transparent'
+                            }`}
+                            style={{ width: '25%' }}
+                          />
+                          <div
+                            className={`h-full transition-all duration-300 rounded-full ${
+                              recoveryPasswordStrengthScore >= 3 ? recoveryPasswordStrengthMeta.color.split(' ')[0] : 'bg-transparent'
+                            }`}
+                            style={{ width: '25%' }}
+                          />
+                          <div
+                            className={`h-full transition-all duration-300 rounded-full ${
+                              recoveryPasswordStrengthScore >= 4 ? recoveryPasswordStrengthMeta.color.split(' ')[0] : 'bg-transparent'
+                            }`}
+                            style={{ width: '25%' }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Visual Criteria Checklist */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 pt-1 text-[10px]">
+                        <div className={`flex items-center gap-1 ${recoveryPasswordCriteria.minLength ? 'text-emerald-700 font-bold' : 'text-outline'}`}>
+                          <span className="material-symbols-outlined text-xs">
+                            {recoveryPasswordCriteria.minLength ? 'check_circle' : 'radio_button_unchecked'}
+                          </span>
+                          <span>Mín. 8 caracteres</span>
+                        </div>
+                        <div className={`flex items-center gap-1 ${recoveryPasswordCriteria.hasUpper ? 'text-emerald-700 font-bold' : 'text-outline'}`}>
+                          <span className="material-symbols-outlined text-xs">
+                            {recoveryPasswordCriteria.hasUpper ? 'check_circle' : 'radio_button_unchecked'}
+                          </span>
+                          <span>Mayúscula (A-Z)</span>
+                        </div>
+                        <div className={`flex items-center gap-1 ${recoveryPasswordCriteria.hasLower ? 'text-emerald-700 font-bold' : 'text-outline'}`}>
+                          <span className="material-symbols-outlined text-xs">
+                            {recoveryPasswordCriteria.hasLower ? 'check_circle' : 'radio_button_unchecked'}
+                          </span>
+                          <span>Minúscula (a-z)</span>
+                        </div>
+                        <div className={`flex items-center gap-1 ${recoveryPasswordCriteria.hasNumber ? 'text-emerald-700 font-bold' : 'text-outline'}`}>
+                          <span className="material-symbols-outlined text-xs">
+                            {recoveryPasswordCriteria.hasNumber ? 'check_circle' : 'radio_button_unchecked'}
+                          </span>
+                          <span>Número (0-9)</span>
+                        </div>
+                        <div className={`flex items-center gap-1 ${recoveryPasswordCriteria.hasSymbol ? 'text-emerald-700 font-bold' : 'text-outline'}`}>
+                          <span className="material-symbols-outlined text-xs">
+                            {recoveryPasswordCriteria.hasSymbol ? 'check_circle' : 'radio_button_unchecked'}
+                          </span>
+                          <span>Símbolo (!@#$%)</span>
+                        </div>
+                        <div className={`flex items-center gap-1 ${recoveryNewPassword && recoveryNewPassword === recoveryConfirmPassword ? 'text-emerald-700 font-bold' : 'text-outline'}`}>
+                          <span className="material-symbols-outlined text-xs">
+                            {recoveryNewPassword && recoveryNewPassword === recoveryConfirmPassword ? 'check_circle' : 'radio_button_unchecked'}
+                          </span>
+                          <span>Coinciden</span>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="pt-2 space-y-2">
+                        <button
+                          type="submit"
+                          disabled={isProcessingRecovery}
+                          className="w-full bg-[#212955] hover:bg-[#181f42] text-white py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                        >
+                          {isProcessingRecovery ? (
+                            <>
+                              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                              <span>Actualizando clave y credenciales...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="material-symbols-outlined text-lg">save</span>
+                              <span>Guardar Nueva Contraseña &amp; Acceder</span>
+                            </>
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAuthMode('login');
+                            setRecoveryError(null);
+                          }}
+                          className="w-full py-2.5 text-xs font-bold text-outline hover:text-on-surface transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-sm">close</span>
+                          <span>Cancelar y regresar</span>
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
               )}
             </>
           )}

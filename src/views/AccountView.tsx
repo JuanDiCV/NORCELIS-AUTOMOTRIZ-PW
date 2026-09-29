@@ -14,7 +14,7 @@ import { generateMaintenanceCertificatePdf, generateWishlistQuotePdf } from '../
 import { SITE_CONFIG } from '../config/siteConfig';
 
 export const AccountView: React.FC = () => {
-  const { user, logoutUser, setCurrentView, showToast, setIsGarageModalOpen } = useApp();
+  const { user, logoutUser, setCurrentView, showToast, setIsGarageModalOpen, navigateToTracking } = useApp();
 
   const [activeTab, setActiveTab] = useState<'vehicles' | 'appointments' | 'orders' | 'security'>('vehicles');
 
@@ -796,7 +796,16 @@ export const AccountView: React.FC = () => {
                       <span>Código de Guía: <strong className="font-mono text-on-surface">{ord.trackingCode}</strong></span>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => navigateToTracking(ord.trackingCode)}
+                        className="bg-[#212955] hover:bg-[#181f42] text-white font-bold px-3 py-1.5 rounded-xl border border-[#212955] text-xs flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                        title="Rastrear envío en tiempo real"
+                      >
+                        <span className="material-symbols-outlined text-sm text-[#F07F00]">local_shipping</span>
+                        <span>Rastrear Envío</span>
+                      </button>
+
                       <button
                         onClick={() => {
                           try {

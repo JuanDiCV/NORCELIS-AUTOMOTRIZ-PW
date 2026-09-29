@@ -29,6 +29,8 @@ import {
   SpeedometerGaugeIcon,
 } from '../components/AutoIcons';
 
+import { DEFAULT_CINEMATIC_CATEGORIES, DEFAULT_OFFICIAL_BRANDS } from '../data/homeShowcaseData';
+
 export const HomeView: React.FC = () => {
   const {
     setCurrentView,
@@ -42,7 +44,12 @@ export const HomeView: React.FC = () => {
     isInWishlist,
     showToast,
     navigateToPartsCatalog,
+    homeCategories,
+    officialBrands,
   } = useApp();
+
+  const categoriesList = homeCategories && homeCategories.length > 0 ? homeCategories : DEFAULT_CINEMATIC_CATEGORIES;
+  const brandsList = officialBrands && officialBrands.length > 0 ? officialBrands : DEFAULT_OFFICIAL_BRANDS;
 
   const [heroTab, setHeroTab] = useState<'parts' | 'workshop' | 'new_cars' | 'used_cars'>('parts');
   const [filterYear, setFilterYear] = useState('2025');
@@ -50,6 +57,7 @@ export const HomeView: React.FC = () => {
   const [filterModel, setFilterModel] = useState('RAV4 Hybrid');
   const [filterPlate, setFilterPlate] = useState('');
   const [partsShowcaseCategory, setPartsShowcaseCategory] = useState<string>('todos');
+  const [categoryDisplayMode, setCategoryDisplayMode] = useState<'flagship' | 'all'>('flagship');
 
   const newCars = vehicles.filter((v) => v.condition === 'nuevo');
   const usedCars = vehicles.filter((v) => v.condition === 'seminuevo');
@@ -95,8 +103,213 @@ export const HomeView: React.FC = () => {
         <PromoHeroCarousel />
       </section>
 
-      {/* 2. Quick Compatibility & Auto Parts Finder */}
-      <section className="px-gutter -mt-4">
+      {/* 2. CATEGORÍAS POPULARES DE AUTOPARTES & MARCAS - CINEMATIC CARDS + INFINITE MARQUEE */}
+      <section className="px-gutter">
+        <div className="max-w-7xl mx-auto space-y-8">
+          {/* Header with Title and Mode Switcher */}
+          <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-4 border-b border-white/15 pb-4">
+            <div>
+              <span className="text-xs font-extrabold uppercase tracking-widest text-[#F07F00] mb-1.5 block">
+                Líneas Especializadas Nor Celis
+              </span>
+              <h2 className="font-headline font-black text-2xl sm:text-3xl text-white tracking-wide">
+                Categorías de Autopartes &amp; Repuestos
+              </h2>
+              <p className="text-xs sm:text-sm text-white/80 mt-1 font-medium max-w-2xl">
+                Autopartes de ingeniería certificada con garantía de fábrica y servicio de instalación opcional en taller.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2.5">
+              {/* Toggle 4 Flagship vs 6 All */}
+              <div className="flex bg-white/10 p-1 rounded-xl border border-white/15 text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => setCategoryDisplayMode('flagship')}
+                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                    categoryDisplayMode === 'flagship'
+                      ? 'bg-[#F07F00] text-white shadow-sm'
+                      : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  Líneas Principales (4)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCategoryDisplayMode('all')}
+                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                    categoryDisplayMode === 'all'
+                      ? 'bg-[#F07F00] text-white shadow-sm'
+                      : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  Todas las Líneas (6)
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => navigateToPartsCatalog('todos')}
+                className="min-h-[40px] px-4 py-2 text-xs font-bold text-white hover:text-[#F07F00] bg-white/10 hover:bg-white/20 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer border border-white/20"
+              >
+                <span>Ver Catálogo Completo ({autoParts.length})</span>
+                <AppleChevronRightIcon size={16} />
+              </button>
+            </div>
+          </div>
+
+          {/* Cinematic Category Cards (Inspired by Fox Factory / Live Valve Reference) */}
+          <div
+            className={`grid gap-4 sm:gap-5 ${
+              categoryDisplayMode === 'flagship'
+                ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+                : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+            }`}
+          >
+            {(categoryDisplayMode === 'flagship'
+              ? categoriesList.slice(0, 4)
+              : categoriesList
+            ).map((cat) => (
+              <button
+                key={cat.code}
+                type="button"
+                onClick={() => navigateToPartsCatalog(cat.code)}
+                className="group relative h-[440px] sm:h-[480px] rounded-3xl overflow-hidden border border-white/15 hover:border-white/80 transition-all duration-500 text-left flex flex-col justify-end p-6 cursor-pointer shadow-2xl hover:shadow-[0_0_35px_rgba(255,255,255,0.25)] hover:-translate-y-1"
+              >
+                {/* Background Image with Grayscale-to-Color + Smooth Scale on hover */}
+                <img
+                  src={cat.image}
+                  alt={cat.name}
+                  className="absolute inset-0 w-full h-full object-cover grayscale contrast-[1.25] brightness-[0.55] group-hover:grayscale-0 group-hover:contrast-[1.15] group-hover:brightness-[1.1] group-hover:scale-105 transition-all duration-700 ease-out cinematic-card-img"
+                  loading="lazy"
+                />
+
+                {/* Dark cinematic gradient overlays */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/20 opacity-90 group-hover:opacity-75 transition-opacity duration-500" />
+
+                {/* Ambient warm glow at the base on hover */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#F07F00]/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+                {/* Top Floating Badge */}
+                <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#F07F00] bg-black/75 px-3 py-1 rounded-full border border-[#F07F00]/30 backdrop-blur-md">
+                    {cat.tag}
+                  </span>
+                  <span className="text-[10px] font-bold text-white/70 bg-white/10 px-2.5 py-1 rounded-full border border-white/15 backdrop-blur-md">
+                    {cat.badge}
+                  </span>
+                </div>
+
+                {/* Bottom Content Area */}
+                <div className="relative z-10 space-y-2">
+                  <h3 className="font-headline font-black text-3xl sm:text-4xl text-white tracking-wider leading-none uppercase drop-shadow-md group-hover:text-white transition-colors">
+                    {cat.name}
+                  </h3>
+                  <p className="text-xs text-white/75 line-clamp-2 leading-relaxed font-medium">
+                    {cat.subtitle}
+                  </p>
+
+                  {/* Action Link like "LEARN MORE ↗" in reference image */}
+                  <div className="pt-3 border-t border-white/20 flex items-center justify-between">
+                    <span className="font-headline font-black tracking-widest text-sm text-white group-hover:text-[#F07F00] flex items-center gap-1.5 transition-colors">
+                      <span>VER REPUESTOS</span>
+                      <span className="text-base group-hover:translate-x-1 group-hover:-translate-y-0.5 transition-transform duration-300">
+                        ↗
+                      </span>
+                    </span>
+                    <span className="text-[11px] font-bold text-white/60 group-hover:text-white transition-colors">
+                      {cat.count}
+                    </span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Marcas Oficiales - Pasarela Continua Infinita (Infinite Marquee Carousel) */}
+          <div className="space-y-3 pt-2">
+            <div className="px-1">
+              <h3 className="text-xs font-black uppercase tracking-wider text-white">
+                Marcas Oficiales Garantizadas en Nor Celis Automotriz
+              </h3>
+            </div>
+
+            {/* Marquee Track with Smooth Left/Right Gradient Mask */}
+            <div className="relative overflow-hidden rounded-2xl bg-black/40 border border-white/10 p-3 backdrop-blur-md">
+              {/* Left & Right gradient fades for smooth marquee blending */}
+              <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-black/85 to-transparent z-10" />
+              <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-black/85 to-transparent z-10" />
+
+              <div className="animate-marquee-infinite flex gap-4 py-1">
+                {/* Batch 1 */}
+                {brandsList.map((brand, bIdx) => (
+                  <button
+                    key={`brand-1-${bIdx}`}
+                    type="button"
+                    onClick={() => navigateToPartsCatalog('todos', brand.code)}
+                    className="group shrink-0 flex items-center gap-3.5 px-5 py-3 rounded-2xl bg-white/[0.05] hover:bg-white/[0.14] border border-white/10 hover:border-[#F07F00]/70 transition-all duration-300 text-left cursor-pointer shadow-md hover:shadow-[0_0_25px_rgba(240,127,0,0.3)] hover:scale-105"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center font-headline font-black text-sm text-white/90 border border-white/15 group-hover:border-[#F07F00] group-hover:text-[#F07F00] group-hover:bg-[#F07F00]/15 transition-all overflow-hidden p-1">
+                      {brand.logoUrl ? (
+                        <img src={brand.logoUrl} alt={brand.name} className="w-full h-full object-contain" />
+                      ) : (
+                        brand.iconText
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-xs font-black text-white uppercase tracking-wider group-hover:text-[#F07F00] transition-colors flex items-center gap-1">
+                        <span>{brand.name}</span>
+                        <span className="text-xs text-white/40 group-hover:text-[#F07F00] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all">
+                          ↗
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-white/60 flex items-center gap-1.5 mt-0.5">
+                        <span>{brand.tag}</span>
+                        <span className="w-1 h-1 rounded-full bg-white/30"></span>
+                        <span className="text-white/40">{brand.origin}</span>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+
+                {/* Batch 2 (Duplicate for continuous infinite loop without seams) */}
+                {brandsList.map((brand, bIdx) => (
+                  <button
+                    key={`brand-2-${bIdx}`}
+                    type="button"
+                    onClick={() => navigateToPartsCatalog('todos', brand.code)}
+                    className="group shrink-0 flex items-center gap-3.5 px-5 py-3 rounded-2xl bg-white/[0.05] hover:bg-white/[0.14] border border-white/10 hover:border-[#F07F00]/70 transition-all duration-300 text-left cursor-pointer shadow-md hover:shadow-[0_0_25px_rgba(240,127,0,0.3)] hover:scale-105"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center font-headline font-black text-sm text-white/90 border border-white/15 group-hover:border-[#F07F00] group-hover:text-[#F07F00] group-hover:bg-[#F07F00]/15 transition-all overflow-hidden p-1">
+                      {brand.logoUrl ? (
+                        <img src={brand.logoUrl} alt={brand.name} className="w-full h-full object-contain" />
+                      ) : (
+                        brand.iconText
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-xs font-black text-white uppercase tracking-wider group-hover:text-[#F07F00] transition-colors flex items-center gap-1">
+                        <span>{brand.name}</span>
+                        <span className="text-xs text-white/40 group-hover:text-[#F07F00] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all">
+                          ↗
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-white/60 flex items-center gap-1.5 mt-0.5">
+                        <span>{brand.tag}</span>
+                        <span className="w-1 h-1 rounded-full bg-white/30"></span>
+                        <span className="text-white/40">{brand.origin}</span>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Quick Compatibility & Auto Parts Finder */}
+      <section className="px-gutter">
         <div className="max-w-7xl mx-auto">
           <div className="bg-surface-container-lowest text-on-surface rounded-3xl shadow-xl border border-surface-container overflow-hidden">
             {/* Tabs */}
@@ -286,7 +499,7 @@ export const HomeView: React.FC = () => {
         </div>
       </section>
 
-      {/* Trust Strip con Estilo Apple y Microgradientes */}
+      {/* 4. Trust Strip con Estilo Apple y Microgradientes */}
       <section className="px-gutter">
         <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="p-4 rounded-2xl bg-surface-container-low border border-surface-container flex items-center gap-3.5 shadow-sm group hover:border-emerald-500/40 transition-colors">
@@ -331,93 +544,7 @@ export const HomeView: React.FC = () => {
         </div>
       </section>
 
-      {/* 3. CATEGORÍAS POPULARES DE AUTOPARTES & MARCAS */}
-      <section className="px-gutter">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-2 border-b border-white/15 pb-4">
-            <div>
-              <span className="text-xs font-bold text-[#F07F00] uppercase tracking-wider">
-                Líneas Especializadas Nor Celis
-              </span>
-              <h2 className="font-headline font-bold text-2xl text-white">
-                Categorías de Autopartes &amp; Repuestos
-              </h2>
-            </div>
-            <button
-              onClick={() => navigateToPartsCatalog('todos')}
-              className="min-h-[44px] px-3.5 py-2 text-xs font-bold text-white hover:text-[#F07F00] bg-white/10 hover:bg-white/20 rounded-xl flex items-center gap-1 transition-colors cursor-pointer border border-white/20"
-            >
-              <span>Ver todas las autopartes ({autoParts.length})</span>
-              <AppleChevronRightIcon size={16} />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-            {[
-              { name: 'Llantas Off-Road', icon: TireOffRoadIcon, desc: 'Mickey Thompson & BR', code: 'llantas', badgeVariant: 'subtle-orange' as const },
-              { name: 'Equipamiento 4x4', icon: Equip4x4Icon, desc: 'KEKO Barras & Tapas', code: 'accesorios4x4', badgeVariant: 'secondary' as const },
-              { name: 'Aceites & Fluidos', icon: LubricantOilIcon, desc: 'Mobil 1 & Delvac', code: 'lubricantes', badgeVariant: 'subtle-orange' as const },
-              { name: 'Frenos & Pastillas', icon: BrakeDiscIcon, desc: 'Brembo & Toyota OEM', code: 'frenos', badgeVariant: 'primary' as const },
-              { name: 'Detailing & PPF', icon: DetailingPPFIcon, desc: '3M Ceramic Coating', code: 'detailing', badgeVariant: 'subtle-blue' as const },
-              { name: 'Suspensión HD', icon: SuspensionHDIcon, desc: 'TRAKKO® & KYB Lift', code: 'suspension', badgeVariant: 'secondary' as const },
-            ].map((cat, i) => {
-              const IconComp = cat.icon;
-              return (
-                <button
-                  key={i}
-                  onClick={() => navigateToPartsCatalog(cat.code)}
-                  className="p-4 min-h-[44px] rounded-2xl bg-surface-container-lowest border border-surface-container hover:border-primary hover:shadow-md transition-all text-center group cursor-pointer"
-                >
-                  <AppleIconBadge variant={cat.badgeVariant} size="lg" className="mx-auto mb-3">
-                    <IconComp size={24} />
-                  </AppleIconBadge>
-                  <div className="text-xs font-bold text-on-surface group-hover:text-primary transition-colors">
-                    {cat.name}
-                  </div>
-                  <div className="text-[10px] text-outline mt-0.5 truncate">{cat.desc}</div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Marcas Oficiales Quick Filter Banner */}
-          <div className="bg-surface-container-lowest p-4 sm:p-5 rounded-2xl border border-surface-container shadow-xs">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-3">
-              <span className="text-xs font-extrabold text-primary flex items-center gap-1.5 uppercase tracking-wider">
-                <span className="material-symbols-outlined text-secondary text-sm">stars</span>
-                Marcas Oficiales Garantizadas en Nor Celis Automotriz
-              </span>
-              <span className="text-[11px] text-outline">Click en cualquier marca para ver repuestos</span>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {[
-                { name: 'TOYOTA Genuino', code: 'TOYOTA Genuino' },
-                { name: 'MICKEY THOMPSON (M/T)', code: 'Mickey Thompson' },
-                { name: 'KEKO 4X4', code: 'KEKO' },
-                { name: 'Mobil Lubricantes', code: 'Mobil' },
-                { name: 'LLumar Seguridad', code: 'LLumar' },
-                { name: 'BLACK RHINO Aros', code: 'BLACK RHINO' },
-                { name: '3M Automotive', code: '3M' },
-                { name: 'TRAKKO® AUTORUS', code: 'TRAKKO® AUTORUS' },
-                { name: 'Brembo Official', code: 'Brembo Official' },
-                { name: 'Bosch Automotive', code: 'Bosch Automotive' },
-                { name: 'KYB Shocks', code: 'KYB Shocks & Struts' },
-                { name: 'Denso Corp', code: 'Denso Corporation' },
-              ].map((brand, bIdx) => (
-                <button
-                  key={bIdx}
-                  onClick={() => navigateToPartsCatalog('todos', brand.code)}
-                  className="px-3.5 py-2 rounded-xl bg-surface-container-low hover:bg-primary hover:text-white text-on-surface text-xs font-bold border border-surface-container hover:border-primary transition-all cursor-pointer shadow-2xs flex items-center gap-1 min-h-[38px]"
-                >
-                  <span>{brand.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 4. MAIN SPOTLIGHT: AUTOPARTES & REPUESTOS MÁS VENDIDOS (PRIORIDAD PRINCIPAL) */}
+      {/* 5. MAIN SPOTLIGHT: AUTOPARTES & REPUESTOS MÁS VENDIDOS (PRIORIDAD PRINCIPAL) */}
       <section className="px-gutter">
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 border-b border-white/15 pb-4">

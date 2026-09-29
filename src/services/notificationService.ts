@@ -77,7 +77,7 @@ export const requestNotificationPermission = async (): Promise<NotificationPermi
 };
 
 /**
- * Send a compact price change notification using the Web Notification API
+ * Send a compact price change notification using the Web Notification API or Service Worker
  */
 export const sendCompactPriceAlertNotification = (
   vehicleName: string,
@@ -96,10 +96,40 @@ export const sendCompactPriceAlertNotification = (
       : '';
     const body = `Nuevo precio: S/ ${newPriceSoles.toLocaleString()}${diffText}. Haz clic para ver detalles.`;
 
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.ready
+        .then((reg) => {
+          reg.showNotification(title, {
+            body,
+            icon: '/logo-norcelis.svg',
+            badge: '/logo-norcelis.svg',
+            tag: `norcelis-price-alert-${Date.now()}`,
+            data: { url: '/' },
+          });
+        })
+        .catch(() => {
+          createDirectNotification(title, body, onClickCallback);
+        });
+      return true;
+    }
+
+    return createDirectNotification(title, body, onClickCallback);
+  } catch (e) {
+    console.error('Error creating Web Notification', e);
+    return false;
+  }
+};
+
+const createDirectNotification = (
+  title: string,
+  body: string,
+  onClickCallback?: () => void
+): boolean => {
+  try {
     const notification = new Notification(title, {
       body,
-      icon: 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=192&q=80',
-      badge: 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=96&q=80',
+      icon: '/logo-norcelis.svg',
+      badge: '/logo-norcelis.svg',
       tag: `norcelis-price-alert-${Date.now()}`,
     });
 
@@ -113,7 +143,7 @@ export const sendCompactPriceAlertNotification = (
 
     return true;
   } catch (e) {
-    console.error('Error creating Web Notification', e);
+    console.error('Error in createDirectNotification', e);
     return false;
   }
 };

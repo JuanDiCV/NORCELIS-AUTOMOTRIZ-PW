@@ -25,6 +25,8 @@ import { LocationsView } from './views/LocationsView';
 import { ClaimsBookView } from './views/ClaimsBookView';
 import { AboutView } from './views/AboutView';
 import { AdminDashboardView } from './views/AdminDashboardView';
+import { OrderTrackingView } from './views/OrderTrackingView';
+import { TermsPoliciesView } from './views/TermsPoliciesView';
 import { AdminPinModal } from './components/admin/AdminPinModal';
 
 const MainContent: React.FC = () => {
@@ -45,6 +47,22 @@ const MainContent: React.FC = () => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentView]);
+
+  // Register service-worker.js for push notifications and Mi Garaje alerts
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker
+          .register('/service-worker.js')
+          .then((registration) => {
+            // Service Worker successfully registered
+          })
+          .catch((error) => {
+            console.warn('Service Worker registration error:', error);
+          });
+      });
+    }
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#212955] text-white antialiased selection:bg-[#F07F00] selection:text-white">
@@ -69,6 +87,8 @@ const MainContent: React.FC = () => {
         {currentView === 'claims' && <ClaimsBookView />}
         {currentView === 'about' && <AboutView />}
         {currentView === 'admin' && <AdminDashboardView />}
+        {currentView === 'order-tracking' && <OrderTrackingView />}
+        {currentView === 'terms-policies' && <TermsPoliciesView />}
       </main>
 
       {/* Dealership Footer */}

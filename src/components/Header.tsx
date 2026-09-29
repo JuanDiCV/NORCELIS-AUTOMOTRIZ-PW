@@ -43,6 +43,8 @@ export const Header: React.FC = () => {
     setIsViewer360Open,
     setIsTestDriveModalOpen,
     navigateToPartsCatalog,
+    navigateToTracking,
+    navigateToTerms,
     setSelectedVehicleId,
     setSelectedPartSku,
   } = useApp();
@@ -446,22 +448,32 @@ export const Header: React.FC = () => {
 
           {/* Header Action Items */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* Active Garage Selector */}
+            {/* Active Garage Selector - Clean, Minimalist & Explicit */}
             <button
               onClick={() => setIsGarageModalOpen(true)}
-              className="flex items-center gap-2.5 px-3 py-2 min-h-[48px] rounded-xl bg-surface-container hover:bg-surface-container-high border border-surface-container-high text-left transition-all group cursor-pointer"
-              title={activeGarage ? `Mi Garaje: ${activeGarage.brand} ${activeGarage.model}` : "Agregar auto a Mi Garaje"}
-              aria-label={activeGarage ? `Mi Garaje: ${activeGarage.brand} ${activeGarage.model}` : "Agregar auto"}
+              className={`flex items-center gap-2 min-h-[44px] px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200/90 hover:border-[#F07F00]/50 hover:bg-slate-50 transition-all cursor-pointer group text-left ${
+                activeGarage ? 'bg-amber-500/5 border-amber-500/30' : 'bg-transparent'
+              }`}
+              title={activeGarage ? `Mi Garaje Virtual: ${activeGarage.brand} ${activeGarage.model} (Clic para gestionar)` : "Abrir Mi Garaje Virtual (Seleccionar vehículo)"}
+              aria-label={activeGarage ? `Mi Garaje Virtual: ${activeGarage.brand} ${activeGarage.model}` : "Mi Garaje Virtual"}
             >
-              <AppleIconBadge variant={activeGarage ? "secondary" : "subtle-orange"} size="md">
-                <GarageLiftIcon size={22} className={activeGarage ? "text-[#F07F00]" : "text-[#F07F00]"} />
-              </AppleIconBadge>
-              <div className="hidden xl:block">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-[#9D9D9C] flex items-center gap-1.5 font-body">
-                  <span>Mi Garaje</span>
-                </div>
-                <div className="text-xs font-bold text-[#212955] max-w-[125px] truncate font-body">
-                  {activeGarage ? activeGarage.model : 'Agregar auto'}
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#F07F00]/10 text-[#F07F00] shrink-0 group-hover:bg-[#F07F00] group-hover:text-white transition-colors">
+                <span className="material-symbols-outlined text-[20px]">garage</span>
+              </div>
+
+              <div className="text-left leading-tight">
+                <span className="block sm:hidden text-[11px] font-bold text-[#212955] group-hover:text-[#F07F00]">
+                  Garaje
+                </span>
+                <div className="hidden sm:block">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Mi Garaje Virtual
+                    </span>
+                  </div>
+                  <div className="text-xs font-bold text-[#212955] group-hover:text-[#F07F00] transition-colors truncate max-w-[130px]">
+                    {activeGarage ? `${activeGarage.brand} ${activeGarage.model}` : 'Elegir vehículo'}
+                  </div>
                 </div>
               </div>
             </button>
@@ -656,6 +668,20 @@ export const Header: React.FC = () => {
           >
             <DealershipPinIcon size={20} className="text-[#F07F00]" />
             <span className="font-headline text-base tracking-wide">Sede Cajamarca</span>
+          </button>
+
+          {/* Rastrear Pedido Desktop Link */}
+          <button
+            onClick={() => navigateToTracking()}
+            className={`px-3.5 py-2 min-h-[42px] rounded-xl transition-colors flex items-center gap-2 cursor-pointer ${
+              currentView === 'order-tracking'
+                ? 'bg-[#F07F00] text-white font-bold shadow-xs'
+                : 'text-on-surface-variant hover:text-[#F07F00] hover:bg-[#F07F00]/10 font-bold'
+            }`}
+            title="Seguimiento de envíos Shalom en tiempo real"
+          >
+            <span className="material-symbols-outlined text-[20px] text-[#F07F00]">local_shipping</span>
+            <span className="font-headline text-base tracking-wide">Rastrear Pedido</span>
           </button>
         </nav>
 
@@ -1368,11 +1394,25 @@ export const Header: React.FC = () => {
               <span>Mi Cuenta</span>
             </button>
             <button
+              onClick={() => { navigateToTracking(); setIsMobileNavOpen(false); }}
+              className="p-3 min-h-[44px] flex items-center justify-center gap-2 text-center bg-[#F07F00] hover:bg-[#d97300] text-white rounded-xl cursor-pointer shadow-xs"
+            >
+              <span className="material-symbols-outlined text-base">local_shipping</span>
+              <span>Rastrear Pedido</span>
+            </button>
+            <button
               onClick={() => { setCurrentView('claims'); setIsMobileNavOpen(false); }}
-              className="p-3 min-h-[44px] flex items-center justify-center gap-2 text-center bg-surface-container-low text-on-surface rounded-xl cursor-pointer"
+              className="p-3 min-h-[44px] flex items-center justify-center gap-2 text-center bg-surface-container-low text-on-surface rounded-xl cursor-pointer hover:bg-surface-container"
             >
               <OfficialQuoteIcon size={16} />
               <span>Reclamaciones</span>
+            </button>
+            <button
+              onClick={() => { navigateToTerms(); setIsMobileNavOpen(false); }}
+              className="p-3 min-h-[44px] flex items-center justify-center gap-2 text-center bg-surface-container-low text-on-surface rounded-xl cursor-pointer hover:bg-surface-container"
+            >
+              <span className="material-symbols-outlined text-base text-[#212955]">policy</span>
+              <span>Términos &amp; Garantías</span>
             </button>
           </div>
         </div>

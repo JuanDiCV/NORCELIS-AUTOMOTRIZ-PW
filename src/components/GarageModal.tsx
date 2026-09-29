@@ -1,15 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { ActiveGarageVehicle } from '../types';
-import {
-  getNotificationPermission,
-  getPriceAlertsEnabled,
-  setPriceAlertsEnabled,
-  requestNotificationPermission,
-  checkPriceVariationsForGarage,
-  triggerTestPriceAlertNotification,
-  NotificationPermissionStatus,
-} from '../services/notificationService';
 
 export const GarageModal: React.FC = () => {
   const {
@@ -25,21 +16,16 @@ export const GarageModal: React.FC = () => {
     vehicles,
     setSelectedVehicleId,
     setCurrentView,
+    alertsEnabled,
+    permissionStatus,
+    requestNotificationPermission,
+    setPriceAlertsSubscription,
+    checkGaragePriceChanges,
+    sendTestPriceAlert,
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'switch' | 'add'>('switch');
-
-  // Notification state
-  const [alertsEnabled, setAlertsEnabled] = useState<boolean>(() => getPriceAlertsEnabled());
-  const [permissionStatus, setPermissionStatus] = useState<NotificationPermissionStatus>(() => getNotificationPermission());
   const [isCheckingPrices, setIsCheckingPrices] = useState<boolean>(false);
-
-  useEffect(() => {
-    if (isGarageModalOpen) {
-      setPermissionStatus(getNotificationPermission());
-      setAlertsEnabled(getPriceAlertsEnabled());
-    }
-  }, [isGarageModalOpen]);
 
   // Add form state
   const [customPlate, setCustomPlate] = useState('');
@@ -134,51 +120,26 @@ export const GarageModal: React.FC = () => {
     setVehicleToDelete(null);
   };
 
-  const handleToggleAlerts = async () => {
-    if (!alertsEnabled || permissionStatus !== 'granted') {
-      const res = await requestNotificationPermission();
-      setPermissionStatus(res);
-      if (res === 'granted') {
-        setAlertsEnabled(true);
-        setPriceAlertsEnabled(true);
-        showToast('✓ Alertas de precio web activadas para Mi Garaje');
-      } else if (res === 'denied') {
-        setAlertsEnabled(false);
-        setPriceAlertsEnabled(false);
-        showToast('Las notificaciones están bloqueadas en tu navegador');
-      } else {
-        showToast('Permiso de notificaciones no concedido');
-      }
-    } else {
-      setAlertsEnabled(false);
-      setPriceAlertsEnabled(false);
-      showToast('Alertas de precio desactivadas');
-    }
+  const handleToggleAlerts = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const shouldEnable = e.target.checked;
+    await setPriceAlertsSubscription(shouldEnable);
   };
 
   const handleManualPriceCheck = async () => {
     setIsCheckingPrices(true);
-    let currentPerm = permissionStatus;
-    if (currentPerm === 'default') {
-      currentPerm = await requestNotificationPermission();
-      setPermissionStatus(currentPerm);
-    }
-
-    if (currentPerm !== 'granted') {
-      showToast('Activa los permisos de notificación web para recibir alertas');
-      setIsCheckingPrices(false);
-      return;
-    }
-
-    const checkResult = checkPriceVariationsForGarage(
-      garageVehicles,
-      vehicles,
-      (targetVehId) => {
-        setSelectedVehicleId(targetVehId);
-        setCurrentView('vehicle-pdp');
-        setIsGarageModalOpen(false);
+    if (permissionStatus !== 'granted') {
+      const perm = await requestNotificationPermission();
+      if (perm !== 'granted') {
+        setIsCheckingPrices(false);
+        return;
       }
-    );
+    }
+
+    const checkResult = checkGaragePriceChanges((targetVehId) => {
+      setSelectedVehicleId(targetVehId);
+      setCurrentView('vehicle-pdp');
+      setIsGarageModalOpen(false);
+    });
 
     if (checkResult.hasChanges) {
       showToast(`🚨 Se detectaron ${checkResult.alerts.length} cambios de precio. Notificación web enviada.`);
@@ -189,36 +150,22 @@ export const GarageModal: React.FC = () => {
   };
 
   const handleTestNotification = async () => {
-    let currentPerm = permissionStatus;
-    if (currentPerm !== 'granted') {
-      currentPerm = await requestNotificationPermission();
-      setPermissionStatus(currentPerm);
-    }
-
-    if (currentPerm !== 'granted') {
-      showToast('Por favor permite las notificaciones del navegador para la prueba');
-      return;
-    }
-
-    const targetVeh = activeGarage || garageVehicles[0] || {
-      brand: 'Toyota',
-      model: 'Hilux Revo 4x4 D-Cab',
-      year: 2025,
-      plate: 'ABC-123',
-      engine: '2.8L Turbo Diésel',
-    };
-
-    triggerTestPriceAlertNotification(
-      targetVeh,
-      vehicles,
-      (targetVehId) => {
-        setSelectedVehicleId(targetVehId);
-        setCurrentView('vehicle-pdp');
-        setIsGarageModalOpen(false);
+    if (permissionStatus !== 'granted') {
+      const perm = await requestNotificationPermission();
+      if (perm !== 'granted') {
+        return;
       }
-    );
+    }
 
-    showToast(`✓ Notificación compacta enviada: ${targetVeh.brand} ${targetVeh.model}`);
+    const sent = sendTestPriceAlert((targetVehId) => {
+      setSelectedVehicleId(targetVehId);
+      setCurrentView('vehicle-pdp');
+      setIsGarageModalOpen(false);
+    });
+
+    if (sent) {
+      showToast(`✓ Notificación compacta de prueba enviada al navegador`);
+    }
   };
 
   const POPULAR_BRANDS = [

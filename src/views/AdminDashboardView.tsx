@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { HeroSlide, Vehicle, AutoPart } from '../types';
+import { HeroSlide, Vehicle, AutoPart, CinematicCategory, OfficialBrand } from '../types';
 import { ImageUploadField } from '../components/admin/ImageUploadField';
 import { AccountingExportCenter } from '../components/admin/AccountingExportCenter';
 import { generateVehiclesCsv, generateAutoPartsCsv, downloadCsvFile } from '../utils/csvExportService';
 
-type AdminTab = 'banners' | 'cars' | 'autoparts' | 'offers' | 'reports' | 'security';
+type AdminTab = 'banners' | 'cars' | 'autoparts' | 'offers' | 'brands_categories' | 'reports' | 'security';
 type ViewModeDisplay = 'grid' | 'table';
 
 interface CustomOffer {
@@ -68,6 +68,28 @@ const INITIAL_OFFERS: CustomOffer[] = [
   },
 ];
 
+const PRESET_CATEGORY_IMAGES = [
+  { label: 'Suspensión 4x4 / Off-Road', url: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1200&q=80' },
+  { label: 'Frenos Deportivos / Brembo', url: 'https://images.unsplash.com/photo-1600790142055-619df03207e6?auto=format&fit=crop&w=1200&q=80' },
+  { label: 'Accesorios Overland & Winch', url: 'https://images.unsplash.com/photo-1551830820-330a71b99659?auto=format&fit=crop&w=1200&q=80' },
+  { label: 'Llantas M/T & Aros Beadlock', url: 'https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?auto=format&fit=crop&w=1200&q=80' },
+  { label: 'Lubricantes Sintéticos Mobil 1', url: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=1200&q=80' },
+  { label: 'Iluminación LED HD & Faros Láser', url: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80' },
+  { label: 'Motor, Turbocompresor & Mofles', url: 'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=1200&q=80' },
+  { label: 'Electrónica, Baterías & ECU', url: 'https://images.unsplash.com/photo-1487754180451-c456f719a1fc?auto=format&fit=crop&w=1200&q=80' },
+];
+
+const PRESET_BRAND_TEMPLATES: Partial<OfficialBrand>[] = [
+  { name: 'Sparco Racing', code: 'Sparco', iconText: 'sparco', tag: 'Accesorios & Butacas FIA', origin: 'Italia' },
+  { name: 'FOX Racing Shox', code: 'FOX Shox', iconText: 'FOX', tag: 'Amortiguadores Bypass HD', origin: 'EE.UU.' },
+  { name: 'Motul 300V', code: 'Motul', iconText: 'MOTUL', tag: 'Aceites Grado Competición', origin: 'Francia' },
+  { name: 'K&N Engineering', code: 'K&N', iconText: 'K&N', tag: 'Filtros de Alto Flujo', origin: 'EE.UU.' },
+  { name: 'Bilstein Suspension', code: 'Bilstein', iconText: 'BILSTEIN', tag: 'Kits Monotubo HD', origin: 'Alemania' },
+  { name: 'Michelin Tires', code: 'Michelin', iconText: 'MICHELIN', tag: 'Neumáticos Alta Gama', origin: 'Francia' },
+  { name: 'Castrol Edge', code: 'Castrol', iconText: 'CASTROL', tag: 'Fluidos Titanium FST', origin: 'Reino Unido' },
+  { name: 'WARN Industries', code: 'WARN', iconText: 'WARN', tag: 'Winches & Defensas 4x4', origin: 'EE.UU.' },
+];
+
 export const AdminDashboardView: React.FC = () => {
   const {
     currentView,
@@ -90,6 +112,14 @@ export const AdminDashboardView: React.FC = () => {
     setIsAdminUnlocked,
     resetToDefaultData,
     showToast,
+    homeCategories,
+    updateHomeCategory,
+    resetHomeCategories,
+    officialBrands,
+    addOfficialBrand,
+    updateOfficialBrand,
+    deleteOfficialBrand,
+    resetOfficialBrands,
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<AdminTab>('banners');
@@ -269,6 +299,42 @@ export const AdminDashboardView: React.FC = () => {
       return matchesSearch && matchesCat && matchesBrand;
     });
   }, [autoParts, partsSearchQuery, selectedPartsCategoryFilter, selectedPartsBrandFilter]);
+
+  // --- STATE FOR BRANDS & CATEGORIES ---
+  const [brandSearchQuery, setBrandSearchQuery] = useState('');
+  const [editingBrand, setEditingBrand] = useState<OfficialBrand | null>(null);
+  const [isCreatingBrand, setIsCreatingBrand] = useState(false);
+  const [brandFormData, setBrandFormData] = useState<Partial<OfficialBrand>>({
+    name: '',
+    code: '',
+    iconText: '',
+    logoUrl: '',
+    tag: 'Repuestos OEM',
+    origin: 'Japón',
+  });
+
+  const [editingCategory, setEditingCategory] = useState<CinematicCategory | null>(null);
+  const [categoryFormData, setCategoryFormData] = useState<Partial<CinematicCategory>>({
+    name: '',
+    subtitle: '',
+    image: '',
+    tag: '',
+    badge: '',
+    count: '',
+  });
+
+  const filteredOfficialBrands = useMemo(() => {
+    const q = brandSearchQuery.trim().toLowerCase();
+    if (!q) return officialBrands;
+    return officialBrands.filter(
+      (b) =>
+        b.name.toLowerCase().includes(q) ||
+        b.code.toLowerCase().includes(q) ||
+        b.tag.toLowerCase().includes(q) ||
+        b.origin.toLowerCase().includes(q) ||
+        b.iconText.toLowerCase().includes(q)
+    );
+  }, [officialBrands, brandSearchQuery]);
 
   // --- STATE FOR PIN CHANGE ---
   const [newPin, setNewPin] = useState('');
@@ -631,6 +697,100 @@ export const AdminDashboardView: React.FC = () => {
     });
   };
 
+  // --- HANDLERS FOR BRANDS & CATEGORIES ---
+  const handleOpenCreateBrand = () => {
+    setEditingBrand(null);
+    setBrandFormData({
+      name: '',
+      code: '',
+      iconText: '',
+      logoUrl: '',
+      tag: 'Repuestos OEM',
+      origin: 'Japón',
+    });
+    setIsCreatingBrand(true);
+  };
+
+  const handleEditBrand = (brand: OfficialBrand) => {
+    setEditingBrand(brand);
+    setBrandFormData({
+      name: brand.name,
+      code: brand.code,
+      iconText: brand.iconText,
+      logoUrl: brand.logoUrl || '',
+      tag: brand.tag,
+      origin: brand.origin,
+    });
+    setIsCreatingBrand(true);
+  };
+
+  const handleSaveBrand = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!brandFormData.name?.trim() || !brandFormData.code?.trim() || !brandFormData.iconText?.trim()) {
+      showToast('⚠️ Por favor completa el nombre, código y texto de la marca');
+      return;
+    }
+    const brandPayload: OfficialBrand = {
+      name: brandFormData.name.trim(),
+      code: brandFormData.code.trim(),
+      iconText: brandFormData.iconText.trim(),
+      logoUrl: brandFormData.logoUrl?.trim() || undefined,
+      tag: brandFormData.tag?.trim() || 'Línea Oficial',
+      origin: brandFormData.origin?.trim() || 'Global',
+    };
+
+    if (editingBrand) {
+      updateOfficialBrand(editingBrand.code, brandPayload);
+    } else {
+      addOfficialBrand(brandPayload);
+    }
+    setIsCreatingBrand(false);
+    setEditingBrand(null);
+  };
+
+  const handleDeleteBrand = (brand: OfficialBrand) => {
+    requestConfirmation({
+      title: '¿Retirar Marca de la Pasarela?',
+      description: `¿Estás seguro de retirar "${brand.name}" de la pasarela de marcas oficiales? Podrás volver a agregarla o restaurarla cuando desees.`,
+      confirmText: 'Retirar Marca',
+      isDestructive: true,
+      onConfirm: () => {
+        deleteOfficialBrand(brand.code);
+      },
+    });
+  };
+
+  const handleEditCategory = (cat: CinematicCategory) => {
+    setEditingCategory(cat);
+    setCategoryFormData({
+      code: cat.code,
+      name: cat.name,
+      subtitle: cat.subtitle,
+      image: cat.image,
+      tag: cat.tag,
+      badge: cat.badge,
+      count: cat.count,
+    });
+  };
+
+  const handleSaveCategory = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCategory) return;
+    if (!categoryFormData.name?.trim() || !categoryFormData.image?.trim()) {
+      showToast('⚠️ El nombre y la imagen de fondo son obligatorios');
+      return;
+    }
+    updateHomeCategory(editingCategory.code, {
+      name: categoryFormData.name.trim(),
+      subtitle: categoryFormData.subtitle?.trim() || '',
+      image: categoryFormData.image.trim(),
+      tag: categoryFormData.tag?.trim() || '',
+      badge: categoryFormData.badge?.trim() || '',
+      count: categoryFormData.count?.trim() || '',
+    });
+    setEditingCategory(null);
+  };
+
   const handleExportPartsCsv = () => {
     const { csvString, rowCount, filename } = generateAutoPartsCsv(autoParts);
     downloadCsvFile(csvString, filename);
@@ -647,6 +807,8 @@ export const AdminDashboardView: React.FC = () => {
       autoParts,
       promoSlides,
       offersList,
+      homeCategories,
+      officialBrands,
     };
     const jsonStr = JSON.stringify(dataToExport, null, 2);
     const blob = new Blob([jsonStr], { type: 'application/json' });
@@ -689,6 +851,16 @@ export const AdminDashboardView: React.FC = () => {
         }
         if (parsed.offersList && Array.isArray(parsed.offersList)) {
           setOffersList(parsed.offersList);
+        }
+        if (parsed.homeCategories && Array.isArray(parsed.homeCategories)) {
+          parsed.homeCategories.forEach((cat: CinematicCategory) => {
+            updateHomeCategory(cat.code, cat);
+          });
+        }
+        if (parsed.officialBrands && Array.isArray(parsed.officialBrands)) {
+          parsed.officialBrands.forEach((b: OfficialBrand) => {
+            addOfficialBrand(b);
+          });
         }
         showToast('Datos de copia de seguridad importados satisfactoriamente');
       } catch (err) {
@@ -833,6 +1005,19 @@ export const AdminDashboardView: React.FC = () => {
           >
             <span className="material-symbols-outlined text-lg text-[#F07F00]">local_offer</span>
             <span>Ofertas Destacadas ({offersList.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('brands_categories')}
+            className={`min-h-[46px] px-4 py-2.5 text-xs font-bold transition-all border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+              activeTab === 'brands_categories'
+                ? 'border-[#F07F00] text-[#212955] bg-[#F07F00]/5'
+                : 'border-transparent text-gray-500 hover:text-[#212955]'
+            }`}
+          >
+            <span className="material-symbols-outlined text-lg text-[#F07F00]">branding_watermark</span>
+            <span>Marcas &amp; Categorías ({officialBrands.length}/{homeCategories.length})</span>
           </button>
 
           <button
@@ -3058,6 +3243,674 @@ export const AdminDashboardView: React.FC = () => {
                         className="px-5 py-2 text-xs font-bold bg-[#212955] hover:bg-[#181e40] text-white rounded-xl shadow-xs cursor-pointer"
                       >
                         {editingOffer ? 'Guardar Cambios' : 'Crear Campaña'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ============================================================== */}
+        {/* TAB: GESTIÓN DE MARCAS OFICIALES & CATEGORÍAS CINEMÁTICAS      */}
+        {/* ============================================================== */}
+        {activeTab === 'brands_categories' && (
+          <div className="space-y-8 animate-in fade-in duration-150">
+            {/* Header Banner */}
+            <div className="bg-white p-5 rounded-2xl border border-[#9D9D9C]/30 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#F07F00] text-xl">branding_watermark</span>
+                  <h2 className="font-headline font-bold text-base text-[#212955]">
+                    Marcas Oficiales &amp; Categorías Cinemáticas de Portada
+                  </h2>
+                </div>
+                <p className="text-xs text-gray-500 mt-1 max-w-3xl">
+                  Administra en tiempo real la pasarela continua de marcas aliadas oficiales (logos, nombres, especialidades y procedencias) y las 6 tarjetas visuales cinemáticas de repuestos (fotografías de fondo en alta resolución, títulos y badges) que se exhiben en la página de inicio.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleOpenCreateBrand}
+                  className="bg-[#F07F00] hover:bg-[#d97300] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-base">add_circle</span>
+                  <span>Nueva Marca Oficial</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    requestConfirmation({
+                      title: '¿Restablecer Categorías Cinemáticas?',
+                      description: 'Se restaurarán las 6 categorías de la portada a sus fotos, títulos y descripciones originales de fábrica.',
+                      confirmText: 'Restablecer Categorías',
+                      isDestructive: false,
+                      onConfirm: () => resetHomeCategories(),
+                    });
+                  }}
+                  className="text-xs font-bold text-gray-600 hover:text-[#212955] bg-gray-50 hover:bg-gray-100 border border-gray-200 px-3 py-2.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                  title="Restablecer categorías a fotos de fábrica"
+                >
+                  <span className="material-symbols-outlined text-sm">restart_alt</span>
+                  <span className="hidden sm:inline">Reset Categorías</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    requestConfirmation({
+                      title: '¿Restaurar Pasarela Oficial de Marcas?',
+                      description: 'Se restablecerá la lista oficial de marcas predeterminadas (Toyota, Brembo, Mickey Thompson, Mobil, Bosch, KYB, etc.).',
+                      confirmText: 'Restaurar Marcas',
+                      isDestructive: false,
+                      onConfirm: () => resetOfficialBrands(),
+                    });
+                  }}
+                  className="text-xs font-bold text-gray-600 hover:text-[#212955] bg-gray-50 hover:bg-gray-100 border border-gray-200 px-3 py-2.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                  title="Restaurar marcas de fábrica"
+                >
+                  <span className="material-symbols-outlined text-sm">history</span>
+                  <span className="hidden sm:inline">Reset Marcas</span>
+                </button>
+              </div>
+            </div>
+
+            {/* PREVISUALIZACIÓN EN VIVO: PASARELA MARQUEE CONTINUA */}
+            <div className="bg-[#0f1426] text-white p-5 rounded-2xl border border-white/10 shadow-lg relative overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="text-xs font-bold tracking-wider uppercase text-gray-300">
+                    Previsualización en Vivo: Pasarela de Marcas Oficiales
+                  </span>
+                  <span className="text-[10px] bg-[#F07F00]/20 text-[#F07F00] font-black px-2 py-0.5 rounded-full border border-[#F07F00]/30">
+                    {officialBrands.length} MARCAS EN ROTACIÓN
+                  </span>
+                </div>
+                <span className="text-[11px] text-gray-400">
+                  Desplaza horizontalmente o posa el cursor para pausar la animación
+                </span>
+              </div>
+
+              {/* Marquee Track Mockup */}
+              <div className="relative overflow-hidden rounded-xl bg-black/40 border border-white/10 p-3">
+                <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-[#0f1426] to-transparent z-10" />
+                <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#0f1426] to-transparent z-10" />
+
+                <div className="animate-marquee-infinite flex gap-3 py-1">
+                  {[...officialBrands, ...officialBrands].map((brand, bIdx) => (
+                    <div
+                      key={`preview-marquee-${brand.code}-${bIdx}`}
+                      className="group shrink-0 flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.14] border border-white/10 hover:border-[#F07F00]/70 transition-all text-left shadow-sm"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center font-headline font-black text-xs text-white/90 border border-white/15 overflow-hidden p-1">
+                        {brand.logoUrl ? (
+                          <img src={brand.logoUrl} alt={brand.name} className="w-full h-full object-contain" />
+                        ) : (
+                          brand.iconText
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-xs font-black text-white uppercase tracking-wider group-hover:text-[#F07F00] transition-colors">
+                          {brand.name}
+                        </div>
+                        <div className="text-[10px] text-white/60 flex items-center gap-1.5 mt-0.5">
+                          <span>{brand.tag}</span>
+                          <span className="w-1 h-1 rounded-full bg-white/30"></span>
+                          <span className="text-[#F07F00] font-semibold">{brand.origin}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* SECCIÓN 1: GESTIÓN DE LA PASARELA DE MARCAS OFICIALES */}
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200 pb-3">
+                <div>
+                  <h3 className="font-headline font-bold text-sm text-[#212955] flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[#F07F00] text-lg">local_shipping</span>
+                    <span>Marcas Oficiales Configuradas ({filteredOfficialBrands.length} de {officialBrands.length})</span>
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    Haz clic en editar para cambiar logos o textos, o agrega nuevas marcas que se integrarán a la pasarela continua.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="relative w-full sm:w-64">
+                    <span className="material-symbols-outlined text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 text-sm">
+                      search
+                    </span>
+                    <input
+                      type="text"
+                      value={brandSearchQuery}
+                      onChange={(e) => setBrandSearchQuery(e.target.value)}
+                      placeholder="Buscar por marca, país o tag..."
+                      className="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs text-[#212955] focus:outline-none focus:border-[#F07F00]"
+                    />
+                    {brandSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setBrandSearchQuery('')}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Plantillas rápidas para incorporar marcas */}
+              <div className="bg-gray-50/80 p-3 rounded-xl border border-gray-200 flex flex-wrap items-center gap-2 text-xs">
+                <span className="text-gray-500 font-bold text-[11px] flex items-center gap-1">
+                  <span className="material-symbols-outlined text-sm text-[#F07F00]">bolt</span>
+                  Plantillas Rápidas:
+                </span>
+                {PRESET_BRAND_TEMPLATES.map((tmpl) => {
+                  const alreadyExists = officialBrands.some((b) => b.code.toLowerCase() === tmpl.code?.toLowerCase());
+                  return (
+                    <button
+                      key={tmpl.code}
+                      type="button"
+                      disabled={alreadyExists}
+                      onClick={() => {
+                        setEditingBrand(null);
+                        setBrandFormData({
+                          name: tmpl.name,
+                          code: tmpl.code,
+                          iconText: tmpl.iconText,
+                          logoUrl: '',
+                          tag: tmpl.tag,
+                          origin: tmpl.origin,
+                        });
+                        setIsCreatingBrand(true);
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                        alreadyExists
+                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                          : 'bg-white border border-gray-200 text-[#212955] hover:border-[#F07F00] hover:text-[#F07F00] shadow-2xs'
+                      }`}
+                    >
+                      <span>+ {tmpl.name}</span>
+                      {alreadyExists && <span className="text-[9px] text-gray-400">(Activa)</span>}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Cuadrícula de Marcas Oficiales */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {filteredOfficialBrands.map((brand) => (
+                  <div
+                    key={brand.code}
+                    className="bg-white p-4 rounded-2xl border border-gray-200 hover:border-[#212955] transition-all shadow-xs flex flex-col justify-between group"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="w-12 h-12 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center font-headline font-black text-sm text-[#212955] overflow-hidden p-1 shadow-2xs">
+                          {brand.logoUrl ? (
+                            <img src={brand.logoUrl} alt={brand.name} className="w-full h-full object-contain" />
+                          ) : (
+                            <span className="uppercase">{brand.iconText}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleEditBrand(brand)}
+                            className="p-1.5 rounded-lg bg-gray-100 hover:bg-[#212955] text-gray-600 hover:text-white transition-colors cursor-pointer"
+                            title="Editar Marca Oficial"
+                          >
+                            <span className="material-symbols-outlined text-sm">edit</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteBrand(brand)}
+                            className="p-1.5 rounded-lg bg-red-50 hover:bg-red-600 text-red-600 hover:text-white transition-colors cursor-pointer"
+                            title="Retirar Marca de la Pasarela"
+                          >
+                            <span className="material-symbols-outlined text-sm">delete</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h4 className="font-headline font-bold text-sm text-[#212955] group-hover:text-[#F07F00] transition-colors leading-tight">
+                          {brand.name}
+                        </h4>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="bg-[#212955]/10 text-[#212955] text-[10px] font-bold px-2 py-0.5 rounded">
+                            Filtro: {brand.code}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 text-xs pt-2 border-t border-gray-100">
+                        <div className="flex items-center justify-between text-gray-500">
+                          <span className="text-[11px]">Especialidad:</span>
+                          <span className="font-bold text-[#212955] text-right truncate max-w-[130px]">{brand.tag}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-gray-500">
+                          <span className="text-[11px]">Procedencia:</span>
+                          <span className="font-bold text-[#F07F00] flex items-center gap-1">
+                            <span className="material-symbols-outlined text-xs">public</span>
+                            <span>{brand.origin}</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-2 border-t border-gray-100 text-[11px] text-gray-400 flex items-center justify-between">
+                      <span>{brand.logoUrl ? '✓ Logo en imagen' : 'Sigla tipográfica'}</span>
+                      <span className="text-emerald-600 font-semibold">● Visible</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* SECCIÓN 2: GESTIÓN DE LAS 6 CATEGORÍAS CINEMÁTICAS */}
+            <div className="space-y-4 pt-6 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-headline font-bold text-sm text-[#212955] flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[#F07F00] text-lg">view_carousel</span>
+                    <span>Tarjetas de Categorías Cinemáticas (Portada Principal)</span>
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    Personaliza los fondos fotográficos, textos y badges de las 6 tarjetas de la página de inicio.
+                  </p>
+                </div>
+              </div>
+
+              {/* Cuadrícula de Categorías */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {homeCategories.map((cat) => (
+                  <div
+                    key={cat.code}
+                    className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs flex flex-col justify-between group hover:border-[#212955] transition-all"
+                  >
+                    {/* Visual Card Preview */}
+                    <div className="relative h-48 overflow-hidden bg-black">
+                      <img
+                        src={cat.image}
+                        alt={cat.name}
+                        className="w-full h-full object-cover grayscale contrast-125 brightness-75 group-hover:grayscale-0 group-hover:brightness-100 group-hover:scale-105 transition-all duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                      
+                      <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#F07F00] bg-black/80 px-2.5 py-0.5 rounded-full border border-[#F07F00]/30 backdrop-blur-xs">
+                          {cat.tag}
+                        </span>
+                        <span className="text-[10px] font-bold text-white/80 bg-white/20 px-2 py-0.5 rounded-full border border-white/20 backdrop-blur-xs">
+                          {cat.badge}
+                        </span>
+                      </div>
+
+                      <div className="absolute bottom-3 left-3 right-3 z-10">
+                        <h4 className="font-headline font-black text-xl text-white uppercase tracking-wider drop-shadow-sm leading-tight">
+                          {cat.name}
+                        </h4>
+                        <p className="text-[11px] text-white/80 line-clamp-1 mt-0.5 font-medium">
+                          {cat.subtitle}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Card Details & Actions */}
+                    <div className="p-4 space-y-3">
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <span className="material-symbols-outlined text-xs text-[#212955]">category</span>
+                          <span>Código: <strong className="text-[#212955]">{cat.code}</strong></span>
+                        </span>
+                        <span className="text-[#F07F00] font-bold">{cat.count}</span>
+                      </div>
+
+                      <div className="text-xs text-gray-600 line-clamp-2 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                        {cat.subtitle}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleEditCategory(cat)}
+                        className="w-full py-2 px-3 bg-[#212955] hover:bg-[#181e40] text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        <span className="material-symbols-outlined text-sm">edit</span>
+                        <span>Editar Fotografía &amp; Textos</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* MODAL 1: CREAR / EDITAR MARCA OFICIAL */}
+            {isCreatingBrand && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+                <div className="bg-white rounded-2xl p-6 max-w-lg w-full border border-[#9D9D9C]/30 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+                  <div className="flex items-center justify-between border-b pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[#F07F00] text-xl">branding_watermark</span>
+                      <h3 className="font-headline font-bold text-base text-[#212955]">
+                        {editingBrand ? `Editar Marca: ${editingBrand.name}` : 'Agregar Nueva Marca Oficial'}
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsCreatingBrand(false)}
+                      className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-lg">close</span>
+                    </button>
+                  </div>
+
+                  {/* Vista Previa en Vivo de la Tarjeta de Marca */}
+                  <div className="bg-[#0f1426] p-4 rounded-xl border border-white/10 text-white">
+                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider block mb-2">
+                      Previsualización en la Pasarela Continua:
+                    </span>
+                    <div className="flex items-center gap-3.5 px-4 py-3 rounded-2xl bg-white/[0.08] border border-white/15 w-fit">
+                      <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center font-headline font-black text-sm text-white/90 border border-white/15 overflow-hidden p-1">
+                        {brandFormData.logoUrl ? (
+                          <img src={brandFormData.logoUrl} alt="Logo" className="w-full h-full object-contain" />
+                        ) : (
+                          brandFormData.iconText || 'LOGO'
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1">
+                          <span>{brandFormData.name || 'NOMBRE DE LA MARCA'}</span>
+                          <span className="text-xs text-white/40">↗</span>
+                        </div>
+                        <div className="text-[10px] text-white/60 flex items-center gap-1.5 mt-0.5">
+                          <span>{brandFormData.tag || 'Especialidad'}</span>
+                          <span className="w-1 h-1 rounded-full bg-white/30"></span>
+                          <span className="text-[#F07F00] font-semibold">{brandFormData.origin || 'Procedencia'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleSaveBrand} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-[#212955] mb-1">
+                        Nombre Comercial de la Marca *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={brandFormData.name}
+                        onChange={(e) => setBrandFormData({ ...brandFormData, name: e.target.value })}
+                        placeholder="Ej: TOYOTA Genuino, Brembo Official, Sparco Racing"
+                        className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-xl px-3 py-2 text-xs text-[#212955]"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-[#212955] mb-1">
+                          Código de Filtrado en Catálogo *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={brandFormData.code}
+                          onChange={(e) => setBrandFormData({ ...brandFormData, code: e.target.value })}
+                          placeholder="Ej: Toyota, Brembo, Sparco"
+                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-xl px-3 py-2 text-xs text-[#212955]"
+                        />
+                        <span className="text-[10px] text-gray-400 mt-0.5 block">
+                          Al hacer clic en la pasarela, se filtrará el catálogo por este código.
+                        </span>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-[#212955] mb-1">
+                          Texto / Sigla de Logotipo *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={brandFormData.iconText}
+                          onChange={(e) => setBrandFormData({ ...brandFormData, iconText: e.target.value })}
+                          placeholder="Ej: brembo, TOYOTA, M/T, BOSCH"
+                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-xl px-3 py-2 text-xs text-[#212955]"
+                        />
+                        <span className="text-[10px] text-gray-400 mt-0.5 block">
+                          Se mostrará como sigla gráfica si no hay imagen de logo.
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-[#212955] mb-1">
+                          Especialidad / Tag Automotriz
+                        </label>
+                        <input
+                          type="text"
+                          value={brandFormData.tag}
+                          onChange={(e) => setBrandFormData({ ...brandFormData, tag: e.target.value })}
+                          placeholder="Ej: Repuestos OEM, Frenos Competición, Neumáticos M/T"
+                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-xl px-3 py-2 text-xs text-[#212955]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-[#212955] mb-1">
+                          País de Procedencia / Origen
+                        </label>
+                        <input
+                          type="text"
+                          value={brandFormData.origin}
+                          onChange={(e) => setBrandFormData({ ...brandFormData, origin: e.target.value })}
+                          placeholder="Ej: Japón, Italia, Alemania, EE.UU., Perú / OEM"
+                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-xl px-3 py-2 text-xs text-[#212955]"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <ImageUploadField
+                        label="Logotipo en Imagen (Opcional - PNG transparente o SVG)"
+                        value={brandFormData.logoUrl || ''}
+                        onChange={(url) => setBrandFormData({ ...brandFormData, logoUrl: url })}
+                        placeholder="https://... logo transparente"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-end gap-3 pt-3 border-t">
+                      <button
+                        type="button"
+                        onClick={() => setIsCreatingBrand(false)}
+                        className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-5 py-2 text-xs font-bold bg-[#212955] hover:bg-[#181e40] text-white rounded-xl shadow-xs cursor-pointer"
+                      >
+                        {editingBrand ? 'Guardar Cambios de Marca' : 'Agregar a la Pasarela'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* MODAL 2: EDITAR CATEGORÍA CINEMÁTICA */}
+            {editingCategory && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+                <div className="bg-white rounded-2xl p-6 max-w-xl w-full border border-[#9D9D9C]/30 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+                  <div className="flex items-center justify-between border-b pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[#F07F00] text-xl">category</span>
+                      <h3 className="font-headline font-bold text-base text-[#212955]">
+                        Editar Tarjeta Cinemática: {categoryFormData.name || editingCategory.name}
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEditingCategory(null)}
+                      className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-lg">close</span>
+                    </button>
+                  </div>
+
+                  {/* Visual Live Preview of the Category Card */}
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider block">
+                      Previsualización en la Portada:
+                    </span>
+                    <div className="relative h-44 rounded-2xl overflow-hidden bg-black border border-gray-300 shadow-md">
+                      <img
+                        src={categoryFormData.image}
+                        alt="Preview"
+                        className="w-full h-full object-cover grayscale contrast-125 brightness-75 transition-all duration-300"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
+                      <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#F07F00] bg-black/80 px-2.5 py-0.5 rounded-full border border-[#F07F00]/30">
+                          {categoryFormData.tag || 'TAG SUPERIOR'}
+                        </span>
+                        <span className="text-[10px] font-bold text-white/80 bg-white/20 px-2 py-0.5 rounded-full border border-white/20">
+                          {categoryFormData.badge || 'BADGE'}
+                        </span>
+                      </div>
+                      <div className="absolute bottom-3 left-3 right-3 z-10">
+                        <h4 className="font-headline font-black text-2xl text-white uppercase tracking-wider leading-none">
+                          {categoryFormData.name || 'NOMBRE CATEGORÍA'}
+                        </h4>
+                        <p className="text-[11px] text-white/80 line-clamp-1 mt-1 font-medium">
+                          {categoryFormData.subtitle || 'Subtítulo descriptivo de repuestos y equipamiento'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleSaveCategory} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-[#212955] mb-1">
+                        Nombre Principal de la Categoría *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={categoryFormData.name}
+                        onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
+                        placeholder="Ej: SUSPENSIÓN OFF-ROAD"
+                        className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-xl px-3 py-2 text-xs text-[#212955] font-bold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-[#212955] mb-1">
+                        Subtítulo Descriptivo
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={categoryFormData.subtitle}
+                        onChange={(e) => setCategoryFormData({ ...categoryFormData, subtitle: e.target.value })}
+                        placeholder="Descripción técnica de repuestos y aplicaciones..."
+                        className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-xl px-3 py-2 text-xs text-[#212955] resize-none"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-[#212955] mb-1">
+                          Tag Superior
+                        </label>
+                        <input
+                          type="text"
+                          value={categoryFormData.tag}
+                          onChange={(e) => setCategoryFormData({ ...categoryFormData, tag: e.target.value })}
+                          placeholder="Ej: LÍNEA COMPETICIÓN"
+                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-xl px-3 py-2 text-xs text-[#212955]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-[#212955] mb-1">
+                          Badge Técnico
+                        </label>
+                        <input
+                          type="text"
+                          value={categoryFormData.badge}
+                          onChange={(e) => setCategoryFormData({ ...categoryFormData, badge: e.target.value })}
+                          placeholder="Ej: Fox & Trakko"
+                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-xl px-3 py-2 text-xs text-[#212955]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-[#212955] mb-1">
+                          Conteo Referencial
+                        </label>
+                        <input
+                          type="text"
+                          value={categoryFormData.count}
+                          onChange={(e) => setCategoryFormData({ ...categoryFormData, count: e.target.value })}
+                          placeholder="Ej: 38 repuestos"
+                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-xl px-3 py-2 text-xs text-[#212955]"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Presets fotográficos de alta resolución */}
+                    <div className="space-y-1.5">
+                      <span className="text-[11px] font-bold text-gray-500 block">
+                        Fotografías HD Automotrices Preconfiguradas:
+                      </span>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {PRESET_CATEGORY_IMAGES.map((preset) => (
+                          <button
+                            key={preset.label}
+                            type="button"
+                            onClick={() => setCategoryFormData({ ...categoryFormData, image: preset.url })}
+                            className={`p-2 rounded-xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
+                              categoryFormData.image === preset.url
+                                ? 'border-[#F07F00] bg-[#F07F00]/5 ring-2 ring-[#F07F00]/30'
+                                : 'border-gray-200 hover:border-gray-300 bg-gray-50'
+                            }`}
+                          >
+                            <span className="text-[10px] font-bold text-[#212955] line-clamp-1">
+                              {preset.label}
+                            </span>
+                            <div className="w-full h-8 mt-1 rounded-md overflow-hidden bg-black/20">
+                              <img src={preset.url} alt={preset.label} className="w-full h-full object-cover" />
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <ImageUploadField
+                        label="URL de Fotografía de Fondo HD *"
+                        value={categoryFormData.image || ''}
+                        onChange={(url) => setCategoryFormData({ ...categoryFormData, image: url })}
+                        placeholder="https://images.unsplash.com/... o sube una imagen"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-end gap-3 pt-3 border-t">
+                      <button
+                        type="button"
+                        onClick={() => setEditingCategory(null)}
+                        className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-5 py-2 text-xs font-bold bg-[#212955] hover:bg-[#181e40] text-white rounded-xl shadow-xs cursor-pointer"
+                      >
+                        Guardar Tarjeta Cinemática
                       </button>
                     </div>
                   </form>

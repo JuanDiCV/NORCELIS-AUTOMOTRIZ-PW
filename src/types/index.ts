@@ -14,7 +14,9 @@ export type ViewMode =
   | 'locations'
   | 'claims'
   | 'about'
-  | 'admin';
+  | 'admin'
+  | 'order-tracking'
+  | 'terms-policies';
 
 export interface HeroSlide {
   id: string;
@@ -271,4 +273,23 @@ export interface StoredUserAccount {
     model: string;
     year: string;
   };
+}
+
+export interface CinematicCategory {
+  code: string;
+  name: string;
+  subtitle: string;
+  image: string;
+  tag: string;
+  badge: string;
+  count: string;
+}
+
+export interface OfficialBrand {
+  code: string;
+  name: string;
+  iconText: string;
+  logoUrl?: string;
+  tag: string;
+  origin: string;
 }

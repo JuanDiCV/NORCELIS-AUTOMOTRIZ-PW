@@ -1,7 +1,18 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { ViewMode, ActiveGarageVehicle, CartItem, WishlistItem, Vehicle, AutoPart, WorkshopService, HeroSlide, AppUser, UserRole, StoredUserAccount } from '../types';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import { ViewMode, ActiveGarageVehicle, CartItem, WishlistItem, Vehicle, AutoPart, WorkshopService, HeroSlide, AppUser, UserRole, StoredUserAccount, CinematicCategory, OfficialBrand } from '../types';
 import { INITIAL_ACTIVE_GARAGE, AVAILABLE_GARAGE_VEHICLES, VEHICLES_DATA, AUTO_PARTS_DATA, WORKSHOP_SERVICES_DATA, INITIAL_HERO_SLIDES } from '../data/mockData';
+import { DEFAULT_CINEMATIC_CATEGORIES, DEFAULT_OFFICIAL_BRANDS } from '../data/homeShowcaseData';
 import { PdfModalData } from '../components/PdfPreviewModal';
+import {
+  getNotificationPermission,
+  getPriceAlertsEnabled,
+  setPriceAlertsEnabled,
+  requestNotificationPermission as requestBrowserNotificationPermission,
+  checkPriceVariationsForGarage,
+  triggerTestPriceAlertNotification,
+  NotificationPermissionStatus,
+  PriceAlertCheckResult,
+} from '../services/notificationService';
 
 export interface QuickQuoteItem {
   type: 'vehicle' | 'part' | 'service' | 'custom';
@@ -29,6 +40,12 @@ interface AppContextType {
   deleteGarageVehicle: (vehicleIdOrPlate: string) => void;
   isGarageModalOpen: boolean;
   setIsGarageModalOpen: (open: boolean) => void;
+  alertsEnabled: boolean;
+  permissionStatus: NotificationPermissionStatus;
+  requestNotificationPermission: () => Promise<NotificationPermissionStatus>;
+  setPriceAlertsSubscription: (enabled: boolean) => Promise<boolean>;
+  checkGaragePriceChanges: (onNavigateToVehicle?: (vehicleId: string) => void) => PriceAlertCheckResult;
+  sendTestPriceAlert: (onNavigateToVehicle?: (vehicleId: string) => void) => boolean;
   isViewer360Open: boolean;
   setIsViewer360Open: (open: boolean) => void;
   isTestDriveModalOpen: boolean;
@@ -58,6 +75,7 @@ interface AppContextType {
     quantity?: number;
   }) => void;
   removeFromCart: (id: string) => void;
+  clearCart: () => void;
   updateCartQuantity: (id: string, quantity: number) => void;
   toggleCartInstallation: (id: string) => void;
   cartTotalCount: number;
@@ -128,6 +146,17 @@ interface AppContextType {
   }) => { success: boolean; message: string; user?: AppUser };
   logoutUser: () => void;
   registeredAccounts: StoredUserAccount[];
+  findAccountForRecovery: (emailOrDoc: string) => {
+    found: boolean;
+    maskedEmail?: string;
+    maskedPhone?: string;
+    accountName?: string;
+    identifier?: string;
+  };
+  updateAccountPassword: (identifier: string, newPassword: string) => {
+    success: boolean;
+    message: string;
+  };
 
   catalogCategoryFilter: string;
   setCatalogCategoryFilter: (cat: string) => void;
@@ -136,6 +165,22 @@ interface AppContextType {
   catalogSearchQuery: string;
   setCatalogSearchQuery: (query: string) => void;
   navigateToPartsCatalog: (category?: string, brand?: string, search?: string) => void;
+
+  trackingOrderCode: string;
+  setTrackingOrderCode: (code: string) => void;
+  termsActiveTab: 'terms' | 'privacy' | 'warranty' | 'shipping';
+  setTermsActiveTab: (tab: 'terms' | 'privacy' | 'warranty' | 'shipping') => void;
+  navigateToTracking: (orderCode?: string) => void;
+  navigateToTerms: (tab?: 'terms' | 'privacy' | 'warranty' | 'shipping') => void;
+
+  homeCategories: CinematicCategory[];
+  updateHomeCategory: (code: string, updated: Partial<CinematicCategory>) => void;
+  resetHomeCategories: () => void;
+  officialBrands: OfficialBrand[];
+  addOfficialBrand: (brand: OfficialBrand) => void;
+  updateOfficialBrand: (code: string, updated: Partial<OfficialBrand>) => void;
+  deleteOfficialBrand: (code: string) => void;
+  resetOfficialBrands: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -260,6 +305,83 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
   
   const [isGarageModalOpen, setIsGarageModalOpen] = useState(false);
+
+  // Notification & Price Alerts State
+  const [alertsEnabled, setAlertsEnabledState] = useState<boolean>(() => getPriceAlertsEnabled());
+  const [permissionStatus, setPermissionStatusState] = useState<NotificationPermissionStatus>(() =>
+    getNotificationPermission()
+  );
+
+  useEffect(() => {
+    setPermissionStatusState(getNotificationPermission());
+    setAlertsEnabledState(getPriceAlertsEnabled());
+  }, [isGarageModalOpen]);
+
+  const requestNotificationPermission = useCallback(async (): Promise<NotificationPermissionStatus> => {
+    const status = await requestBrowserNotificationPermission();
+    setPermissionStatusState(status);
+    if (status === 'granted') {
+      setAlertsEnabledState(true);
+      setPriceAlertsEnabled(true);
+      showToast('✓ Permiso concedido: Alertas de precio web activadas para Mi Garaje.');
+    } else if (status === 'denied') {
+      setAlertsEnabledState(false);
+      setPriceAlertsEnabled(false);
+      showToast('Las notificaciones están bloqueadas en la configuración de tu navegador.');
+    }
+    return status;
+  }, []);
+
+  const setPriceAlertsSubscription = useCallback(async (enabled: boolean): Promise<boolean> => {
+    if (enabled) {
+      const currentPerm = getNotificationPermission();
+      if (currentPerm === 'granted') {
+        setAlertsEnabledState(true);
+        setPriceAlertsEnabled(true);
+        showToast('✓ Alertas de precio web activadas para Mi Garaje.');
+        return true;
+      } else {
+        const result = await requestBrowserNotificationPermission();
+        setPermissionStatusState(result);
+        if (result === 'granted') {
+          setAlertsEnabledState(true);
+          setPriceAlertsEnabled(true);
+          showToast('✓ Permiso concedido: Alertas de precio web activadas para Mi Garaje.');
+          return true;
+        } else {
+          setAlertsEnabledState(false);
+          setPriceAlertsEnabled(false);
+          if (result === 'denied') {
+            showToast('Las notificaciones están bloqueadas en la configuración del navegador.');
+          } else {
+            showToast('Permiso de notificaciones no otorgado.');
+          }
+          return false;
+        }
+      }
+    } else {
+      setAlertsEnabledState(false);
+      setPriceAlertsEnabled(false);
+      showToast('Alertas de precio desactivadas.');
+      return false;
+    }
+  }, []);
+
+  const checkGaragePriceChanges = useCallback((onNavigateToVehicle?: (vehicleId: string) => void): PriceAlertCheckResult => {
+    return checkPriceVariationsForGarage(garageVehicles, undefined, onNavigateToVehicle);
+  }, [garageVehicles]);
+
+  const sendTestPriceAlert = useCallback((onNavigateToVehicle?: (vehicleId: string) => void): boolean => {
+    const targetVeh = activeGarage || garageVehicles[0] || {
+      brand: 'Toyota',
+      model: 'Hilux Revo 4x4 D-Cab',
+      year: 2025,
+      plate: 'ABC-123',
+      engine: '2.8L Turbo Diésel',
+    };
+    return triggerTestPriceAlertNotification(targetVeh, undefined, onNavigateToVehicle);
+  }, [activeGarage, garageVehicles]);
+
   const [isViewer360Open, setIsViewer360Open] = useState(false);
   const [isTestDriveModalOpen, setIsTestDriveModalOpen] = useState(false);
   const [pdfModalData, setPdfModalData] = useState<PdfModalData | null>(null);
@@ -536,6 +658,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCurrentView('parts');
   };
 
+  const [trackingOrderCode, setTrackingOrderCode] = useState<string>('');
+  const [termsActiveTab, setTermsActiveTab] = useState<'terms' | 'privacy' | 'warranty' | 'shipping'>('terms');
+
+  const navigateToTracking = (orderCode?: string) => {
+    if (orderCode) setTrackingOrderCode(orderCode);
+    setCurrentView('order-tracking');
+  };
+
+  const navigateToTerms = (tab?: 'terms' | 'privacy' | 'warranty' | 'shipping') => {
+    if (tab) setTermsActiveTab(tab);
+    setCurrentView('terms-policies');
+  };
+
   // Vehicles dynamic state
   const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
     try {
@@ -693,10 +828,99 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast(`Repuesto retirado del catálogo`);
   };
 
+  // Cinematic Home Categories state & persistence
+  const [homeCategories, setHomeCategories] = useState<CinematicCategory[]>(() => {
+    try {
+      const saved = localStorage.getItem('norcelis_home_categories');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error('Error loading home categories from localStorage', e);
+    }
+    return DEFAULT_CINEMATIC_CATEGORIES;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('norcelis_home_categories', JSON.stringify(homeCategories));
+    } catch (e) {
+      console.error('Error saving home categories to localStorage', e);
+    }
+  }, [homeCategories]);
+
+  const updateHomeCategory = (code: string, updatedData: Partial<CinematicCategory>) => {
+    setHomeCategories((prev) =>
+      prev.map((cat) => (cat.code === code ? { ...cat, ...updatedData } : cat))
+    );
+    showToast('Categoría actualizada correctamente');
+  };
+
+  const resetHomeCategories = () => {
+    setHomeCategories(DEFAULT_CINEMATIC_CATEGORIES);
+    try {
+      localStorage.setItem('norcelis_home_categories', JSON.stringify(DEFAULT_CINEMATIC_CATEGORIES));
+    } catch (e) {}
+    showToast('Categorías restablecidas a sus valores de fábrica');
+  };
+
+  // Official Brands state & persistence
+  const [officialBrands, setOfficialBrands] = useState<OfficialBrand[]>(() => {
+    try {
+      const saved = localStorage.getItem('norcelis_official_brands');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error('Error loading official brands from localStorage', e);
+    }
+    return DEFAULT_OFFICIAL_BRANDS;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('norcelis_official_brands', JSON.stringify(officialBrands));
+    } catch (e) {
+      console.error('Error saving official brands to localStorage', e);
+    }
+  }, [officialBrands]);
+
+  const addOfficialBrand = (newBrand: OfficialBrand) => {
+    setOfficialBrands((prev) => {
+      const filtered = prev.filter((b) => b.code !== newBrand.code);
+      return [...filtered, newBrand];
+    });
+    showToast(`Marca oficial "${newBrand.name}" agregada a la pasarela`);
+  };
+
+  const updateOfficialBrand = (code: string, updatedData: Partial<OfficialBrand>) => {
+    setOfficialBrands((prev) =>
+      prev.map((b) => (b.code === code ? { ...b, ...updatedData } : b))
+    );
+    showToast('Marca oficial actualizada correctamente');
+  };
+
+  const deleteOfficialBrand = (code: string) => {
+    setOfficialBrands((prev) => prev.filter((b) => b.code !== code));
+    showToast('Marca retirada de la pasarela');
+  };
+
+  const resetOfficialBrands = () => {
+    setOfficialBrands(DEFAULT_OFFICIAL_BRANDS);
+    try {
+      localStorage.setItem('norcelis_official_brands', JSON.stringify(DEFAULT_OFFICIAL_BRANDS));
+    } catch (e) {}
+    showToast('Pasarela de marcas restablecida a los valores oficiales');
+  };
+
   const resetToDefaultData = () => {
     setVehicles(VEHICLES_DATA);
     setPromoSlides(INITIAL_HERO_SLIDES);
     setAutoParts(AUTO_PARTS_DATA);
+    setHomeCategories(DEFAULT_CINEMATIC_CATEGORIES);
+    setOfficialBrands(DEFAULT_OFFICIAL_BRANDS);
     setAdminPinState('1234');
     setCartItems([]);
     setWishlistItems([]);
@@ -704,11 +928,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.removeItem('norcelis_custom_vehicles');
       localStorage.removeItem('norcelis_promo_slides');
       localStorage.removeItem('norcelis_custom_parts');
+      localStorage.removeItem('norcelis_home_categories');
+      localStorage.removeItem('norcelis_official_brands');
       localStorage.removeItem('norcelis_admin_pin');
       localStorage.removeItem('norcelis_cart_guest');
       localStorage.removeItem('norcelis_wishlist_guest');
     } catch (e) {}
-    showToast('Catálogo, repuestos y banners restablecidos a valores originales');
+    showToast('Catálogo, repuestos, marcas y banners restablecidos a valores originales');
   };
 
   const showToast = (msg: string) => {
@@ -766,6 +992,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const removeFromCart = (id: string) => {
     setCartItems((prev) => prev.filter((item) => item.id !== id));
     showToast('Producto eliminado del carrito');
+  };
+
+  const clearCart = () => {
+    setCartItems([]);
   };
 
   const updateCartQuantity = (id: string, quantity: number) => {
@@ -912,7 +1142,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     password: string
   ): { success: boolean; message: string; user?: AppUser } => {
     const term = emailOrDoc.trim().toLowerCase();
-    const account = registeredAccounts.find(
+    let currentAccounts = registeredAccounts;
+    try {
+      const stored = localStorage.getItem('norcelis_registered_accounts');
+      if (stored) {
+        currentAccounts = JSON.parse(stored);
+      }
+    } catch {
+      // fallback
+    }
+    const account = currentAccounts.find(
       (acc) => acc.email.toLowerCase() === term || acc.docNumber.toLowerCase() === term
     );
 
@@ -1126,6 +1365,110 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('Sesión cerrada correctamente');
   };
 
+  const findAccountForRecovery = (emailOrDoc: string): {
+    found: boolean;
+    maskedEmail?: string;
+    maskedPhone?: string;
+    accountName?: string;
+    identifier?: string;
+  } => {
+    const clean = emailOrDoc.trim().toLowerCase();
+    let currentAccounts = registeredAccounts;
+    try {
+      const stored = localStorage.getItem('norcelis_registered_accounts');
+      if (stored) {
+        currentAccounts = JSON.parse(stored);
+      }
+    } catch {
+      // fallback
+    }
+    const account = currentAccounts.find(
+      (acc) => acc.email.toLowerCase() === clean || acc.docNumber.toLowerCase() === clean
+    );
+
+    if (!account) {
+      return { found: false };
+    }
+
+    const [namePart, domain] = account.email.split('@');
+    const maskedEmail = namePart.length > 2
+      ? `${namePart[0]}***${namePart.slice(-1)}@${domain || 'norcelis.pe'}`
+      : `${namePart[0]}***@${domain || 'norcelis.pe'}`;
+
+    const phone = account.phone || '987654321';
+    const maskedPhone = phone.length >= 6
+      ? `${phone.slice(0, 3)}***${phone.slice(-3)}`
+      : `${phone.slice(0, 2)}***`;
+
+    return {
+      found: true,
+      maskedEmail,
+      maskedPhone,
+      accountName: account.name,
+      identifier: account.email,
+    };
+  };
+
+  const updateAccountPassword = (identifier: string, newPassword: string): {
+    success: boolean;
+    message: string;
+  } => {
+    const clean = identifier.trim().toLowerCase();
+    let currentAccounts = registeredAccounts;
+    try {
+      const stored = localStorage.getItem('norcelis_registered_accounts');
+      if (stored) {
+        currentAccounts = JSON.parse(stored);
+      }
+    } catch {
+      // fallback
+    }
+    const accountIndex = currentAccounts.findIndex(
+      (acc) => acc.email.toLowerCase() === clean || acc.docNumber.toLowerCase() === clean
+    );
+
+    if (accountIndex === -1) {
+      return {
+        success: false,
+        message: 'No se encontró la cuenta para restablecer la contraseña.',
+      };
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      return {
+        success: false,
+        message: 'La nueva contraseña debe tener al menos 6 caracteres.',
+      };
+    }
+
+    const updatedAccount = {
+      ...currentAccounts[accountIndex],
+      passwordHash: newPassword,
+    };
+
+    const newAccountsList = [...currentAccounts];
+    newAccountsList[accountIndex] = updatedAccount;
+
+    setRegisteredAccounts(newAccountsList);
+    try {
+      localStorage.setItem('norcelis_registered_accounts', JSON.stringify(newAccountsList));
+    } catch (e) {
+      console.error('Error saving updated accounts', e);
+    }
+
+    // If currently logged-in user matches, keep in sync
+    if (user.isLoggedIn && (user.email.toLowerCase() === clean || user.docNumber?.toLowerCase() === clean)) {
+      // session is preserved
+    }
+
+    showToast('¡Contraseña restablecida exitosamente! Ya puedes iniciar sesión con tu nueva clave.');
+
+    return {
+      success: true,
+      message: 'Contraseña restablecida con éxito',
+    };
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -1143,6 +1486,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         deleteGarageVehicle,
         isGarageModalOpen,
         setIsGarageModalOpen,
+        alertsEnabled,
+        permissionStatus,
+        requestNotificationPermission,
+        setPriceAlertsSubscription,
+        checkGaragePriceChanges,
+        sendTestPriceAlert,
         isViewer360Open,
         setIsViewer360Open,
         isTestDriveModalOpen,
@@ -1161,6 +1510,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         cartItems,
         addToCart,
         removeFromCart,
+        clearCart,
         updateCartQuantity,
         toggleCartInstallation,
         cartTotalCount,
@@ -1208,6 +1558,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         catalogSearchQuery,
         setCatalogSearchQuery,
         navigateToPartsCatalog,
+        trackingOrderCode,
+        setTrackingOrderCode,
+        termsActiveTab,
+        setTermsActiveTab,
+        navigateToTracking,
+        navigateToTerms,
+        findAccountForRecovery,
+        updateAccountPassword,
+        homeCategories,
+        updateHomeCategory,
+        resetHomeCategories,
+        officialBrands,
+        addOfficialBrand,
+        updateOfficialBrand,
+        deleteOfficialBrand,
+        resetOfficialBrands,
       }}
     >
       {children}

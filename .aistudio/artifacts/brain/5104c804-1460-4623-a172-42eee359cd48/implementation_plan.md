@@ -1,46 +1,70 @@
-# Plan de Implementación: Notificaciones Web de Cambios de Precio para 'Mi Garaje'
+# Plan de Implementación: Administración de Categorías Cinemáticas y Marcas Oficiales en Panel Admin
 
-Implementación de un servicio de notificaciones web mediante la API estándar de `Notification` del navegador para alertar sobre variaciones de precios en los vehículos guardados en **Mi Garaje**, con activación por interruptor, verificación manual y notificaciones compactas.
-
----
-
-## 1. Arquitectura y Servicio de Notificaciones
-
-### 1.1 Módulo `notificationService.ts`
-- **Soporte y Detección**: Verificación de compatibilidad con `window.Notification` en el navegador.
-- **Gestión de Permisos**:
-  - Consulta de estado actual: `'default' | 'granted' | 'denied'`.
-  - Solicitud explícita de permiso al activar el interruptor de alertas (`Notification.requestPermission()`).
-- **Persistencia de Preferencias**:
-  - Almacenamiento en `localStorage` del estado de suscripción de alertas (`norcelis_garage_price_alerts_enabled`).
-  - Almacenamiento de snapshots de precios (`norcelis_garage_price_snapshots`) para detectar variaciones reales frente al catálogo oficial de Nor Celis.
-- **Despacho de Notificación Compacta**:
-  - Emisión de notificación nativa con título del vehículo, nuevo precio en Soles (S/) y logo/ícono institucional.
-  - Manejo del evento `onclick` para enfocar la pestaña y abrir la ficha del vehículo correspondiente.
+Habilitar la gestión completa, interactiva y persistente de las tarjetas de categorías (fondos, nombres, subtítulos) y de la pasarela de marcas oficiales (logos, nombres, especialidades, creación y eliminación) desde una nueva pestaña dedicada **"Marcas & Categorías"** en `AdminDashboardView`.
 
 ---
 
-## 2. Integración en la Interfaz de Usuario (UI & UX)
+## 1. Arquitectura de Estado y Persistencia (`AppContext.tsx`)
 
-### 2.1 Sección de Alertas en `GarageModal.tsx`
-- **Interruptor de Alertas de Precio**:
-  - Control tipo switch toggle intuitivo en el modal de Mi Garaje.
-  - Al activarse, solicita de inmediato el permiso del navegador si aún no ha sido concedido.
-  - Indicador de estado: *Activo*, *Inactivo* o *Bloqueado por el navegador* con guía para desbloquear.
-- **Botón de Verificación Manual**:
-  - Botón *"Verificar Variaciones de Precio"* según la preferencia del usuario.
-  - Compara los precios actuales de los autos guardados frente al catálogo de vehículos de Nor Celis.
-  - Si se detecta un cambio de precio o si se ejecuta la comprobación de prueba, dispara la notificación web compacta con el nuevo precio y muestra un feedback toast en la interfaz.
+1. **Tipos e Interfaces**:
+   - `CinematicCategory`: `code`, `name`, `subtitle`, `image`, `tag`, `badge`, `count`.
+   - `OfficialBrand`: `code`, `name`, `iconText`, `logoUrl?`, `tag`, `origin`.
+
+2. **Estados en `AppContext`**:
+   - `homeCategories`: Arreglo de categorías persistido en `localStorage` (`norcelis_home_categories`), con respaldo en las 6 líneas predeterminadas.
+   - `officialBrands`: Arreglo de marcas oficiales persistido en `localStorage` (`norcelis_official_brands`), con respaldo en las 12 marcas oficiales predeterminadas.
+
+3. **Métodos Expuestos**:
+   - `updateHomeCategory(code: string, updated: Partial<CinematicCategory>)`: Actualiza fotos de fondo, textos y tags de cada categoría.
+   - `resetHomeCategories()`: Restablece las categorías a sus valores originales.
+   - `addOfficialBrand(brand: OfficialBrand)`: Agrega una nueva marca a la pasarela continua.
+   - `updateOfficialBrand(code: string, updated: Partial<OfficialBrand>)`: Modifica una marca existente.
+   - `deleteOfficialBrand(code: string)`: Elimina una marca de la pasarela.
+   - `resetOfficialBrands()`: Restablece la lista oficial de marcas predeterminadas.
 
 ---
 
-## 3. Pruebas y Validación
+## 2. Nueva Pestaña en el Panel de Administración (`AdminDashboardView.tsx`)
 
-1. **Prueba de Permisos**:
-   - Activar el interruptor en `GarageModal` y validar la solicitud de permiso del navegador.
-   - Verificar persistencia en `localStorage` tras recargar o cambiar de sesión.
-2. **Prueba de Notificación**:
-   - Ejecutar la verificación manual y comprobar que la notificación web se muestre con formato compacto (marca, modelo y precio actualizado).
-   - Verificar clic en la notificación para abrir la vista del vehículo.
-3. **Verificación de Compilación y Linter**:
-   - Ejecutar `compile_applet` y `lint_applet` para asegurar cero errores en TypeScript y React.
+1. **Nueva Pestaña en Barra de Navegación**:
+   - Pestaña: **"Marcas & Categorías"** (`activeTab === 'brands_categories'`).
+   - Icono representativo: `branding_watermark` o `category`.
+
+2. **Sección A: Gestión de Tarjetas de Categorías Cinemáticas**:
+   - Cuadrícula visual con previsualización en vivo de cada tarjeta.
+   - Botón **"Editar Tarjeta"** que abre modal con:
+     - Nombre de la categoría (ej: "SUSPENSIÓN OFF-ROAD")
+     - Subtítulo descriptivo
+     - URL de la Imagen de Fondo (con previsualizador instantáneo, botón para probar URLs de Unsplash / CDN y presets de alta definición)
+     - Tag superior (ej: "LÍNEA COMPETICIÓN")
+     - Badge técnico (ej: "Fox & Trakko")
+     - Conteo de repuestos vinculados
+   - Botón de restablecer valores de fábrica.
+
+3. **Sección B: Gestión de la Pasarela de Marcas Oficiales (Marquee)**:
+   - Botón destacado **"+ Agregar Nueva Marca Oficial"**.
+   - Tabla y tarjetas de marcas con:
+     - Logotipo / Sigla gráfica (`iconText` o imagen)
+     - Nombre comercial (ej: "TOYOTA GENUINO", "BREMBO")
+     - Código de filtro del catálogo
+     - Especialidad automotriz
+     - País de procedencia (con bandera / origen)
+     - Botones de acción: **Editar** y **Eliminar**.
+   - Modal para crear / editar marcas con validación en tiempo real.
+   - Botón para restaurar la lista oficial de marcas de fábrica.
+
+---
+
+## 3. Conexión en Tiempo Real con la Página Principal (`HomeView.tsx`)
+
+- Reemplazar las constantes locales en `HomeView.tsx` para que consuman `homeCategories` y `officialBrands` directamente de `useApp()`.
+- Cualquier cambio realizado en el panel Admin (por ejemplo, cambiar la foto de suspensión o agregar una nueva marca deportiva a la pasarela) se reflejará al instante en la página principal sin recargar la aplicación.
+
+---
+
+## 4. Verificación y Pruebas
+1. Acceder al panel de administración (usuario Administrador).
+2. Entrar a la nueva pestaña **"Marcas & Categorías"**.
+3. Cambiar la imagen de fondo de una categoría (ej. Frenos Deportivos) y verificar que en la página principal cambie de inmediato.
+4. Agregar una nueva marca oficial (ej. "SPARCO Racing", "K&N Engineering") y verificar que se integre a la pasarela continua infinita.
+5. Ejecutar `lint_applet` y `compile_applet` para garantizar cero errores de tipos y compilación.

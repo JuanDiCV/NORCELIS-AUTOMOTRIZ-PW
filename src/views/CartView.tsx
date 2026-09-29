@@ -17,6 +17,8 @@ export const CartView: React.FC = () => {
     setCurrentView,
     showToast,
     addToCart,
+    clearCart,
+    navigateToTracking,
     user,
   } = useApp();
 
@@ -60,6 +62,62 @@ export const CartView: React.FC = () => {
     }
   };
 
+  const savePlacedOrderRecord = (orderNum: string, guide?: string, paymentLabel?: string, totalAmount?: number) => {
+    try {
+      const existing = JSON.parse(localStorage.getItem('norcelis_placed_orders') || '[]');
+      const newOrder = {
+        orderNumber: orderNum,
+        trackingGuide: guide || `SHA-CAJ-${Math.floor(100000 + Math.random() * 900000)}`,
+        carrier: deliveryMethod === 'shipping' ? 'Shalom Express' : 'Flota Local Nor Celis',
+        createdDate: new Date().toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' }),
+        estimatedDelivery: deliveryMethod === 'shipping' ? selectedDestObj.estimatedTime : 'Inmediato en Sede',
+        status: 'confirmado',
+        statusText: 'Pedido Confirmado & Facturado',
+        statusDescription: 'El pedido fue recibido en nuestro sistema y los repuestos están siendo verificados por código OEM.',
+        destination: deliveryMethod === 'shipping' ? `${selectedDestObj.label} (${customerAddress || 'Dirección registrada'})` : 'Concesionario Nor Celis (AV. VIA DE EVITAMIENTO SUR 6003)',
+        deliveryType: deliveryMethod === 'shipping' ? `Despacho Shalom Express (${shalomDeliveryType === 'domicilio' ? 'A Domicilio' : 'Agencia Shalom'})` : 'Retiro en Concesionario Cajamarca',
+        recipientName: user.isLoggedIn && user.name ? user.name : (customerDniRuc ? `Cliente DNI/RUC ${customerDniRuc}` : 'Cliente Nor Celis'),
+        recipientPhone: user.isLoggedIn && user.phone ? user.phone : '987 654 321',
+        items: cartItems.map((it) => ({
+          name: it.title,
+          sku: it.skuOrCode,
+          quantity: it.quantity,
+          priceSoles: it.priceSoles,
+          image: it.image,
+        })),
+        totalSoles: totalAmount || finalTotalSoles,
+        timeline: [
+          {
+            title: 'Pedido Confirmado y Pago Registrado',
+            date: 'Hoy',
+            time: new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
+            location: 'Nor Celis E-Commerce Central',
+            completed: true,
+            current: true,
+          },
+          {
+            title: 'Control Técnico y Embalaje de Piezas OEM',
+            date: 'En progreso',
+            time: 'Estimado 2 horas',
+            location: 'Almacén Central Cajamarca',
+            completed: false,
+          },
+          {
+            title: deliveryMethod === 'shipping' ? 'Entrega a Agencia Shalom Express' : 'Disponible para Retiro en Sede',
+            date: 'Hoy / Mañana',
+            time: 'Pendiente',
+            location: deliveryMethod === 'shipping' ? 'Agencia Shalom Evitamiento' : 'Muelle de Entregas Nor Celis',
+            completed: false,
+          },
+        ],
+      };
+      localStorage.setItem('norcelis_placed_orders', JSON.stringify([newOrder, ...existing]));
+    } catch (e) {
+      console.error('Error saving placed order', e);
+    }
+    clearCart();
+  };
+
   const handleCheckout = () => {
     if (selectedPayment === 'culqi') {
       setIsCulqiModalOpen(true);
@@ -71,6 +129,8 @@ export const CartView: React.FC = () => {
       setIsCheckingOut(false);
       const generatedOrder = `NC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
       const generatedGuide = deliveryMethod === 'shipping' ? `SHA-CAJ-${Math.floor(100000 + Math.random() * 900000)}` : undefined;
+
+      savePlacedOrderRecord(generatedOrder, generatedGuide, selectedPayment === 'transfer' ? 'Transferencia Bancaria Oficial' : 'Yape / Plin Directo', finalTotalSoles);
 
       setCompletedOrder({
         orderNumber: generatedOrder,
@@ -89,6 +149,8 @@ export const CartView: React.FC = () => {
     setIsCulqiModalOpen(false);
     const generatedOrder = `NC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
     const generatedGuide = deliveryMethod === 'shipping' ? `SHA-CAJ-${Math.floor(100000 + Math.random() * 900000)}` : undefined;
+
+    savePlacedOrderRecord(generatedOrder, generatedGuide, details.method, details.amount);
 
     setCompletedOrder({
       orderNumber: generatedOrder,
@@ -755,6 +817,19 @@ export const CartView: React.FC = () => {
 
               {/* Action Buttons */}
               <div className="space-y-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const ordNum = completedOrder.orderNumber;
+                    setCompletedOrder(null);
+                    navigateToTracking(ordNum);
+                  }}
+                  className="w-full py-3 bg-[#212955] hover:bg-[#181f42] text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm"
+                >
+                  <span className="material-symbols-outlined text-base text-[#F07F00]">local_shipping</span>
+                  <span>Rastrear Pedido en Tiempo Real</span>
+                </button>
+
                 <a
                   href={`https://wa.me/51987654321?text=Hola%20Nor%20Celis,%20adjunto%20mi%20pedido%20${completedOrder.orderNumber}%20con%20guía%20Shalom%20${completedOrder.shalomGuide || 'retiro'}`}
                   target="_blank"

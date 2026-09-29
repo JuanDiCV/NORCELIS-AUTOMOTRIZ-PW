@@ -1,5 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { ActiveGarageVehicle } from '../types';
+import {
+  getNotificationPermission,
+  getPriceAlertsEnabled,
+  setPriceAlertsEnabled,
+  requestNotificationPermission as requestBrowserNotificationPermission,
+  checkPriceVariationsForGarage,
+  triggerTestPriceAlertNotification,
+  NotificationPermissionStatus,
+  PriceAlertCheckResult,
+} from '../services/notificationService';
 
 export interface GarageContextType {
   garageVehicles: ActiveGarageVehicle[];
@@ -12,6 +22,14 @@ export interface GarageContextType {
   isGarageModalOpen: boolean;
   setIsGarageModalOpen: (open: boolean) => void;
   hasVehicles: boolean;
+
+  // Web Notification & Price Alerts State and Methods
+  alertsEnabled: boolean;
+  permissionStatus: NotificationPermissionStatus;
+  requestNotificationPermission: () => Promise<NotificationPermissionStatus>;
+  setPriceAlertsSubscription: (enabled: boolean) => Promise<boolean>;
+  checkGaragePriceChanges: (onNavigateToVehicle?: (vehicleId: string) => void) => PriceAlertCheckResult;
+  sendTestPriceAlert: (onNavigateToVehicle?: (vehicleId: string) => void) => boolean;
 }
 
 export const GarageContext = createContext<GarageContextType | undefined>(undefined);
@@ -44,6 +62,18 @@ export const GarageProvider: React.FC<GarageProviderProps> = ({
   }, [userId]);
 
   const [isGarageModalOpen, setIsGarageModalOpen] = useState(false);
+
+  // Notification state
+  const [alertsEnabled, setAlertsEnabledState] = useState<boolean>(() => getPriceAlertsEnabled());
+  const [permissionStatus, setPermissionStatusState] = useState<NotificationPermissionStatus>(() =>
+    getNotificationPermission()
+  );
+
+  // Update permission status and alert subscription on mount or modal open
+  useEffect(() => {
+    setPermissionStatusState(getNotificationPermission());
+    setAlertsEnabledState(getPriceAlertsEnabled());
+  }, [isGarageModalOpen]);
 
   // Load initial vehicles from localStorage for current session / guest
   const [garageVehicles, setGarageVehicles] = useState<ActiveGarageVehicle[]>(() => {
@@ -258,6 +288,85 @@ export const GarageProvider: React.FC<GarageProviderProps> = ({
     }
   }, [getStorageKeys, onToastMessage]);
 
+  // Request browser notification permission explicitly
+  const requestNotificationPermission = useCallback(async (): Promise<NotificationPermissionStatus> => {
+    const status = await requestBrowserNotificationPermission();
+    setPermissionStatusState(status);
+    if (status === 'granted') {
+      setAlertsEnabledState(true);
+      setPriceAlertsEnabled(true);
+      if (onToastMessage) {
+        onToastMessage('✓ Permiso concedido: Alertas de precio web activadas para Mi Garaje.');
+      }
+    } else if (status === 'denied') {
+      setAlertsEnabledState(false);
+      setPriceAlertsEnabled(false);
+      if (onToastMessage) {
+        onToastMessage('Las notificaciones están bloqueadas en la configuración de tu navegador.');
+      }
+    }
+    return status;
+  }, [onToastMessage]);
+
+  // Handle subscription state when user toggles the switch in GarageModal
+  const setPriceAlertsSubscription = useCallback(async (enabled: boolean): Promise<boolean> => {
+    if (enabled) {
+      const currentPerm = getNotificationPermission();
+      if (currentPerm === 'granted') {
+        setAlertsEnabledState(true);
+        setPriceAlertsEnabled(true);
+        if (onToastMessage) {
+          onToastMessage('✓ Alertas de precio web activadas para Mi Garaje.');
+        }
+        return true;
+      } else {
+        const result = await requestBrowserNotificationPermission();
+        setPermissionStatusState(result);
+        if (result === 'granted') {
+          setAlertsEnabledState(true);
+          setPriceAlertsEnabled(true);
+          if (onToastMessage) {
+            onToastMessage('✓ Permiso concedido: Alertas de precio web activadas para Mi Garaje.');
+          }
+          return true;
+        } else {
+          setAlertsEnabledState(false);
+          setPriceAlertsEnabled(false);
+          if (onToastMessage) {
+            if (result === 'denied') {
+              onToastMessage('Las notificaciones están bloqueadas en la configuración del navegador.');
+            } else {
+              onToastMessage('Permiso de notificaciones no otorgado.');
+            }
+          }
+          return false;
+        }
+      }
+    } else {
+      setAlertsEnabledState(false);
+      setPriceAlertsEnabled(false);
+      if (onToastMessage) {
+        onToastMessage('Alertas de precio desactivadas.');
+      }
+      return false;
+    }
+  }, [onToastMessage]);
+
+  const checkGaragePriceChanges = useCallback((onNavigateToVehicle?: (vehicleId: string) => void): PriceAlertCheckResult => {
+    return checkPriceVariationsForGarage(garageVehicles, undefined, onNavigateToVehicle);
+  }, [garageVehicles]);
+
+  const sendTestPriceAlert = useCallback((onNavigateToVehicle?: (vehicleId: string) => void): boolean => {
+    const targetVeh = activeGarage || garageVehicles[0] || {
+      brand: 'Toyota',
+      model: 'Hilux Revo 4x4 D-Cab',
+      year: 2025,
+      plate: 'ABC-123',
+      engine: '2.8L Turbo Diésel',
+    };
+    return triggerTestPriceAlertNotification(targetVeh, undefined, onNavigateToVehicle);
+  }, [activeGarage, garageVehicles]);
+
   const value: GarageContextType = {
     garageVehicles,
     activeGarage,
@@ -269,6 +378,12 @@ export const GarageProvider: React.FC<GarageProviderProps> = ({
     isGarageModalOpen,
     setIsGarageModalOpen,
     hasVehicles: garageVehicles.length > 0,
+    alertsEnabled,
+    permissionStatus,
+    requestNotificationPermission,
+    setPriceAlertsSubscription,
+    checkGaragePriceChanges,
+    sendTestPriceAlert,
   };
 
   return <GarageContext.Provider value={value}>{children}</GarageContext.Provider>;

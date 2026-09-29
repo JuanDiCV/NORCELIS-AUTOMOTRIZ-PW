@@ -1,6 +1,6 @@
 {
-  "summary": "Plan de implementación para el servicio de notificaciones web (Notification API) para alertar cambios de precios en vehículos guardados en Mi Garaje.",
-  "updatedAt": "2026-09-29T16:18:34.305675273Z",
+  "summary": "Plan de implementación para habilitar la administración dinámica y completa de las Tarjetas de Categorías Cinemáticas y de la Pasarela de Marcas Oficiales desde el panel de Administración:\n1. Pestaña dedicada 'Marcas & Categorías' en AdminDashboardView.\n2. Estado persistente en AppContext sincronizado con localStorage para categorías y marcas.\n3. Edición en tiempo real de imágenes de fondo, nombres, subtítulos y badges de categorías.\n4. Gestión completa de marcas oficiales: agregar, editar logos/insignias, nombres, países de origen y eliminar marcas de la pasarela.\n5. Sincronización inmediata con HomeView para reflejar los cambios en vivo en la página principal.",
+  "updatedAt": "2026-09-29T21:48:40.727613838Z",
   "requestFeedback": true,
   "userFacing": true
 }
