@@ -927,9 +927,6 @@ export const HomeView: React.FC = () => {
       <section className="px-gutter">
         <div className="max-w-7xl mx-auto bg-gradient-to-r from-surface-container-high via-surface-container-low to-surface-container rounded-3xl p-6 sm:p-10 border border-surface-container flex flex-col lg:flex-row items-center justify-between gap-8">
           <div className="space-y-3 max-w-xl">
-            <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full border border-emerald-300">
-              Certificación 150 Puntos de Control
-            </span>
             <h3 className="font-headline font-extrabold text-2xl sm:text-3xl text-primary">
               Seminuevos con la misma confianza que un auto nuevo.
             </h3>

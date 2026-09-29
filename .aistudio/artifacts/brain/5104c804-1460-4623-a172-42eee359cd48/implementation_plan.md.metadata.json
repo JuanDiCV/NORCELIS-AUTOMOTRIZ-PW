@@ -1,6 +1,6 @@
 {
-  "summary":  "Plan para integrar un botón flotante de cotización rápida y reorganizar los accesos flotantes (Asesor Virtual IA, WhatsApp Oficial y Cotización Rápida) en un Speed Dial / Hub Flotante elegante, evitando obstrucción visual en pantallas móviles y desktop.",
-  "updatedAt":  "2026-09-28T17:34:30.433162835Z",
-  "requestFeedback":  true,
-  "userFacing":  true
+  "summary": "Plan de implementación para el servicio de notificaciones web (Notification API) para alertar cambios de precios en vehículos guardados en Mi Garaje.",
+  "updatedAt": "2026-09-29T16:18:34.305675273Z",
+  "requestFeedback": true,
+  "userFacing": true
 }

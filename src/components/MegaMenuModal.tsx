@@ -60,6 +60,9 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
     showToast,
     setSelectedPartSku,
     setSelectedVehicleId,
+    setCatalogCategoryFilter,
+    setCatalogBrandFilter,
+    setCatalogSearchQuery,
   } = useApp();
 
   const [activeDeptId, setActiveDeptId] = useState<string>('automotriz');
@@ -90,13 +93,11 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
       setCurrentView('vehicle-pdp');
       showToast(`Cargando ficha técnica de ${item.name}`);
     } else if (item.sku) {
+      if (item.category !== undefined) setCatalogCategoryFilter(item.category);
+      if (item.brand !== undefined) setCatalogBrandFilter(item.brand);
+      setCatalogSearchQuery('');
       setSelectedPartSku(item.sku);
-      // Filter catalog in subcategory and highlight the item front-and-center
-      navigateToPartsCatalog(
-        item.category || 'todos',
-        item.brand || 'todos',
-        ''
-      );
+      setCurrentView('parts');
       showToast(`Destacando "${item.name}" en el catálogo`);
     } else if (item.view) {
       setCurrentView(item.view);

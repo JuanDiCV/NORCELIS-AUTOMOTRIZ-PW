@@ -10,6 +10,7 @@ export const WishlistView: React.FC = () => {
     moveWishlistToCart,
     moveAllWishlistToCart,
     activeGarage,
+    setIsGarageModalOpen,
     setCurrentView,
     setSelectedVehicleId,
     showToast,
@@ -128,17 +129,34 @@ export const WishlistView: React.FC = () => {
       )}
 
       {/* Active Garage Compatibility Indicator */}
-      <div className="bg-white/95 text-gray-800 p-3.5 rounded-2xl border border-gray-200 flex items-center justify-between text-xs shadow-xs">
-        <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-emerald-600 text-lg">verified</span>
-          <span className="text-gray-600">
-            Verificando compatibilidad con: <strong className="text-[#212955]">{activeGarage.brand} {activeGarage.model} ({activeGarage.year})</strong>
+      {activeGarage ? (
+        <div className="bg-white/95 text-gray-800 p-3.5 rounded-2xl border border-gray-200 flex items-center justify-between text-xs shadow-xs">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-emerald-600 text-lg">verified</span>
+            <span className="text-gray-600">
+              Verificando compatibilidad con: <strong className="text-[#212955]">{activeGarage.brand} {activeGarage.model} ({activeGarage.year})</strong>
+            </span>
+          </div>
+          <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">
+            100% Compatible
           </span>
         </div>
-        <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">
-          100% Compatible
-        </span>
-      </div>
+      ) : (
+        <div className="bg-white/95 text-gray-800 p-3.5 rounded-2xl border border-gray-200 flex items-center justify-between text-xs shadow-xs">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[#F07F00] text-lg">garage</span>
+            <span className="text-gray-600">
+              ¿Deseas validar compatibilidad con tu vehículo?
+            </span>
+          </div>
+          <button
+            onClick={() => setIsGarageModalOpen(true)}
+            className="text-[#F07F00] hover:underline font-bold text-xs cursor-pointer"
+          >
+            + Configurar Garaje
+          </button>
+        </div>
+      )}
 
       {/* Category Tabs */}
       <div className="flex border-b border-white/20 text-xs font-bold gap-2 overflow-x-auto scrollbar-none">

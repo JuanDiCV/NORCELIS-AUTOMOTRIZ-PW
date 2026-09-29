@@ -107,7 +107,11 @@ export const PartsCatalogView: React.FC = () => {
 
   useEffect(() => {
     if (catalogSearchQuery) {
+      setBrandSegment('todos');
+      setOnlyOffers(false);
       setSearchFilter(catalogSearchQuery);
+    } else {
+      setSearchFilter('');
     }
   }, [catalogSearchQuery]);
 
@@ -285,7 +289,7 @@ export const PartsCatalogView: React.FC = () => {
         }
 
         // Compatibilidad con Garaje Activo
-        if (onlyCompatible && !isTargetPart) {
+        if (onlyCompatible && !isTargetPart && activeGarage) {
           const garBrand = activeGarage.brand.toLowerCase();
           const garModel = activeGarage.model.toLowerCase();
           const compText = (part.compatibleVehicle || '').toLowerCase();
@@ -316,20 +320,27 @@ export const PartsCatalogView: React.FC = () => {
             return true;
           }
 
+          const crossCodesText = (part.crossOemCodes || []).join(' ');
+          const techSpecsText = part.technicalSpecs
+            ? Object.values(part.technicalSpecs).join(' ')
+            : '';
+          const searchableText = normalizeSearchText(
+            `${part.name} ${part.sku} ${part.oemCode} ${crossCodesText} ${part.brand} ${part.category} ${part.compatibleVehicle || ''} ${(part.features || []).join(' ')} ${techSpecsText} ${part.badge || ''}`
+          );
+
+          if (searchableText.includes(normQuery)) {
+            return true;
+          }
+
           const queryTokens = normQuery
             .split(' ')
             .filter((tok) => tok.length > 1 && !STOPWORDS.has(tok));
 
           if (queryTokens.length > 0) {
-            const crossCodesText = (part.crossOemCodes || []).join(' ');
-            const techSpecsText = part.technicalSpecs
-              ? Object.values(part.technicalSpecs).join(' ')
-              : '';
-            const searchableText = normalizeSearchText(
-              `${part.name} ${part.sku} ${part.oemCode} ${crossCodesText} ${part.brand} ${part.category} ${part.compatibleVehicle || ''} ${(part.features || []).join(' ')} ${techSpecsText}`
-            );
             const matchesAll = queryTokens.every((tok) => searchableText.includes(tok));
             if (!matchesAll) return false;
+          } else {
+            if (!searchableText.includes(normQuery)) return false;
           }
         }
 
@@ -407,30 +418,50 @@ export const PartsCatalogView: React.FC = () => {
       {/* 1. TARJETA DESTACADA: ASISTENTE DE COMPATIBILIDAD & VIN */}
       <div className="bg-white rounded-2xl border border-[#9D9D9C]/40 p-4 shadow-sm relative overflow-hidden space-y-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-[#212955] text-white flex items-center justify-center">
-              <span className="material-symbols-outlined text-[17px] text-[#F07F00]">directions_car</span>
-            </span>
-            <div>
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#F07F00] block">
-                Tu Vehículo Guardado
+        {activeGarage ? (
+          <>
+            <div className="flex items-center gap-2">
+              <span className="w-7 h-7 rounded-lg bg-[#212955] text-white flex items-center justify-center">
+                <span className="material-symbols-outlined text-[17px] text-[#F07F00]">directions_car</span>
               </span>
-              <h4 className="font-bold text-xs text-[#212955] truncate max-w-[190px]">
-                {activeGarage.brand} {activeGarage.model} ({activeGarage.year})
-              </h4>
+              <div>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#F07F00] block">
+                  Tu Vehículo Guardado
+                </span>
+                <h4 className="font-bold text-xs text-[#212955] truncate max-w-[190px]">
+                  {activeGarage.brand} {activeGarage.model} ({activeGarage.year})
+                </h4>
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={() => setIsGarageModalOpen(true)}
+              className="text-[11px] font-bold text-[#F07F00] hover:underline cursor-pointer ml-auto"
+              title="Cambiar vehículo"
+            >
+              Cambiar
+            </button>
+          </>
+        ) : (
+          <div className="w-full flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-7 h-7 rounded-lg bg-[#F07F00]/10 text-[#F07F00] flex items-center justify-center">
+                <span className="material-symbols-outlined text-[17px]">garage</span>
+              </span>
+              <span className="text-xs font-bold text-[#212955]">Sin auto configurado</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsGarageModalOpen(true)}
+              className="text-[11px] font-bold text-[#F07F00] hover:underline cursor-pointer"
+            >
+              + Agregar
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsGarageModalOpen(true)}
-            className="text-[11px] font-bold text-[#F07F00] hover:underline cursor-pointer"
-            title="Cambiar vehículo"
-          >
-            Cambiar
-          </button>
-        </div>
+        )}
+      </div>
 
-        {/* Toggle Solo Compatibles */}
+      {activeGarage && (
         <label className={`flex items-start gap-2.5 p-2.5 rounded-xl border transition-all cursor-pointer ${
           onlyCompatible
             ? 'bg-[#212955]/5 border-[#212955] text-[#212955]'
@@ -451,6 +482,7 @@ export const PartsCatalogView: React.FC = () => {
             </span>
           </div>
         </label>
+      )}
 
         {/* VIN Check mini-form */}
         <div className="pt-2 border-t border-[#9D9D9C]/20">
@@ -889,18 +921,20 @@ export const PartsCatalogView: React.FC = () => {
                 </div>
               </label>
 
-              <label className="flex items-center gap-2.5 text-xs font-semibold text-gray-700 cursor-pointer p-1.5 rounded-lg hover:bg-gray-50">
-                <input
-                  type="checkbox"
-                  checked={onlyCompatible}
-                  onChange={(e) => setOnlyCompatible(e.target.checked)}
-                  className="w-4 h-4 accent-[#F07F00] rounded cursor-pointer"
-                />
-                <div className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-emerald-600 text-sm">verified</span>
-                  <span>Garantía de Calce para {activeGarage.brand}</span>
-                </div>
-              </label>
+              {activeGarage && (
+                <label className="flex items-center gap-2.5 text-xs font-semibold text-gray-700 cursor-pointer p-1.5 rounded-lg hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={onlyCompatible}
+                    onChange={(e) => setOnlyCompatible(e.target.checked)}
+                    className="w-4 h-4 accent-[#F07F00] rounded cursor-pointer"
+                  />
+                  <div className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-emerald-600 text-sm">verified</span>
+                    <span>Garantía de Calce para {activeGarage.brand}</span>
+                  </div>
+                </label>
+              )}
             </div>
           )}
         </div>
@@ -950,63 +984,93 @@ export const PartsCatalogView: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-gutter py-6 space-y-6">
       {/* Active Garage Vehicle Banner */}
-      <div className="bg-[#212955] text-white rounded-3xl p-5 sm:p-6 shadow-xl border border-[#212955]/30 relative overflow-hidden">
-        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+      {activeGarage ? (
+        <div className="bg-[#212955] text-white rounded-3xl p-5 sm:p-6 shadow-xl border border-[#212955]/30 relative overflow-hidden">
+          <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-[#F07F00] text-white flex items-center justify-center font-bold shadow-lg shrink-0">
+                <span className="material-symbols-outlined text-3xl">garage</span>
+              </div>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#212955] bg-white px-2.5 py-0.5 rounded-full">
+                    Tu Garaje Activo
+                  </span>
+                  <span className="flex items-center gap-1 text-[11px] text-emerald-400 font-bold">
+                    <span className="material-symbols-outlined text-[15px]">verified</span>
+                    Compatibilidad Verificada por Catálogo OEM
+                  </span>
+                </div>
+                <h2 className="font-headline font-bold text-xl sm:text-2xl text-white mt-1">
+                  {activeGarage.brand} {activeGarage.model} ({activeGarage.year})
+                </h2>
+                <div className="text-xs text-gray-300 flex flex-wrap gap-2 mt-0.5 font-mono">
+                  <span>Placa: <strong className="text-white">{activeGarage.plate}</strong></span>
+                  <span>•</span>
+                  <span>{activeGarage.engine}</span>
+                  {activeGarage.vin && (
+                    <>
+                      <span>•</span>
+                      <span>VIN: {activeGarage.vin}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Toggle switch for compatible only */}
+              <label className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer border transition-colors ${
+                onlyCompatible ? 'bg-[#F07F00] text-white border-[#F07F00]' : 'bg-white/10 hover:bg-white/15 text-white border-white/15'
+              }`}>
+                <input
+                  type="checkbox"
+                  checked={onlyCompatible}
+                  onChange={(e) => setOnlyCompatible(e.target.checked)}
+                  className="w-4 h-4 accent-white rounded cursor-pointer"
+                />
+                <span>Filtrar solo compatibles con {activeGarage.model.split(' ')[0]}</span>
+              </label>
+
+              <button
+                onClick={() => setIsGarageModalOpen(true)}
+                className="bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-4 py-2.5 rounded-xl border border-white/20 transition-all flex items-center gap-1.5 cursor-pointer min-h-[44px]"
+              >
+                <span className="material-symbols-outlined text-[16px]">swap_horiz</span>
+                Cambiar Vehículo
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-gradient-to-r from-[#212955] to-[#161c3b] text-white rounded-3xl p-5 sm:p-6 shadow-xl border border-[#212955]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-[#F07F00] text-white flex items-center justify-center font-bold shadow-lg shrink-0">
+            <div className="w-14 h-14 rounded-2xl bg-white/10 text-[#F07F00] flex items-center justify-center font-bold shrink-0">
               <span className="material-symbols-outlined text-3xl">garage</span>
             </div>
             <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#212955] bg-white px-2.5 py-0.5 rounded-full">
-                  Tu Garaje Activo
-                </span>
-                <span className="flex items-center gap-1 text-[11px] text-emerald-400 font-bold">
-                  <span className="material-symbols-outlined text-[15px]">verified</span>
-                  Compatibilidad Verificada por Catálogo OEM
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#F07F00] bg-white/10 px-2.5 py-0.5 rounded-full">
+                  Configura Tu Garaje
                 </span>
               </div>
-              <h2 className="font-headline font-bold text-xl sm:text-2xl text-white mt-1">
-                {activeGarage.brand} {activeGarage.model} ({activeGarage.year})
+              <h2 className="font-headline font-bold text-lg sm:text-xl text-white mt-1">
+                ¿Buscas repuestos para tu vehículo?
               </h2>
-              <div className="text-xs text-gray-300 flex flex-wrap gap-2 mt-0.5 font-mono">
-                <span>Placa: <strong className="text-white">{activeGarage.plate}</strong></span>
-                <span>•</span>
-                <span>{activeGarage.engine}</span>
-                {activeGarage.vin && (
-                  <>
-                    <span>•</span>
-                    <span>VIN: {activeGarage.vin}</span>
-                  </>
-                )}
-              </div>
+              <p className="text-xs text-gray-300 mt-0.5">
+                Registra tu modelo o placa para filtrar automáticamente piezas homologadas con garantía de calce.
+              </p>
             </div>
           </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Toggle switch for compatible only */}
-            <label className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-semibold cursor-pointer border transition-colors ${
-              onlyCompatible ? 'bg-[#F07F00] text-white border-[#F07F00]' : 'bg-white/10 hover:bg-white/15 text-white border-white/15'
-            }`}>
-              <input
-                type="checkbox"
-                checked={onlyCompatible}
-                onChange={(e) => setOnlyCompatible(e.target.checked)}
-                className="w-4 h-4 accent-white rounded cursor-pointer"
-              />
-              <span>Filtrar solo compatibles con {activeGarage.model.split(' ')[0]}</span>
-            </label>
-
-            <button
-              onClick={() => setIsGarageModalOpen(true)}
-              className="bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-4 py-2.5 rounded-xl border border-white/20 transition-all flex items-center gap-1.5 cursor-pointer min-h-[44px]"
-            >
-              <span className="material-symbols-outlined text-[16px]">swap_horiz</span>
-              Cambiar Vehículo
-            </button>
-          </div>
+          <button
+            onClick={() => setIsGarageModalOpen(true)}
+            className="bg-[#F07F00] hover:bg-[#d97200] text-white text-xs font-bold px-5 py-3 rounded-xl transition-all flex items-center gap-2 shrink-0 cursor-pointer shadow-md"
+          >
+            <span className="material-symbols-outlined text-base">add_circle</span>
+            + Agregar auto a Mi Garaje
+          </button>
         </div>
-      </div>
+      )}
 
       {/* Brand Logos Quick Carousel / Pills */}
       <div className="bg-white p-4 rounded-2xl border border-[#9D9D9C]/30 shadow-xs">
@@ -1189,7 +1253,7 @@ export const PartsCatalogView: React.FC = () => {
                   </span>
                 )}
 
-                {onlyCompatible && (
+                {onlyCompatible && activeGarage && (
                   <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-900 font-bold px-2.5 py-1 rounded-lg">
                     Compatible {activeGarage.model.split(' ')[0]}
                     <button

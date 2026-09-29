@@ -462,7 +462,7 @@ Contamos con stock en tiempo real de marcas líderes:
                 >
                   <span className="material-symbols-outlined text-sm text-[#F07F00]">garage</span>
                   <span className="truncate font-semibold text-slate-800">
-                    Garaje: <strong className="text-[#212955]">{activeGarage.brand} {activeGarage.model}</strong>
+                    Garaje: <strong className={activeGarage ? "text-[#212955]" : "text-[#F07F00]"}>{activeGarage ? `${activeGarage.brand} ${activeGarage.model}` : '+ Agregar auto'}</strong>
                   </span>
                 </div>
 

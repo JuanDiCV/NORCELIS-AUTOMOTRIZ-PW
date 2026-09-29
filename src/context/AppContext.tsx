@@ -21,8 +21,8 @@ interface AppContextType {
   setSelectedVehicleId: (id: string) => void;
   selectedPartSku: string;
   setSelectedPartSku: (sku: string) => void;
-  activeGarage: ActiveGarageVehicle;
-  setActiveGarage: (garage: ActiveGarageVehicle) => void;
+  activeGarage: ActiveGarageVehicle | null;
+  setActiveGarage: (garage: ActiveGarageVehicle | null) => void;
   garageVehicles: ActiveGarageVehicle[];
   addGarageVehicle: (vehicle: Omit<ActiveGarageVehicle, 'id'>) => void;
   updateGarageVehicle: (vehicleIdOrPlate: string, updatedData: Partial<ActiveGarageVehicle>) => void;
@@ -147,22 +147,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [garageVehicles, setGarageVehicles] = useState<ActiveGarageVehicle[]>(() => {
     try {
-      const saved = localStorage.getItem('norcelis_garage_vehicles');
+      // Remove legacy non-user scoped keys
+      localStorage.removeItem('norcelis_garage_vehicles');
+      localStorage.removeItem('norcelis_active_garage');
+
+      const savedAuth = localStorage.getItem('norcelis_current_auth_user');
+      let userId = 'guest';
+      if (savedAuth) {
+        const parsed = JSON.parse(savedAuth);
+        if (parsed?.isLoggedIn && parsed?.id) {
+          userId = parsed.id;
+        }
+      }
+      const storageKey = userId === 'guest' ? 'norcelis_garage_vehicles_guest' : `norcelis_garage_vehicles_${userId}`;
+      const saved = localStorage.getItem(storageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           return parsed;
         }
       }
     } catch (e) {
       console.error('Error loading garage vehicles from localStorage', e);
     }
-    return AVAILABLE_GARAGE_VEHICLES;
+    // Guests and new accounts have NO vehicles by default (empty)
+    return [];
   });
 
-  const [activeGarage, setActiveGarage] = useState<ActiveGarageVehicle>(() => {
+  const [activeGarage, setActiveGarage] = useState<ActiveGarageVehicle | null>(() => {
     try {
-      const savedActive = localStorage.getItem('norcelis_active_garage');
+      const savedAuth = localStorage.getItem('norcelis_current_auth_user');
+      let userId = 'guest';
+      if (savedAuth) {
+        const parsed = JSON.parse(savedAuth);
+        if (parsed?.isLoggedIn && parsed?.id) {
+          userId = parsed.id;
+        }
+      }
+      const storageKey = userId === 'guest' ? 'norcelis_active_garage_guest' : `norcelis_active_garage_${userId}`;
+      const savedActive = localStorage.getItem(storageKey);
       if (savedActive) {
         const parsed = JSON.parse(savedActive);
         if (parsed && parsed.brand) return parsed;
@@ -170,26 +193,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {
       console.error('Error loading active garage from localStorage', e);
     }
-    return INITIAL_ACTIVE_GARAGE;
+    // Starts with null if no vehicle registered
+    return null;
   });
 
-  // Sync garageVehicles to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('norcelis_garage_vehicles', JSON.stringify(garageVehicles));
-    } catch (e) {
-      console.error('Error saving garage vehicles to localStorage', e);
-    }
-  }, [garageVehicles]);
 
-  // Sync activeGarage to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('norcelis_active_garage', JSON.stringify(activeGarage));
-    } catch (e) {
-      console.error('Error saving active garage to localStorage', e);
-    }
-  }, [activeGarage]);
 
   const addGarageVehicle = (newVeh: Omit<ActiveGarageVehicle, 'id'>) => {
     const created: ActiveGarageVehicle = {
@@ -208,7 +216,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (!matches) return v;
         const updated = { ...v, ...updatedData };
         // If active vehicle is being updated, update activeGarage state too
-        if (activeGarage.id === v.id || activeGarage.plate === v.plate || activeGarage.vin === v.vin) {
+        if (activeGarage && (activeGarage.id === v.id || activeGarage.plate === v.plate || activeGarage.vin === v.vin)) {
           setActiveGarage(updated);
         }
         return updated;
@@ -228,19 +236,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setGarageVehicles(remaining);
 
-    // If deleted vehicle was currently active, auto-select the next available vehicle or default fallback
+    // If deleted vehicle was currently active, auto-select the next available vehicle or null
     const wasActive =
-      activeGarage.id === vehicleIdOrPlate ||
-      activeGarage.plate === vehicleIdOrPlate ||
-      activeGarage.vin === vehicleIdOrPlate ||
-      (targetVehicle && activeGarage.model === targetVehicle.model && activeGarage.year === targetVehicle.year);
+      activeGarage &&
+      (activeGarage.id === vehicleIdOrPlate ||
+        activeGarage.plate === vehicleIdOrPlate ||
+        activeGarage.vin === vehicleIdOrPlate ||
+        (targetVehicle && activeGarage.model === targetVehicle.model && activeGarage.year === targetVehicle.year));
 
     if (wasActive) {
-      const nextVehicle = remaining.length > 0 ? remaining[0] : INITIAL_ACTIVE_GARAGE;
+      const nextVehicle = remaining.length > 0 ? remaining[0] : null;
       setActiveGarage(nextVehicle);
-      showToast(
-        `Vehículo eliminado. Se activó automáticamente ${nextVehicle.brand} ${nextVehicle.model}.`
-      );
+      if (nextVehicle) {
+        showToast(
+          `Vehículo eliminado. Se activó automáticamente ${nextVehicle.brand} ${nextVehicle.model}.`
+        );
+      } else {
+        showToast(`Vehículo eliminado. Tu garaje ahora está vacío.`);
+      }
     } else {
       showToast(`Vehículo eliminado de Mi Garaje`);
     }
@@ -393,7 +406,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Track previous authenticated user ID to prevent race conditions or cross-account leakage
   const prevUserIdRef = useRef<string | null>(null);
 
-  // Sync cart and wishlist whenever active authenticated user changes (login, logout, new registration)
+  // Sync cart, wishlist, and garage whenever active authenticated user changes (login, logout, new registration)
   useEffect(() => {
     const currentUserId = user.isLoggedIn && user.id ? user.id : null;
 
@@ -416,7 +429,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       prevUserIdRef.current = currentUserId || 'guest';
 
       if (user.isLoggedIn && user.id) {
-        // Authenticated user: load their specific saved cart and wishlist
+        // Authenticated user: load their specific saved cart, wishlist, and garage
         try {
           const userCart = localStorage.getItem(`norcelis_cart_${user.id}`);
           setCartItems(userCart ? JSON.parse(userCart) : []);
@@ -429,14 +442,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         } catch {
           setWishlistItems([]);
         }
+        try {
+          const userGarage = localStorage.getItem(`norcelis_garage_vehicles_${user.id}`);
+          const parsedGarage = userGarage ? JSON.parse(userGarage) : [];
+          setGarageVehicles(Array.isArray(parsedGarage) ? parsedGarage : []);
+          const userActive = localStorage.getItem(`norcelis_active_garage_${user.id}`);
+          setActiveGarage(userActive ? JSON.parse(userActive) : (parsedGarage[0] || null));
+        } catch {
+          setGarageVehicles([]);
+          setActiveGarage(null);
+        }
       } else {
-        // Unauthenticated visitor / guest / logged out: strictly empty cart and favorites!
+        // Unauthenticated visitor / guest / logged out: strictly empty cart and favorites, load guest garage if any
         setCartItems([]);
         setWishlistItems([]);
         try {
           localStorage.removeItem('norcelis_cart_guest');
           localStorage.removeItem('norcelis_wishlist_guest');
-        } catch (e) {}
+          const guestGarage = localStorage.getItem('norcelis_garage_vehicles_guest');
+          const parsedGuestGarage = guestGarage ? JSON.parse(guestGarage) : [];
+          setGarageVehicles(Array.isArray(parsedGuestGarage) ? parsedGuestGarage : []);
+          const guestActive = localStorage.getItem('norcelis_active_garage_guest');
+          setActiveGarage(guestActive ? JSON.parse(guestActive) : (parsedGuestGarage[0] || null));
+        } catch (e) {
+          setGarageVehicles([]);
+          setActiveGarage(null);
+        }
       }
     }
   }, [user.isLoggedIn, user.id]);
@@ -465,11 +496,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
   }, [wishlistItems, user.isLoggedIn, user.id]);
 
+  // Sync garageVehicles to localStorage for guest or user
+  useEffect(() => {
+    try {
+      const storageKey = user.isLoggedIn && user.id
+        ? `norcelis_garage_vehicles_${user.id}`
+        : 'norcelis_garage_vehicles_guest';
+      localStorage.setItem(storageKey, JSON.stringify(garageVehicles));
+    } catch (e) {
+      console.error('Error saving garage vehicles to localStorage', e);
+    }
+  }, [garageVehicles, user.isLoggedIn, user.id]);
+
+  // Sync activeGarage to localStorage for guest or user
+  useEffect(() => {
+    try {
+      const storageKey = user.isLoggedIn && user.id
+        ? `norcelis_active_garage_${user.id}`
+        : 'norcelis_active_garage_guest';
+      if (activeGarage) {
+        localStorage.setItem(storageKey, JSON.stringify(activeGarage));
+      } else {
+        localStorage.removeItem(storageKey);
+      }
+    } catch (e) {
+      console.error('Error saving active garage to localStorage', e);
+    }
+  }, [activeGarage, user.isLoggedIn, user.id]);
+
   const [catalogCategoryFilter, setCatalogCategoryFilter] = useState<string>('todos');
   const [catalogBrandFilter, setCatalogBrandFilter] = useState<string>('todos');
   const [catalogSearchQuery, setCatalogSearchQuery] = useState<string>('');
 
   const navigateToPartsCatalog = (category?: string, brand?: string, search?: string) => {
+    setSelectedPartSku('');
     if (category !== undefined) setCatalogCategoryFilter(category);
     if (brand !== undefined) setCatalogBrandFilter(brand);
     if (search !== undefined) setCatalogSearchQuery(search);
@@ -895,6 +955,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {
       setWishlistItems([]);
     }
+    try {
+      const userGarage = localStorage.getItem(`norcelis_garage_vehicles_${authUser.id}`);
+      if (userGarage) {
+        const parsedGarage = JSON.parse(userGarage);
+        setGarageVehicles(Array.isArray(parsedGarage) ? parsedGarage : []);
+        const userActive = localStorage.getItem(`norcelis_active_garage_${authUser.id}`);
+        setActiveGarage(userActive ? JSON.parse(userActive) : (parsedGarage[0] || null));
+      } else if (account.vehicle && account.vehicle.brand && account.vehicle.model) {
+        const createdVeh: ActiveGarageVehicle = {
+          id: `gar-${Date.now()}`,
+          brand: account.vehicle.brand,
+          model: account.vehicle.model,
+          year: parseInt(account.vehicle.year) || 2025,
+          engine: '1.8L - 2.5L Gasolina / Híbrido',
+          plate: `PER-${Math.floor(100 + Math.random() * 900)}`,
+          vin: `93H${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+        };
+        setGarageVehicles([createdVeh]);
+        setActiveGarage(createdVeh);
+      } else {
+        setGarageVehicles([]);
+        setActiveGarage(null);
+      }
+    } catch {
+      setGarageVehicles([]);
+      setActiveGarage(null);
+    }
 
     setUser(authUser);
     if (account.role === 'admin') {
@@ -965,6 +1052,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         plate: `PER-${Math.floor(100 + Math.random() * 900)}`,
         vin: `93H${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
       });
+    } else {
+      // New account with no vehicle specified starts strictly with empty garage
+      setGarageVehicles([]);
+      setActiveGarage(null);
+      try {
+        localStorage.setItem(`norcelis_garage_vehicles_${newAccount.id}`, JSON.stringify([]));
+        localStorage.removeItem(`norcelis_active_garage_${newAccount.id}`);
+      } catch (e) {}
     }
 
     // Brand new account: start with 0 saved favorites and 0 cart items
@@ -1017,7 +1112,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.removeItem('norcelis_current_auth_user');
       localStorage.removeItem('norcelis_cart_guest');
       localStorage.removeItem('norcelis_wishlist_guest');
-    } catch (e) {}
+      const guestGarage = localStorage.getItem('norcelis_garage_vehicles_guest');
+      const parsedGuestGarage = guestGarage ? JSON.parse(guestGarage) : [];
+      setGarageVehicles(Array.isArray(parsedGuestGarage) ? parsedGuestGarage : []);
+      const guestActive = localStorage.getItem('norcelis_active_garage_guest');
+      setActiveGarage(guestActive ? JSON.parse(guestActive) : (parsedGuestGarage[0] || null));
+    } catch (e) {
+      setGarageVehicles([]);
+      setActiveGarage(null);
+    }
     setUser(guestUser);
     setIsAdminUnlocked(false);
     showToast('Sesión cerrada correctamente');
@@ -1119,3 +1222,5 @@ export const useApp = () => {
   }
   return context;
 };
+
+export { GarageContext, GarageProvider, useGarage } from './GarageContext';

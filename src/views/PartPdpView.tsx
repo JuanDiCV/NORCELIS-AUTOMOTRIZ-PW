@@ -9,6 +9,7 @@ export const PartPdpView: React.FC = () => {
     selectedPartSku,
     setSelectedPartSku,
     activeGarage,
+    setIsGarageModalOpen,
     addToCart,
     toggleWishlist,
     isInWishlist,
@@ -35,9 +36,10 @@ export const PartPdpView: React.FC = () => {
   const isWishlisted = isInWishlist(part.id);
 
   // Check garage compatibility
-  const isCompatibleWithGarage =
+  const isCompatibleWithGarage = activeGarage ? (
     part.compatibleVehicle.toLowerCase().includes(activeGarage.brand.toLowerCase()) ||
-    part.compatibleVehicle.toLowerCase().includes(activeGarage.model.toLowerCase().split(' ')[0]);
+    part.compatibleVehicle.toLowerCase().includes(activeGarage.model.toLowerCase().split(' ')[0])
+  ) : false;
 
   // Comprehensive compatibility list
   const defaultCompatibilityList = [
@@ -87,36 +89,60 @@ export const PartPdpView: React.FC = () => {
         </nav>
 
         {/* Garage Active Compatibility Alert Banner */}
-        <div
-          className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs ${
-            isCompatibleWithGarage
-              ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
-              : 'bg-amber-50 text-amber-900 border-amber-200'
-          }`}
-        >
-          <div className="flex items-start sm:items-center gap-3">
-            <span className="material-symbols-outlined text-2xl shrink-0 mt-0.5 sm:mt-0">
-              {isCompatibleWithGarage ? 'check_circle' : 'warning'}
-            </span>
-            <div>
-              <span className="font-bold block break-words">
-                {isCompatibleWithGarage
-                  ? `✓ Pieza 100% Homologada para tu Garaje Activo: ${activeGarage.brand} ${activeGarage.model} (${activeGarage.year})`
-                  : `⚠️ Atención: Verifica compatibilidad para tu ${activeGarage.brand} ${activeGarage.model}`}
-              </span>
-              <span className="text-[11px] opacity-85 block break-words">
-                Placa registrada: <strong className="font-mono">{activeGarage.plate}</strong> • Código OEM: {part.oemCode}
-              </span>
-            </div>
-          </div>
-
-          <button
-            onClick={() => setCurrentView('parts')}
-            className="text-[11px] font-bold underline hover:opacity-80 shrink-0 self-end sm:self-auto cursor-pointer"
+        {activeGarage ? (
+          <div
+            className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs ${
+              isCompatibleWithGarage
+                ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
+                : 'bg-amber-50 text-amber-900 border-amber-200'
+            }`}
           >
-            Buscar por otro chasis / VIN
-          </button>
-        </div>
+            <div className="flex items-start sm:items-center gap-3">
+              <span className="material-symbols-outlined text-2xl shrink-0 mt-0.5 sm:mt-0">
+                {isCompatibleWithGarage ? 'check_circle' : 'warning'}
+              </span>
+              <div>
+                <span className="font-bold block break-words">
+                  {isCompatibleWithGarage
+                    ? `✓ Pieza 100% Homologada para tu Garaje Activo: ${activeGarage.brand} ${activeGarage.model} (${activeGarage.year})`
+                    : `⚠️ Atención: Verifica compatibilidad para tu ${activeGarage.brand} ${activeGarage.model}`}
+                </span>
+                <span className="text-[11px] opacity-85 block break-words">
+                  Placa registrada: <strong className="font-mono">{activeGarage.plate}</strong> • Código OEM: {part.oemCode}
+                </span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setCurrentView('parts')}
+              className="text-[11px] font-bold underline hover:opacity-80 shrink-0 self-end sm:self-auto cursor-pointer"
+            >
+              Buscar por otro chasis / VIN
+            </button>
+          </div>
+        ) : (
+          <div className="p-4 rounded-2xl border border-blue-200 bg-blue-50/90 text-blue-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-start sm:items-center gap-3">
+              <span className="material-symbols-outlined text-2xl text-blue-700 shrink-0 mt-0.5 sm:mt-0">
+                garage
+              </span>
+              <div>
+                <span className="font-bold block">
+                  Configura tu garaje para verificar compatibilidad exacta
+                </span>
+                <span className="text-[11px] text-blue-800/80 block">
+                  Registra tu modelo o placa para confirmar que este repuesto calza con tu auto.
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsGarageModalOpen(true)}
+              className="bg-[#212955] hover:bg-[#1a2044] text-white text-xs font-bold px-3 py-1.5 rounded-lg shrink-0 cursor-pointer"
+            >
+              + Configurar Mi Garaje
+            </button>
+          </div>
+        )}
 
         {/* Product Master Section: Gallery + Details */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 bg-white rounded-3xl p-6 md:p-10 border border-surface-container shadow-xs">

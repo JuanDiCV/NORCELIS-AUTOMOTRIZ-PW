@@ -1,7 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
+import { AutoPart, Vehicle, WorkshopService } from '../types';
 import { NorCelisLogo } from './NorCelisLogo';
 import { MegaMenuModal } from './MegaMenuModal';
+import { SafeImage } from './SafeImage';
+import { PARTS_CATALOG_DATA, VEHICLES_DATA, WORKSHOP_SERVICES_DATA } from '../data/mockData';
 import { SITE_CONFIG } from '../config/siteConfig';
 import {
   AutoPartsIcon,
@@ -41,9 +44,13 @@ export const Header: React.FC = () => {
     setIsTestDriveModalOpen,
     navigateToPartsCatalog,
     setSelectedVehicleId,
+    setSelectedPartSku,
   } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement | null>(null);
+
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<NavDropdownType>('none');
@@ -62,53 +69,117 @@ export const Header: React.FC = () => {
     }, 200);
   };
 
+  // Close search dropdown on click outside
   useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setIsSearchDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
       if (dropdownTimeoutRef.current) {
         clearTimeout(dropdownTimeoutRef.current);
       }
     };
   }, []);
 
+  // Compute live search suggestions
+  const liveSuggestions = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return { parts: [], vehicles: [], services: [], brands: [] };
+
+    const parts = PARTS_CATALOG_DATA.filter((p) => {
+      const matchName = p.name.toLowerCase().includes(q);
+      const matchBrand = p.brand.toLowerCase().includes(q);
+      const matchSku = p.sku.toLowerCase().includes(q);
+      const matchOem = (p.oemCode || '').toLowerCase().includes(q);
+      const matchCat = p.category.toLowerCase().includes(q);
+      const matchCompat = (p.compatibleVehicle || '').toLowerCase().includes(q);
+      return matchName || matchBrand || matchSku || matchOem || matchCat || matchCompat;
+    }).slice(0, 4);
+
+    const vehicles = VEHICLES_DATA.filter((v) => {
+      const matchName = v.name.toLowerCase().includes(q);
+      const matchBrand = v.brand.toLowerCase().includes(q);
+      const matchSubtitle = (v.subtitle || '').toLowerCase().includes(q);
+      const matchBody = v.bodyType.toLowerCase().includes(q);
+      const matchFuel = v.fuelType.toLowerCase().includes(q);
+      return matchName || matchBrand || matchSubtitle || matchBody || matchFuel;
+    }).slice(0, 3);
+
+    const services = WORKSHOP_SERVICES_DATA.filter((s) => {
+      const matchName = s.name.toLowerCase().includes(q);
+      const matchCat = s.category.toLowerCase().includes(q);
+      const matchDesc = s.description.toLowerCase().includes(q);
+      return matchName || matchCat || matchDesc;
+    }).slice(0, 2);
+
+    const allBrands = [
+      'Toyota', 'Nissan', 'Hyundai', 'Kia', 'Ford', 'Mobil', '3M', 'K&N',
+      'Brembo', 'Bosch', 'Denso', 'LLumar', 'KEKO', 'Mickey Thompson', 'Castrol', 'Motul'
+    ];
+    const brands = allBrands.filter((b) => b.toLowerCase().includes(q)).slice(0, 4);
+
+    return { parts, vehicles, services, brands };
+  }, [searchQuery]);
+
+  const hasSuggestions =
+    liveSuggestions.parts.length > 0 ||
+    liveSuggestions.vehicles.length > 0 ||
+    liveSuggestions.services.length > 0 ||
+    liveSuggestions.brands.length > 0;
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchQuery.trim()) {
+    const query = searchQuery.trim();
+    if (!query) {
       showToast('Ingresa un término de búsqueda');
       return;
     }
-    // Búsqueda inteligente por palabras clave
-    const q = searchQuery.toLowerCase();
-    if (
-      q.includes('freno') ||
-      q.includes('disco') ||
-      q.includes('bateria') ||
-      q.includes('amortiguador') ||
-      q.includes('filtro') ||
-      q.includes('llanta') ||
-      q.includes('aceite') ||
-      q.includes('mickey') ||
-      q.includes('keko') ||
-      q.includes('mobil') ||
-      q.includes('llumar') ||
-      q.includes('3m') ||
-      q.includes('trakko') ||
-      q.includes('suspension') ||
-      q.includes('repuesto')
-    ) {
-      navigateToPartsCatalog('todos', 'todos', searchQuery);
-    } else if (
-      q.includes('taller') ||
-      q.includes('mantenimiento') ||
-      q.includes('alineamiento') ||
-      q.includes('pintura') ||
-      q.includes('detailing') ||
-      q.includes('servicio')
-    ) {
+    setIsMobileNavOpen(false);
+    setIsMegaMenuOpen(false);
+    setIsSearchDropdownOpen(false);
+
+    const q = query.toLowerCase();
+
+    // Specific vehicle filter keywords (exact vehicle purchasing intent)
+    const isVehicleSpecific =
+      q === 'auto nuevo' ||
+      q === 'autos nuevos' ||
+      q === 'auto seminuevo' ||
+      q === 'autos seminuevos' ||
+      q === 'seminuevos' ||
+      q === 'seminuevo' ||
+      q === '0km' ||
+      q === 'autos 0km' ||
+      q === 'vehiculos' ||
+      q === 'vehículos' ||
+      q === 'comprar auto' ||
+      q === 'catalogo de autos' ||
+      q === 'catálogo de autos';
+
+    // Specific service filter keywords (exact workshop appointment intent)
+    const isServiceSpecific =
+      q === 'taller' ||
+      q === 'cita taller' ||
+      q === 'cita de taller' ||
+      q === 'taller mecanico' ||
+      q === 'taller mecánico' ||
+      q === 'servicios de taller';
+
+    if (isServiceSpecific) {
       setCurrentView('services');
-    } else {
+      showToast(`Mostrando servicios de taller para "${query}"`);
+    } else if (isVehicleSpecific) {
       setCurrentView('cars');
+      showToast(`Mostrando catálogo de vehículos para "${query}"`);
+    } else {
+      // Primary e-commerce catalog: Navigate to parts catalog with exact search query
+      navigateToPartsCatalog('todos', 'todos', query);
+      showToast(`Filtrando repuestos y accesorios para "${query}"...`);
     }
-    showToast(`Buscando "${searchQuery}" en el catálogo...`);
   };
 
   return (
@@ -165,37 +236,213 @@ export const Header: React.FC = () => {
             </button>
           </div>
 
-          {/* Search bar con UNA SOLA lupa grande estilo Apple */}
-          <form
-            onSubmit={handleSearchSubmit}
-            className="flex-1 max-w-xl lg:max-w-2xl hidden md:flex items-center bg-surface-container-low rounded-xl border border-surface-container focus-within:border-[#212955] focus-within:ring-2 focus-within:ring-[#212955]/15 transition-all overflow-hidden min-h-[46px]"
-          >
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar por Repuesto, Marca Oficial (M/T, KEKO, Mobil, 3M, LLumar, Toyota)..."
-              className="flex-1 pl-4 pr-3 py-2.5 min-h-[46px] text-sm bg-transparent focus:outline-none placeholder:text-[#9D9D9C] text-on-surface font-body"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="p-2 text-[#9D9D9C] hover:text-on-surface cursor-pointer transition-colors"
-                title="Limpiar búsqueda"
-              >
-                <AppleCloseIcon size={18} />
-              </button>
-            )}
-            <button
-              type="submit"
-              className="min-w-[48px] min-h-[48px] flex items-center justify-center p-2.5 pr-4 text-[#212955] hover:text-[#F07F00] transition-colors cursor-pointer group"
-              title="Buscar"
-              aria-label="Buscar"
+          {/* Search bar con UNA SOLA lupa grande estilo Apple y sugerencias en tiempo real */}
+          <div ref={searchContainerRef} className="relative flex-1 max-w-xl lg:max-w-2xl hidden md:block">
+            <form
+              onSubmit={handleSearchSubmit}
+              className="flex items-center bg-surface-container-low rounded-xl border border-surface-container focus-within:border-[#212955] focus-within:ring-2 focus-within:ring-[#212955]/15 transition-all overflow-hidden min-h-[46px]"
             >
-              <AppleSearchIcon size={28} className="group-hover:scale-105" />
-            </button>
-          </form>
+              <input
+                type="text"
+                value={searchQuery}
+                onFocus={() => setIsSearchDropdownOpen(true)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setIsSearchDropdownOpen(true);
+                }}
+                placeholder="Buscar por Repuesto, Marca Oficial (M/T, KEKO, Mobil, 3M, LLumar, Toyota)..."
+                className="flex-1 pl-4 pr-3 py-2.5 min-h-[46px] text-sm bg-transparent focus:outline-none placeholder:text-[#9D9D9C] text-on-surface font-body"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setIsSearchDropdownOpen(false);
+                  }}
+                  className="p-2 text-[#9D9D9C] hover:text-on-surface cursor-pointer transition-colors"
+                  title="Limpiar búsqueda"
+                >
+                  <AppleCloseIcon size={18} />
+                </button>
+              )}
+              <button
+                type="submit"
+                className="min-w-[48px] min-h-[48px] flex items-center justify-center p-2.5 pr-4 text-[#212955] hover:text-[#F07F00] transition-colors cursor-pointer group"
+                title="Buscar"
+                aria-label="Buscar"
+              >
+                <AppleSearchIcon size={28} className="group-hover:scale-105" />
+              </button>
+            </form>
+
+            {/* Live Autocomplete Overlay */}
+            {isSearchDropdownOpen && searchQuery.trim().length >= 1 && (
+              <div className="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-2xl shadow-2xl border border-surface-container z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150 max-h-[75vh] overflow-y-auto">
+                {hasSuggestions ? (
+                  <div className="divide-y divide-gray-100">
+                    {/* 1. Autopartes y Repuestos */}
+                    {liveSuggestions.parts.length > 0 && (
+                      <div className="p-3">
+                        <div className="text-[10px] font-extrabold uppercase tracking-wider text-[#9D9D9C] mb-2 px-1 flex items-center justify-between">
+                          <span>Repuestos &amp; Accesorios OEM</span>
+                          <span className="text-primary font-bold">{liveSuggestions.parts.length} coincidencias</span>
+                        </div>
+                        <div className="space-y-1">
+                          {liveSuggestions.parts.map((p) => (
+                            <div
+                              key={p.sku}
+                              onClick={() => {
+                                setSelectedPartSku(p.sku);
+                                setCurrentView('part-pdp');
+                                setSearchQuery('');
+                                setIsSearchDropdownOpen(false);
+                              }}
+                              className="flex items-center gap-3 p-2 rounded-xl hover:bg-surface-container-low transition-colors cursor-pointer group"
+                            >
+                              <div className="w-10 h-10 rounded-lg bg-gray-100 p-1 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200">
+                                <SafeImage src={p.image} alt={p.name} className="w-full h-full object-contain" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-xs font-bold text-[#212955] group-hover:text-[#F07F00] transition-colors truncate">
+                                  {p.name}
+                                </div>
+                                <div className="text-[11px] text-[#9D9D9C] flex items-center gap-1.5 truncate">
+                                  <span className="font-semibold text-gray-700">{p.brand}</span>
+                                  <span>•</span>
+                                  <span className="font-mono">SKU: {p.sku}</span>
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <div className="text-xs font-bold text-primary">S/ {p.priceSoles.toLocaleString()}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 2. Vehículos en catálogo */}
+                    {liveSuggestions.vehicles.length > 0 && (
+                      <div className="p-3 bg-gray-50/60">
+                        <div className="text-[10px] font-extrabold uppercase tracking-wider text-[#9D9D9C] mb-2 px-1">
+                          Vehículos
+                        </div>
+                        <div className="space-y-1">
+                          {liveSuggestions.vehicles.map((v) => (
+                            <div
+                              key={v.id}
+                              onClick={() => {
+                                setSelectedVehicleId(v.id);
+                                setCurrentView('vehicle-pdp');
+                                setSearchQuery('');
+                                setIsSearchDropdownOpen(false);
+                              }}
+                              className="flex items-center gap-3 p-2 rounded-xl hover:bg-white transition-colors cursor-pointer group border border-transparent hover:border-gray-200"
+                            >
+                              <div className="w-10 h-10 rounded-lg bg-gray-200 overflow-hidden shrink-0">
+                                <SafeImage src={v.image} alt={v.name} className="w-full h-full object-cover" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-xs font-bold text-[#212955] group-hover:text-[#F07F00] transition-colors truncate">
+                                  {v.name}
+                                </div>
+                                <div className="text-[11px] text-gray-500 truncate">
+                                  {v.brand} • {v.year} • {v.fuelType}
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <div className="text-xs font-bold text-primary">S/ {v.priceSoles.toLocaleString()}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 3. Servicios de Taller */}
+                    {liveSuggestions.services.length > 0 && (
+                      <div className="p-3">
+                        <div className="text-[10px] font-extrabold uppercase tracking-wider text-[#9D9D9C] mb-2 px-1">
+                          Servicios de Taller
+                        </div>
+                        <div className="space-y-1">
+                          {liveSuggestions.services.map((s) => (
+                            <div
+                              key={s.id}
+                              onClick={() => {
+                                setCurrentView('services');
+                                setSearchQuery('');
+                                setIsSearchDropdownOpen(false);
+                              }}
+                              className="flex items-center justify-between p-2 rounded-xl hover:bg-surface-container-low transition-colors cursor-pointer group"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="material-symbols-outlined text-base text-[#F07F00]">build</span>
+                                <span className="text-xs font-bold text-[#212955] group-hover:text-[#F07F00] transition-colors truncate">
+                                  {s.name}
+                                </span>
+                              </div>
+                              <span className="text-xs font-bold text-primary">S/ {s.priceStartingSoles.toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 4. Marcas sugeridas */}
+                    {liveSuggestions.brands.length > 0 && (
+                      <div className="p-3 bg-gray-50/40">
+                        <div className="text-[10px] font-extrabold uppercase tracking-wider text-[#9D9D9C] mb-2 px-1">
+                          Marcas Oficiales
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {liveSuggestions.brands.map((b) => (
+                            <button
+                              key={b}
+                              type="button"
+                              onClick={() => {
+                                navigateToPartsCatalog('todos', b, '');
+                                setSearchQuery('');
+                                setIsSearchDropdownOpen(false);
+                              }}
+                              className="text-xs font-bold px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-[#212955] hover:border-[#F07F00] hover:text-[#F07F00] transition-colors cursor-pointer"
+                            >
+                              {b}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Footer: Ver todos */}
+                    <div className="p-2.5 bg-primary/5 hover:bg-primary/10 transition-colors">
+                      <button
+                        type="button"
+                        onClick={handleSearchSubmit}
+                        className="w-full py-1 text-center text-xs font-bold text-primary hover:text-secondary flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <span>Ver todos los resultados para &quot;{searchQuery}&quot;</span>
+                        <AppleChevronRightIcon size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-6 text-center space-y-2">
+                    <span className="material-symbols-outlined text-3xl text-gray-400">search_off</span>
+                    <p className="text-xs font-semibold text-gray-700">No encontramos coincidencias directas para &quot;{searchQuery}&quot;</p>
+                    <button
+                      type="button"
+                      onClick={handleSearchSubmit}
+                      className="text-xs font-bold text-[#F07F00] hover:underline cursor-pointer"
+                    >
+                      Buscar de todas formas en el catálogo completo →
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Header Action Items */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
@@ -203,18 +450,18 @@ export const Header: React.FC = () => {
             <button
               onClick={() => setIsGarageModalOpen(true)}
               className="flex items-center gap-2.5 px-3 py-2 min-h-[48px] rounded-xl bg-surface-container hover:bg-surface-container-high border border-surface-container-high text-left transition-all group cursor-pointer"
-              title="Configurar Mi Garaje para ver compatibilidad exacta"
-              aria-label="Configurar Mi Garaje"
+              title={activeGarage ? `Mi Garaje: ${activeGarage.brand} ${activeGarage.model}` : "Agregar auto a Mi Garaje"}
+              aria-label={activeGarage ? `Mi Garaje: ${activeGarage.brand} ${activeGarage.model}` : "Agregar auto"}
             >
-              <AppleIconBadge variant="secondary" size="md">
-                <GarageLiftIcon size={22} className="text-[#F07F00]" />
+              <AppleIconBadge variant={activeGarage ? "secondary" : "subtle-orange"} size="md">
+                <GarageLiftIcon size={22} className={activeGarage ? "text-[#F07F00]" : "text-[#F07F00]"} />
               </AppleIconBadge>
               <div className="hidden xl:block">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-[#9D9D9C] flex items-center gap-1.5 font-body">
                   <span>Mi Garaje</span>
                 </div>
                 <div className="text-xs font-bold text-[#212955] max-w-[125px] truncate font-body">
-                  {activeGarage.model}
+                  {activeGarage ? activeGarage.model : 'Agregar auto'}
                 </div>
               </div>
             </button>
@@ -1065,7 +1312,9 @@ export const Header: React.FC = () => {
                 </AppleIconBadge>
                 <span>Mi Garaje Virtual (Compatibilidad VIN)</span>
               </div>
-              <span className="text-xs text-emerald-600 font-bold">{activeGarage.model}</span>
+              <span className={`text-xs font-bold ${activeGarage ? 'text-emerald-600' : 'text-[#F07F00]'}`}>
+                {activeGarage ? activeGarage.model : '+ Agregar auto'}
+              </span>
             </button>
 
             <button

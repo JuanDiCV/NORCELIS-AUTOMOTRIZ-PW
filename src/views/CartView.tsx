@@ -13,6 +13,7 @@ export const CartView: React.FC = () => {
     toggleCartInstallation,
     cartSubtotalSoles,
     activeGarage,
+    setIsGarageModalOpen,
     setCurrentView,
     showToast,
     addToCart,
@@ -132,17 +133,34 @@ export const CartView: React.FC = () => {
       </div>
 
       {/* Active Garage Check */}
-      <div className="bg-white/95 text-gray-800 p-3.5 rounded-2xl border border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs shadow-xs">
-        <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[#212955] text-lg shrink-0">garage</span>
-          <span className="text-gray-600 break-words">
-            Repuestos validados para: <strong className="text-[#212955]">{activeGarage.brand} {activeGarage.model} ({activeGarage.year})</strong>
+      {activeGarage ? (
+        <div className="bg-white/95 text-gray-800 p-3.5 rounded-2xl border border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs shadow-xs">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[#212955] text-lg shrink-0">garage</span>
+            <span className="text-gray-600 break-words">
+              Repuestos validados para: <strong className="text-[#212955]">{activeGarage.brand} {activeGarage.model} ({activeGarage.year})</strong>
+            </span>
+          </div>
+          <span className="text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded text-[10px] shrink-0">
+            100% Compatibilidad Garantizada
           </span>
         </div>
-        <span className="text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded text-[10px] shrink-0">
-          100% Compatibilidad Garantizada
-        </span>
-      </div>
+      ) : (
+        <div className="bg-white/95 text-gray-800 p-3.5 rounded-2xl border border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs shadow-xs">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[#212955] text-lg shrink-0">garage</span>
+            <span className="text-gray-600 break-words">
+              ¿Deseas validar compatibilidad exacta con tu vehículo antes de comprar?
+            </span>
+          </div>
+          <button
+            onClick={() => setIsGarageModalOpen(true)}
+            className="text-[#F07F00] hover:underline font-bold text-xs shrink-0 cursor-pointer"
+          >
+            + Configurar Garaje
+          </button>
+        </div>
+      )}
 
       {cartItems.length === 0 ? (
         <div className="bg-surface-container-lowest rounded-3xl p-12 text-center space-y-3 border border-surface-container">
