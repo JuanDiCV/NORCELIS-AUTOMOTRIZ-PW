@@ -1,70 +1,80 @@
-# Plan de Implementación: Administración de Categorías Cinemáticas y Marcas Oficiales en Panel Admin
+# Plan de Optimización de Código y Rediseño CMS del Panel de Administración
 
-Habilitar la gestión completa, interactiva y persistente de las tarjetas de categorías (fondos, nombres, subtítulos) y de la pasarela de marcas oficiales (logos, nombres, especialidades, creación y eliminación) desde una nueva pestaña dedicada **"Marcas & Categorías"** en `AdminDashboardView`.
-
----
-
-## 1. Arquitectura de Estado y Persistencia (`AppContext.tsx`)
-
-1. **Tipos e Interfaces**:
-   - `CinematicCategory`: `code`, `name`, `subtitle`, `image`, `tag`, `badge`, `count`.
-   - `OfficialBrand`: `code`, `name`, `iconText`, `logoUrl?`, `tag`, `origin`.
-
-2. **Estados en `AppContext`**:
-   - `homeCategories`: Arreglo de categorías persistido en `localStorage` (`norcelis_home_categories`), con respaldo en las 6 líneas predeterminadas.
-   - `officialBrands`: Arreglo de marcas oficiales persistido en `localStorage` (`norcelis_official_brands`), con respaldo en las 12 marcas oficiales predeterminadas.
-
-3. **Métodos Expuestos**:
-   - `updateHomeCategory(code: string, updated: Partial<CinematicCategory>)`: Actualiza fotos de fondo, textos y tags de cada categoría.
-   - `resetHomeCategories()`: Restablece las categorías a sus valores originales.
-   - `addOfficialBrand(brand: OfficialBrand)`: Agrega una nueva marca a la pasarela continua.
-   - `updateOfficialBrand(code: string, updated: Partial<OfficialBrand>)`: Modifica una marca existente.
-   - `deleteOfficialBrand(code: string)`: Elimina una marca de la pasarela.
-   - `resetOfficialBrands()`: Restablece la lista oficial de marcas predeterminadas.
+Transformar el header y la barra del panel de administración en un **CMS profesional de gestión de contenidos web y operaciones comerciales** de Nor Celis Automotriz, agrupando sus funcionalidades de forma intuitiva, junto con una **optimización integral del rendimiento del código** (memoización, aligeramiento de renders y persistencia fluida).
 
 ---
 
-## 2. Nueva Pestaña en el Panel de Administración (`AdminDashboardView.tsx`)
+## Decisiones Críticas Confirmadas
 
-1. **Nueva Pestaña en Barra de Navegación**:
-   - Pestaña: **"Marcas & Categorías"** (`activeTab === 'brands_categories'`).
-   - Icono representativo: `branding_watermark` o `category`.
-
-2. **Sección A: Gestión de Tarjetas de Categorías Cinemáticas**:
-   - Cuadrícula visual con previsualización en vivo de cada tarjeta.
-   - Botón **"Editar Tarjeta"** que abre modal con:
-     - Nombre de la categoría (ej: "SUSPENSIÓN OFF-ROAD")
-     - Subtítulo descriptivo
-     - URL de la Imagen de Fondo (con previsualizador instantáneo, botón para probar URLs de Unsplash / CDN y presets de alta definición)
-     - Tag superior (ej: "LÍNEA COMPETICIÓN")
-     - Badge técnico (ej: "Fox & Trakko")
-     - Conteo de repuestos vinculados
-   - Botón de restablecer valores de fábrica.
-
-3. **Sección B: Gestión de la Pasarela de Marcas Oficiales (Marquee)**:
-   - Botón destacado **"+ Agregar Nueva Marca Oficial"**.
-   - Tabla y tarjetas de marcas con:
-     - Logotipo / Sigla gráfica (`iconText` o imagen)
-     - Nombre comercial (ej: "TOYOTA GENUINO", "BREMBO")
-     - Código de filtro del catálogo
-     - Especialidad automotriz
-     - País de procedencia (con bandera / origen)
-     - Botones de acción: **Editar** y **Eliminar**.
-   - Modal para crear / editar marcas con validación en tiempo real.
-   - Botón para restaurar la lista oficial de marcas de fábrica.
+- **Estructura del Header**: Diseño tipo **CMS profesional** estructurado en dos grupos de navegación claramente diferenciados:
+  1. **Contenidos Web (CMS)**: Banners & Publicidad, Marcas & Categorías de Portada, Ofertas & Campañas Comerciales.
+  2. **Inventario & Operaciones**: Inventario de Autos, Autopartes & Repuestos OEM, Reportes Contables CSV, Seguridad & Respaldos JSON.
+- **Optimización de Código**: Enfoque en **rendimiento integral**: memoización (`useMemo`, `useCallback`) de listas y filtros pesados, reducción de renderizados redundantes, optimización de persistencia en `localStorage` y limpieza de código residual.
 
 ---
 
-## 3. Conexión en Tiempo Real con la Página Principal (`HomeView.tsx`)
+## 1. Visión General del Rediseño del Header Admin (CMS Hub)
 
-- Reemplazar las constantes locales en `HomeView.tsx` para que consuman `homeCategories` y `officialBrands` directamente de `useApp()`.
-- Cualquier cambio realizado en el panel Admin (por ejemplo, cambiar la foto de suspensión o agregar una nueva marca deportiva a la pasarela) se reflejará al instante en la página principal sin recargar la aplicación.
+El panel actual reúne tanto herramientas de publicación visual (banners, marcas, categorías, ofertas) como herramientas operativas de negocio (inventario automotriz, repuestos, reportes contables, seguridad).
+
+### Arquitectura de Navegación del Header CMS:
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│  NOR CELIS AUTOMOTRIZ  ·  CMS & Gestor Web    [● Sitio en Vivo]       [↗ Ver Tienda] [Cerrar]│
+├─────────────────────────────────────────────────────────────────────────────────────────────┤
+│  CONTENIDO WEB & PORTADA (CMS)                │  INVENTARIO & OPERACIONES COMERCIALES       │
+│  [Banners]  [Marcas & Categorías]  [Ofertas]  │  [Autos]  [Autopartes]  [Reportes] [Seguridad]│
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+1. **Barra Superior Ejecutiva**:
+   - Identidad corporativa clara: `NOR CELIS AUTOMOTRIZ · Portal de Contenidos & Operaciones`.
+   - Indicador de estado del sitio en tiempo real con punto verde animado (`Sitio en Vivo · Cajamarca`).
+   - Botón directo de acceso rápido con icono para previsualizar la tienda (`Ver Tienda Pública ↗`).
+   - Botón de cierre de sesión seguro con protección de PIN.
+
+2. **Navegación Segmentada en 2 Grupos Lógicos**:
+   - **Bloque A — Contenido Web & Portada**:
+     - *Banners & Publicidad*: Control del carrusel principal hero y campañas de marketing.
+     - *Marcas & Categorías*: Gestión de la pasarela continua infinita de marcas y 6 tarjetas cinemáticas de inicio.
+     - *Ofertas Destacadas*: Bonos comerciales, tasas de financiamiento y promociones.
+   - **Bloque B — Inventario & Operaciones**:
+     - *Inventario de Autos*: Unidades 0 km y seminuevos con precios USD/PEN y especificaciones.
+     - *Autopartes & Repuestos*: Catálogo técnico OEM, compatibilidad por modelo/VIN y stock.
+     - *Reportes & Contabilidad*: Centro de exportación de nómina de ventas, órdenes y catálogos en CSV.
+     - *Seguridad & Respaldos*: Cambio de PIN de 4 dígitos, copias de seguridad JSON completas y reinicio.
+
+3. **KPI Cards con Formato Numérico Tabular (`tabular-nums`)**:
+   - Tarjetas de estadísticas de inventario, valor estimado en USD, banners activos y marcas registradas con alineación numérica precisa y microinteracciones de hover fluidas.
 
 ---
 
-## 4. Verificación y Pruebas
-1. Acceder al panel de administración (usuario Administrador).
-2. Entrar a la nueva pestaña **"Marcas & Categorías"**.
-3. Cambiar la imagen de fondo de una categoría (ej. Frenos Deportivos) y verificar que en la página principal cambie de inmediato.
-4. Agregar una nueva marca oficial (ej. "SPARCO Racing", "K&N Engineering") y verificar que se integre a la pasarela continua infinita.
-5. Ejecutar `lint_applet` y `compile_applet` para garantizar cero errores de tipos y compilación.
+## 2. Optimización Integral del Código y Rendimiento
+
+1. **Memoización Avanzada (`useMemo` y `useCallback`)**:
+   - En `AdminDashboardView.tsx`: Optimizar los filtros de búsqueda de vehículos, autopartes y marcas para evitar recálculos en cada pulsación de tecla o cambio de estado ajeno.
+   - En `HomeView.tsx`: Memoizar los cálculos de autopartes filtradas por pestaña rápida, listas de vehículos nuevos/seminuevos y marcas en rotación.
+   - En `CatalogView.tsx` y `VehicleCatalogView.tsx`: Garantizar que el filtrado por marcas, categorías, años y precios no bloquee el hilo principal del navegador.
+
+2. **Optimización de Lectura/Escritura en Almacenamiento Local (`localStorage`)**:
+   - Reducir escrituras innecesarias en `AppContext.tsx` mediante debounce o comprobaciones de igualdad de estado antes de serializar estructuras JSON voluminosas.
+   - Manejo seguro y tolerante a fallos ante cuotas de almacenamiento o datos corruptos.
+
+3. **Limpieza y Pulido de Código**:
+   - Depurar selectores o clases CSS redundantes.
+   - Asegurar accesibilidad (`focus-visible`, contraste WCAG AA, textos de botones semánticos).
+   - Verificación estricta de compilación (`compile_applet`) y tipado (`lint_applet`).
+
+---
+
+## 3. Plan de Ejecución por Fases
+
+1. **Fase 1: Rediseño del Header y Navegación del Panel de Administración**:
+   - Actualizar el encabezado en `AdminDashboardView.tsx` incorporando la barra ejecutiva y los dos grupos de pestañas ("Contenido Web" e "Inventario & Operaciones").
+   - Añadir badges contadores visuales discretos y accesos directos de navegación rápida.
+2. **Fase 2: Optimización de Rendimiento y Renders**:
+   - Refactorizar y memoizar selectores y filtros clave en `AdminDashboardView.tsx` y `HomeView.tsx`.
+   - Optimizar manejadores de eventos con `useCallback`.
+3. **Fase 3: Verificación, Linting y Compilación**:
+   - Ejecutar `lint_applet` para garantizar cero advertencias y errores de tipos.
+   - Ejecutar `compile_applet` para confirmar una compilación impecable y validar la experiencia en vivo.

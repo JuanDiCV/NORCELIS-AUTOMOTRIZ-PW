@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import { PromoHeroCarousel } from '../components/PromoHeroCarousel';
 import { SafeImage } from '../components/SafeImage';
@@ -48,8 +48,14 @@ export const HomeView: React.FC = () => {
     officialBrands,
   } = useApp();
 
-  const categoriesList = homeCategories && homeCategories.length > 0 ? homeCategories : DEFAULT_CINEMATIC_CATEGORIES;
-  const brandsList = officialBrands && officialBrands.length > 0 ? officialBrands : DEFAULT_OFFICIAL_BRANDS;
+  const categoriesList = useMemo(
+    () => (homeCategories && homeCategories.length > 0 ? homeCategories : DEFAULT_CINEMATIC_CATEGORIES),
+    [homeCategories]
+  );
+  const brandsList = useMemo(
+    () => (officialBrands && officialBrands.length > 0 ? officialBrands : DEFAULT_OFFICIAL_BRANDS),
+    [officialBrands]
+  );
 
   const [heroTab, setHeroTab] = useState<'parts' | 'workshop' | 'new_cars' | 'used_cars'>('parts');
   const [filterYear, setFilterYear] = useState('2025');
@@ -59,13 +65,15 @@ export const HomeView: React.FC = () => {
   const [partsShowcaseCategory, setPartsShowcaseCategory] = useState<string>('todos');
   const [categoryDisplayMode, setCategoryDisplayMode] = useState<'flagship' | 'all'>('flagship');
 
-  const newCars = vehicles.filter((v) => v.condition === 'nuevo');
-  const usedCars = vehicles.filter((v) => v.condition === 'seminuevo');
+  const newCars = useMemo(() => vehicles.filter((v) => v.condition === 'nuevo'), [vehicles]);
+  const usedCars = useMemo(() => vehicles.filter((v) => v.condition === 'seminuevo'), [vehicles]);
 
-  // Filter parts for the homepage showcase
-  const displayedParts = partsShowcaseCategory === 'todos'
-    ? autoParts.slice(0, 8)
-    : autoParts.filter((p) => p.category === partsShowcaseCategory).slice(0, 8);
+  // Memoized filter for homepage parts showcase
+  const displayedParts = useMemo(() => {
+    return partsShowcaseCategory === 'todos'
+      ? autoParts.slice(0, 8)
+      : autoParts.filter((p) => p.category === partsShowcaseCategory).slice(0, 8);
+  }, [autoParts, partsShowcaseCategory]);
 
   const handleHeroSubmit = (e: React.FormEvent) => {
     e.preventDefault();

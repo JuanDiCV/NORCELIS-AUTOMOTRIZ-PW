@@ -360,8 +360,11 @@ export const AdminDashboardView: React.FC = () => {
       totalBannersCount: promoSlides.length,
       activeOffersCount,
       totalPartsCount,
+      totalBrandsCount: officialBrands.length,
+      totalCategoriesCount: homeCategories.length,
+      totalContentItems: promoSlides.length + officialBrands.length + homeCategories.length + offersList.length,
     };
-  }, [vehicles, promoSlides, offersList, autoParts]);
+  }, [vehicles, promoSlides, offersList, autoParts, officialBrands, homeCategories]);
 
   // --- FILTERED VEHICLES LIST ---
   const filteredVehicles = useMemo(() => {
@@ -911,40 +914,55 @@ export const AdminDashboardView: React.FC = () => {
         className="hidden"
       />
 
-      {/* Top Header Bar for Admin */}
+      {/* Top Header Bar for Admin (CMS & Operations Console) */}
       <header className="sticky top-0 z-30 bg-white border-b border-[#9D9D9C]/30 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+        {/* Executive Top Row */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#212955] text-white flex items-center justify-center font-bold shadow-xs">
-              <span className="material-symbols-outlined text-[#F07F00] text-xl">admin_panel_settings</span>
-            </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#F07F00]">
-                  Consola de Operaciones
+                <h1 className="font-headline font-bold text-base sm:text-lg text-[#212955] leading-tight">
+                  Panel de Gestión de Contenidos &amp; Operaciones
+                </h1>
+                <span className="hidden sm:inline text-xs text-gray-400 font-medium">·</span>
+                <span className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-lg">
+                  <span className="material-symbols-outlined text-xs text-[#F07F00]">folder_open</span>
+                  {activeTab === 'banners' && 'Contenido Web > Banners & Publicidad'}
+                  {activeTab === 'brands_categories' && 'Contenido Web > Marcas & Categorías'}
+                  {activeTab === 'offers' && 'Contenido Web > Ofertas & Campañas'}
+                  {activeTab === 'cars' && 'Inventario > Vehículos & Autos'}
+                  {activeTab === 'autoparts' && 'Inventario > Catálogo de Autopartes'}
+                  {activeTab === 'reports' && 'Operaciones > Reportes Contables CSV'}
+                  {activeTab === 'security' && 'Operaciones > Seguridad & Respaldos'}
                 </span>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Sistema Activo en Tiempo Real" />
               </div>
-              <h1 className="font-headline font-bold text-sm sm:text-base text-[#212955]">
-                Panel de Administración Nor Celis
-              </h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 self-end md:self-auto">
             <button
               type="button"
-              onClick={() => setCurrentView('home')}
-              className="min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold text-[#212955] bg-gray-100 hover:bg-gray-200 transition-colors flex items-center gap-1.5 cursor-pointer"
-              title="Volver a la vista del cliente"
+              onClick={handleExportJson}
+              className="min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold text-gray-600 hover:text-[#212955] bg-gray-100 hover:bg-gray-200 transition-colors flex items-center gap-1.5 cursor-pointer"
+              title="Descargar copia de seguridad JSON instantánea"
             >
-              <span className="material-symbols-outlined text-base">visibility</span>
-              <span className="hidden sm:inline">Ver Sitio Web</span>
+              <span className="material-symbols-outlined text-base text-gray-500">cloud_download</span>
+              <span className="hidden lg:inline">Backup JSON</span>
             </button>
             <button
               type="button"
+              onClick={() => setCurrentView('home')}
+              className="min-h-[38px] px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-[#212955] hover:bg-[#181e40] transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+              title="Previsualizar el sitio web público tal como lo ve el cliente"
+            >
+              <span className="material-symbols-outlined text-base text-[#F07F00]">open_in_new</span>
+              <span>Ver Sitio Web</span>
+            </button>
+            <div className="h-6 w-px bg-gray-200 hidden sm:block" />
+            <button
+              type="button"
               onClick={handleLogout}
-              className="min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-colors flex items-center gap-1.5 cursor-pointer border border-red-200"
+              className="min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-colors flex items-center gap-1.5 cursor-pointer border border-red-200"
               title="Cerrar sesión de administración"
             >
               <span className="material-symbols-outlined text-base">lock</span>
@@ -953,98 +971,136 @@ export const AdminDashboardView: React.FC = () => {
           </div>
         </div>
 
-        {/* Tab Navigation with counts */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex overflow-x-auto gap-2 border-t border-gray-100 scrollbar-none">
-          <button
-            type="button"
-            onClick={() => setActiveTab('banners')}
-            className={`min-h-[46px] px-4 py-2.5 text-xs font-bold transition-all border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer ${
-              activeTab === 'banners'
-                ? 'border-[#F07F00] text-[#212955] bg-[#F07F00]/5'
-                : 'border-transparent text-gray-500 hover:text-[#212955]'
-            }`}
-          >
-            <span className="material-symbols-outlined text-lg text-[#F07F00]">view_carousel</span>
-            <span>Banners &amp; Publicidad ({promoSlides.length})</span>
-          </button>
+        {/* Grouped Tab Navigation with CMS & Operations Segments */}
+        <div className="border-t border-gray-100 bg-gray-50/70">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 flex flex-col lg:flex-row lg:items-center justify-between gap-3 overflow-x-auto scrollbar-none">
+            
+            {/* GRUPO 1: CONTENIDO WEB (CMS) */}
+            <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center gap-1 pr-2 border-r border-gray-200 mr-1">
+                <span className="material-symbols-outlined text-[#F07F00] text-sm">edit_note</span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-gray-500">
+                  CMS Web:
+                </span>
+              </div>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('cars')}
-            className={`min-h-[46px] px-4 py-2.5 text-xs font-bold transition-all border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer ${
-              activeTab === 'cars'
-                ? 'border-[#F07F00] text-[#212955] bg-[#F07F00]/5'
-                : 'border-transparent text-gray-500 hover:text-[#212955]'
-            }`}
-          >
-            <span className="material-symbols-outlined text-lg text-[#212955]">directions_car</span>
-            <span>Inventario de Autos ({vehicles.length})</span>
-          </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('banners')}
+                className={`min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                  activeTab === 'banners'
+                    ? 'bg-[#212955] text-white shadow-xs'
+                    : 'text-gray-600 hover:text-[#212955] hover:bg-white'
+                }`}
+              >
+                <span className={`material-symbols-outlined text-base ${activeTab === 'banners' ? 'text-[#F07F00]' : 'text-gray-400'}`}>
+                  view_carousel
+                </span>
+                <span>Banners ({promoSlides.length})</span>
+              </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('autoparts')}
-            className={`min-h-[46px] px-4 py-2.5 text-xs font-bold transition-all border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer ${
-              activeTab === 'autoparts'
-                ? 'border-[#F07F00] text-[#212955] bg-[#F07F00]/5'
-                : 'border-transparent text-gray-500 hover:text-[#212955]'
-            }`}
-          >
-            <span className="material-symbols-outlined text-lg text-[#F07F00]">settings_suggest</span>
-            <span>Autopartes &amp; Repuestos ({autoParts.length})</span>
-          </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('brands_categories')}
+                className={`min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                  activeTab === 'brands_categories'
+                    ? 'bg-[#212955] text-white shadow-xs'
+                    : 'text-gray-600 hover:text-[#212955] hover:bg-white'
+                }`}
+              >
+                <span className={`material-symbols-outlined text-base ${activeTab === 'brands_categories' ? 'text-[#F07F00]' : 'text-gray-400'}`}>
+                  branding_watermark
+                </span>
+                <span>Marcas &amp; Categorías ({officialBrands.length}/{homeCategories.length})</span>
+              </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('offers')}
-            className={`min-h-[46px] px-4 py-2.5 text-xs font-bold transition-all border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer ${
-              activeTab === 'offers'
-                ? 'border-[#F07F00] text-[#212955] bg-[#F07F00]/5'
-                : 'border-transparent text-gray-500 hover:text-[#212955]'
-            }`}
-          >
-            <span className="material-symbols-outlined text-lg text-[#F07F00]">local_offer</span>
-            <span>Ofertas Destacadas ({offersList.length})</span>
-          </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('offers')}
+                className={`min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                  activeTab === 'offers'
+                    ? 'bg-[#212955] text-white shadow-xs'
+                    : 'text-gray-600 hover:text-[#212955] hover:bg-white'
+                }`}
+              >
+                <span className={`material-symbols-outlined text-base ${activeTab === 'offers' ? 'text-[#F07F00]' : 'text-gray-400'}`}>
+                  local_offer
+                </span>
+                <span>Ofertas ({offersList.length})</span>
+              </button>
+            </div>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('brands_categories')}
-            className={`min-h-[46px] px-4 py-2.5 text-xs font-bold transition-all border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer ${
-              activeTab === 'brands_categories'
-                ? 'border-[#F07F00] text-[#212955] bg-[#F07F00]/5'
-                : 'border-transparent text-gray-500 hover:text-[#212955]'
-            }`}
-          >
-            <span className="material-symbols-outlined text-lg text-[#F07F00]">branding_watermark</span>
-            <span>Marcas &amp; Categorías ({officialBrands.length}/{homeCategories.length})</span>
-          </button>
+            {/* GRUPO 2: INVENTARIO & OPERACIONES */}
+            <div className="flex items-center gap-1 shrink-0 pt-1 lg:pt-0 border-t lg:border-t-0 border-gray-200">
+              <div className="flex items-center gap-1 pr-2 border-r border-gray-200 mr-1">
+                <span className="material-symbols-outlined text-[#212955] text-sm">inventory_2</span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-gray-500">
+                  Operaciones:
+                </span>
+              </div>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('reports')}
-            className={`min-h-[46px] px-4 py-2.5 text-xs font-bold transition-all border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer ${
-              activeTab === 'reports'
-                ? 'border-[#F07F00] text-[#212955] bg-[#F07F00]/5'
-                : 'border-transparent text-gray-500 hover:text-[#212955]'
-            }`}
-          >
-            <span className="material-symbols-outlined text-lg text-emerald-600">receipt_long</span>
-            <span>Reportes &amp; Contabilidad CSV</span>
-          </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('cars')}
+                className={`min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                  activeTab === 'cars'
+                    ? 'bg-[#212955] text-white shadow-xs'
+                    : 'text-gray-600 hover:text-[#212955] hover:bg-white'
+                }`}
+              >
+                <span className={`material-symbols-outlined text-base ${activeTab === 'cars' ? 'text-[#F07F00]' : 'text-gray-400'}`}>
+                  directions_car
+                </span>
+                <span>Autos ({vehicles.length})</span>
+              </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('security')}
-            className={`min-h-[46px] px-4 py-2.5 text-xs font-bold transition-all border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer ${
-              activeTab === 'security'
-                ? 'border-[#F07F00] text-[#212955] bg-[#F07F00]/5'
-                : 'border-transparent text-gray-500 hover:text-[#212955]'
-            }`}
-          >
-            <span className="material-symbols-outlined text-lg text-gray-600">settings</span>
-            <span>Seguridad &amp; Respaldos</span>
-          </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('autoparts')}
+                className={`min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                  activeTab === 'autoparts'
+                    ? 'bg-[#212955] text-white shadow-xs'
+                    : 'text-gray-600 hover:text-[#212955] hover:bg-white'
+                }`}
+              >
+                <span className={`material-symbols-outlined text-base ${activeTab === 'autoparts' ? 'text-[#F07F00]' : 'text-gray-400'}`}>
+                  settings_suggest
+                </span>
+                <span>Autopartes ({autoParts.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('reports')}
+                className={`min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                  activeTab === 'reports'
+                    ? 'bg-[#212955] text-white shadow-xs'
+                    : 'text-gray-600 hover:text-[#212955] hover:bg-white'
+                }`}
+              >
+                <span className={`material-symbols-outlined text-base ${activeTab === 'reports' ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                  receipt_long
+                </span>
+                <span>Reportes CSV</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('security')}
+                className={`min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                  activeTab === 'security'
+                    ? 'bg-[#212955] text-white shadow-xs'
+                    : 'text-gray-600 hover:text-[#212955] hover:bg-white'
+                }`}
+              >
+                <span className={`material-symbols-outlined text-base ${activeTab === 'security' ? 'text-gray-300' : 'text-gray-500'}`}>
+                  settings
+                </span>
+                <span>Seguridad &amp; PIN</span>
+              </button>
+            </div>
+
+          </div>
         </div>
       </header>
 
@@ -1052,13 +1108,13 @@ export const AdminDashboardView: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
         {/* KPI Summary Cards */}
         <section className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="bg-white p-4 rounded-2xl border border-[#9D9D9C]/30 shadow-xs flex items-center justify-between">
+          <div className="bg-white p-4 rounded-2xl border border-[#9D9D9C]/30 shadow-xs flex items-center justify-between hover:border-[#212955] transition-all">
             <div>
               <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
-                Autos Inventario
+                Autos en Catálogo
               </span>
               <div className="flex items-baseline gap-1.5 mt-0.5">
-                <span className="font-headline font-black text-2xl text-[#212955]">
+                <span className="font-headline font-black text-2xl text-[#212955] tabular-nums">
                   {kpiStats.totalVehicles}
                 </span>
                 <span className="text-xs text-gray-500 font-medium">
@@ -1071,13 +1127,13 @@ export const AdminDashboardView: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-2xl border border-[#9D9D9C]/30 shadow-xs flex items-center justify-between">
+          <div className="bg-white p-4 rounded-2xl border border-[#9D9D9C]/30 shadow-xs flex items-center justify-between hover:border-[#F07F00] transition-all">
             <div>
               <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
                 Autopartes &amp; OEM
               </span>
               <div className="flex items-baseline gap-1.5 mt-0.5">
-                <span className="font-headline font-black text-2xl text-[#F07F00]">
+                <span className="font-headline font-black text-2xl text-[#F07F00] tabular-nums">
                   {kpiStats.totalPartsCount}
                 </span>
                 <span className="text-xs text-gray-500 font-medium">
@@ -1090,13 +1146,13 @@ export const AdminDashboardView: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-2xl border border-[#9D9D9C]/30 shadow-xs flex items-center justify-between">
+          <div className="bg-white p-4 rounded-2xl border border-[#9D9D9C]/30 shadow-xs flex items-center justify-between hover:border-emerald-500 transition-all">
             <div>
               <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
                 Valor Flota Autos
               </span>
               <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="font-headline font-black text-2xl text-[#212955] font-mono">
+                <span className="font-headline font-black text-2xl text-[#212955] font-mono tabular-nums">
                   ${(kpiStats.totalInventoryValueUsd / 1000).toFixed(0)}K
                 </span>
                 <span className="text-xs text-emerald-600 font-bold">USD</span>
@@ -1107,17 +1163,17 @@ export const AdminDashboardView: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-2xl border border-[#9D9D9C]/30 shadow-xs flex items-center justify-between">
+          <div className="bg-white p-4 rounded-2xl border border-[#9D9D9C]/30 shadow-xs flex items-center justify-between hover:border-[#F07F00] transition-all">
             <div>
               <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
-                Banners en Rotación
+                Publicación CMS Web
               </span>
               <div className="flex items-baseline gap-1.5 mt-0.5">
-                <span className="font-headline font-black text-2xl text-[#F07F00]">
-                  {kpiStats.activeBannersCount}
+                <span className="font-headline font-black text-2xl text-[#F07F00] tabular-nums">
+                  {kpiStats.totalContentItems}
                 </span>
                 <span className="text-xs text-gray-500 font-medium">
-                  de {kpiStats.totalBannersCount}
+                  elementos activos
                 </span>
               </div>
             </div>
@@ -1126,22 +1182,22 @@ export const AdminDashboardView: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-2xl border border-[#9D9D9C]/30 shadow-xs flex items-center justify-between">
+          <div className="bg-white p-4 rounded-2xl border border-[#9D9D9C]/30 shadow-xs flex items-center justify-between hover:border-purple-500 transition-all">
             <div>
               <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
-                Campañas Activas
+                Marcas &amp; Campañas
               </span>
               <div className="flex items-baseline gap-1.5 mt-0.5">
-                <span className="font-headline font-black text-2xl text-purple-700">
-                  {kpiStats.activeOffersCount}
+                <span className="font-headline font-black text-2xl text-purple-700 tabular-nums">
+                  {kpiStats.totalBrandsCount + kpiStats.activeOffersCount}
                 </span>
                 <span className="text-xs text-gray-500 font-medium">
-                  promociones en web
+                  {kpiStats.totalBrandsCount} marcas · {kpiStats.activeOffersCount} ofertas
                 </span>
               </div>
             </div>
             <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-xl">local_offer</span>
+              <span className="material-symbols-outlined text-xl">branding_watermark</span>
             </div>
           </div>
         </section>
