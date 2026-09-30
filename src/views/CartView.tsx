@@ -165,7 +165,7 @@ export const CartView: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-gutter py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-gutter py-8 space-y-8 min-h-[70vh]">
       {/* Header */}
       <div className="border-b border-white/20 pb-4">
         <span className="text-xs font-bold uppercase tracking-wider text-[#F07F00]">

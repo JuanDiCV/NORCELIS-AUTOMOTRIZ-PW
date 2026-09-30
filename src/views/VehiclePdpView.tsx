@@ -114,7 +114,7 @@ export const VehiclePdpView: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-gutter py-6 space-y-8">
+    <div className="max-w-7xl mx-auto px-gutter py-8 space-y-8 min-h-[70vh]">
       {/* Breadcrumb navigation */}
       <nav className="flex items-center gap-2 text-xs text-outline">
         <span>Inicio</span>

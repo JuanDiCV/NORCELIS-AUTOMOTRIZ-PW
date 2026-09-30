@@ -982,7 +982,7 @@ export const PartsCatalogView: React.FC = () => {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-gutter py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-gutter py-8 space-y-8 min-h-[70vh]">
       {/* Active Garage Vehicle Banner */}
       {activeGarage ? (
         <div className="bg-[#212955] text-white rounded-3xl p-5 sm:p-6 shadow-xl border border-[#212955]/30 relative overflow-hidden">

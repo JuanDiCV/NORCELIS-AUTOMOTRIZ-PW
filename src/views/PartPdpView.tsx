@@ -71,8 +71,7 @@ export const PartPdpView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen py-8 px-gutter">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto px-gutter py-8 space-y-8 min-h-[70vh]">
         {/* Breadcrumb Navigation */}
         <nav className="flex items-center gap-2 text-xs text-white/70 flex-wrap">
           <button onClick={() => setCurrentView('home')} className="hover:text-white transition-colors cursor-pointer">
@@ -489,6 +488,5 @@ export const PartPdpView: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
   );
 };

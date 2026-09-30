@@ -86,17 +86,17 @@ export const PromoHeroCarousel: React.FC = () => {
   if (!slides.length) return null;
 
   return (
-    <section className="px-0 sm:px-gutter">
+    <section className="w-full">
       <div
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className="relative max-w-7xl mx-auto overflow-hidden sm:rounded-lg shadow-2xl select-none group bg-[#212955]/[0.98] border border-white/15"
-        style={{ minHeight: '360px' }}
+        className="relative w-full overflow-hidden shadow-2xl select-none group bg-[#212955]/[0.98] border-y border-white/15"
+        style={{ minHeight: '480px' }}
       >
         {/* Slides Stack Container with Elegant Fade-In Transitions */}
-        <div className="relative w-full min-h-[360px] md:min-h-[400px] lg:min-h-[430px]">
+        <div className="relative w-full min-h-[460px] sm:min-h-[500px] md:min-h-[540px] lg:min-h-[580px] xl:min-h-[620px]">
           {slides.map((slide, idx) => {
             const isCurrent = idx === currentSlideIndex;
             return (
@@ -125,10 +125,10 @@ export const PromoHeroCarousel: React.FC = () => {
                 {/* Slide Interactive Content */}
                 <div
                   onClick={() => handleSlideClick(slide)}
-                  className="relative z-10 w-full h-full min-h-[360px] md:min-h-[400px] lg:min-h-[430px] flex flex-col md:flex-row items-center justify-between p-6 sm:p-10 lg:p-12 cursor-pointer pb-14 sm:pb-16"
+                  className="relative z-10 w-full h-full min-h-[460px] sm:min-h-[500px] md:min-h-[540px] lg:min-h-[580px] xl:min-h-[620px] max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between p-6 sm:p-10 lg:p-14 xl:p-16 cursor-pointer pb-16 sm:pb-20"
                 >
                   {/* LEFT ZONE: Campaign badge, Category Title, Call to Action */}
-                  <div className="w-full md:w-5/12 flex flex-col items-start justify-center space-y-3.5 lg:space-y-4.5 z-20">
+                  <div className="w-full md:w-5/12 flex flex-col items-start justify-center space-y-4 lg:space-y-5 z-20">
                     {/* Badge de Campaña Oficial */}
                     <div className="inline-flex items-center gap-2.5 bg-[#212955]/[0.98] backdrop-blur-md text-white px-3.5 py-1.5 rounded-xl shadow-lg border border-[#F07F00]/50 ring-1 ring-white/15 transition-transform hover:scale-105 duration-300">
                       <div className="bg-[#F07F00] text-white font-black text-sm px-2 py-0.5 rounded-md leading-none tracking-tight shadow-xs font-headline">
@@ -142,13 +142,13 @@ export const PromoHeroCarousel: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Titular Principal en Tipografía Bebas Neue */}
+                    {/* Titular Principal */}
                     <div className="space-y-1">
-                      <h2 className="font-headline font-black text-3xl sm:text-4xl lg:text-5xl tracking-normal uppercase text-white drop-shadow-md leading-[1.05]">
+                      <h2 className="font-extrabold text-2xl sm:text-3xl lg:text-4xl uppercase text-white drop-shadow-md leading-[1.1] tracking-tight">
                         {slide.categoryTitle}
                       </h2>
                       {slide.categorySubtitle && (
-                        <p className="text-[#F07F00] font-bold text-xs sm:text-sm tracking-widest uppercase font-headline">
+                        <p className="text-[#F07F00] font-bold text-xs sm:text-sm tracking-wider uppercase">
                           {slide.categorySubtitle}
                         </p>
                       )}
@@ -158,7 +158,7 @@ export const PromoHeroCarousel: React.FC = () => {
                     <div className="pt-1">
                       <button
                         type="button"
-                        className="bg-[#F07F00] hover:bg-[#d97300] active:scale-95 text-white px-7 sm:px-9 py-2.5 sm:py-3 rounded-xl font-black text-sm tracking-wider flex items-center gap-3 shadow-xl hover:shadow-[#F07F00]/30 hover:scale-105 transition-all duration-300 cursor-pointer border border-white/25 font-headline"
+                        className="bg-[#F07F00] hover:bg-[#d97300] active:scale-95 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm tracking-wide flex items-center gap-2.5 shadow-xl hover:shadow-[#F07F00]/30 hover:scale-105 transition-all duration-300 cursor-pointer border border-white/25"
                       >
                         <span>{slide.buttonText || '¡VER TODO!'}</span>
                         <span className="w-5 h-5 rounded-md bg-white/25 flex items-center justify-center text-xs font-bold">
@@ -176,40 +176,40 @@ export const PromoHeroCarousel: React.FC = () => {
                       <img
                         src={slide.productPng}
                         alt={slide.productTitle}
-                        className="relative z-10 w-48 h-48 sm:w-60 sm:h-60 lg:w-72 lg:h-72 object-contain drop-shadow-[0_25px_35px_rgba(0,0,0,0.7)] filter transition-all duration-500"
+                        className="relative z-10 w-52 h-52 sm:w-64 sm:h-64 md:w-76 md:h-76 lg:w-92 lg:h-92 xl:w-[410px] xl:h-[410px] object-contain drop-shadow-[0_25px_35px_rgba(0,0,0,0.7)] filter transition-all duration-500"
                       />
                     </div>
 
                     {/* Product Details & Refined Pricing Tag */}
-                    <div className="flex flex-col items-start sm:items-end text-left sm:text-right space-y-2.5 max-w-xs">
+                    <div className="flex flex-col items-start sm:items-end text-left sm:text-right space-y-2 max-w-xs">
                       <div>
-                        <span className="text-xs sm:text-sm font-black uppercase tracking-widest text-[#F07F00] drop-shadow-sm block font-headline">
+                        <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-[#F07F00] drop-shadow-sm block">
                           {slide.productBrand}
                         </span>
-                        <h3 className="text-base sm:text-lg lg:text-xl font-bold text-white drop-shadow-md leading-snug line-clamp-2">
+                        <h3 className="text-sm sm:text-base font-bold text-white drop-shadow-md leading-snug line-clamp-2">
                           {slide.productTitle}
                         </h3>
                       </div>
 
                       {/* Clean Corporate Price Box */}
-                      <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 bg-[#212955]/[0.98] backdrop-blur-md p-2.5 rounded-xl border border-white/20 shadow-2xl">
+                      <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 bg-[#212955]/[0.98] backdrop-blur-md p-2 rounded-xl border border-white/20 shadow-2xl">
                         {/* Orange Price Tag */}
-                        <div className="bg-[#F07F00] text-white px-4 py-2 rounded-lg text-center shadow-lg flex flex-col justify-center min-w-[110px]">
-                          <span className="font-headline font-black text-xl sm:text-2xl lg:text-3xl leading-none tracking-tight">
+                        <div className="bg-[#F07F00] text-white px-3.5 py-1.5 rounded-lg text-center shadow-lg flex flex-col justify-center min-w-[100px]">
+                          <span className="font-mono font-black text-lg sm:text-xl lg:text-2xl leading-none tracking-tight">
                             S/ {slide.productPrice.toLocaleString(undefined, { minimumFractionDigits: slide.productPrice % 1 !== 0 ? 2 : 0 })}
                           </span>
-                          <span className="text-[10px] font-black uppercase tracking-wider opacity-95 leading-tight mt-0.5 font-headline">
+                          <span className="text-[9px] font-bold uppercase tracking-wider opacity-95 leading-none mt-1">
                             Precio Exclusivo
                           </span>
                         </div>
 
                         {/* Comparative Offer / Normal prices */}
-                        <div className="text-xs sm:text-sm text-white font-medium leading-tight space-y-1 text-left pr-2">
+                        <div className="text-[11px] sm:text-xs text-white font-medium leading-tight space-y-0.5 text-left pr-1.5">
                           <div>
-                            P. Oferta: <strong className="text-[#F07F00] font-black">S/ {slide.offerPrice.toLocaleString(undefined, { minimumFractionDigits: slide.offerPrice % 1 !== 0 ? 2 : 0 })}</strong>
+                            P. Oferta: <strong className="text-[#F07F00] font-bold font-mono">S/ {slide.offerPrice.toLocaleString(undefined, { minimumFractionDigits: slide.offerPrice % 1 !== 0 ? 2 : 0 })}</strong>
                           </div>
                           <div className="text-[#9D9D9C]">
-                            P. Normal: <span className="line-through">S/ {slide.normalPrice.toLocaleString(undefined, { minimumFractionDigits: slide.normalPrice % 1 !== 0 ? 2 : 0 })}</span>
+                            P. Normal: <span className="line-through font-mono">S/ {slide.normalPrice.toLocaleString(undefined, { minimumFractionDigits: slide.normalPrice % 1 !== 0 ? 2 : 0 })}</span>
                           </div>
                         </div>
                       </div>

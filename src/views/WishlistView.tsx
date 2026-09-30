@@ -28,7 +28,7 @@ export const WishlistView: React.FC = () => {
   const totalValueUsd = Math.round(totalValueSoles / 3.75);
 
   return (
-    <div className="max-w-7xl mx-auto px-gutter py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-gutter py-8 space-y-8 min-h-[70vh]">
       {/* Header (Screen 7 spec) */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/20 pb-4">
         <div>

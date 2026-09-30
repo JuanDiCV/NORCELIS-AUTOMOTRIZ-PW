@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
 
 @theme {
   --color-primary: #212955;
@@ -50,31 +51,37 @@
   --color-error-container: #ffdad6;
   --color-on-error-container: #93000a;
 
-  --font-headline: 'Bebas Neue', 'Plus Jakarta Sans', sans-serif;
-  --font-body: 'Source Sans 3', 'Source Sans Pro', sans-serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-headline: 'Plus Jakarta Sans', sans-serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
 }
 
 @layer base {
+  *, ::before, ::after {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
   body {
-    font-family: var(--font-body);
+    font-family: 'Plus Jakarta Sans', sans-serif;
     color: var(--color-on-surface);
     background-color: #212955;
-    letter-spacing: 0.01em;
+    letter-spacing: 0.005em;
   }
   
   h1, h2, h3, h4, h5, h6, .font-headline {
-    font-family: var(--font-headline);
-    letter-spacing: 0.035em;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    letter-spacing: 0.015em;
   }
 
-  input, select, textarea {
+  input, select, textarea, button {
+    font-family: 'Plus Jakarta Sans', sans-serif;
     color: #0f172a;
   }
 }
 
-/* Material symbols utility */
+/* Material symbols utility - preserve symbol icon font */
 .material-symbols-outlined {
-  font-family: 'Material Symbols Outlined';
+  font-family: 'Material Symbols Outlined' !important;
   font-weight: normal;
   font-style: normal;
   font-size: 24px;

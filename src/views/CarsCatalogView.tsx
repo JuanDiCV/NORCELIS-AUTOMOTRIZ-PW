@@ -675,7 +675,7 @@ export const CarsCatalogView: React.FC = () => {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-gutter py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-gutter py-8 space-y-8 min-h-[70vh]">
       {/* Hero Banner with Finance Widget */}
       <div className="bg-primary text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-primary-container relative overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">

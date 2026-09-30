@@ -579,15 +579,15 @@ export const Header: React.FC = () => {
               onClick={() => navigateToPartsCatalog('todos')}
               className={`px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
                 currentView === 'parts' || currentView === 'part-pdp' || activeDropdown === 'repuestos'
-                  ? 'bg-primary/10 text-primary font-black'
+                  ? 'bg-primary/10 text-primary font-bold'
                   : 'text-[#212955] hover:text-primary hover:bg-surface-container-low'
               }`}
             >
-              <AutoPartsIcon size={22} className="text-[#F07F00] shrink-0" />
-              <span className="font-headline font-black text-[16px] lg:text-[17px] xl:text-[18px] tracking-tight whitespace-nowrap text-[#212955]">
+              <AutoPartsIcon size={20} className="text-[#F07F00] shrink-0" />
+              <span className="font-bold text-xs lg:text-[13px] xl:text-sm tracking-wide whitespace-nowrap text-[#212955]">
                 Autopartes y Accesorios
               </span>
-              <AppleChevronDownIcon size={16} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
+              <AppleChevronDownIcon size={15} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
             </button>
           </div>
 
@@ -600,15 +600,15 @@ export const Header: React.FC = () => {
               onClick={() => setCurrentView('services')}
               className={`px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
                 currentView === 'services' || activeDropdown === 'taller'
-                  ? 'bg-primary/10 text-primary font-black'
+                  ? 'bg-primary/10 text-primary font-bold'
                   : 'text-[#212955] hover:text-primary hover:bg-surface-container-low'
               }`}
             >
-              <WorkshopServiceIcon size={22} className="text-[#212955] shrink-0" />
-              <span className="font-headline font-black text-[16px] lg:text-[17px] xl:text-[18px] tracking-tight whitespace-nowrap text-[#212955]">
+              <WorkshopServiceIcon size={20} className="text-[#212955] shrink-0" />
+              <span className="font-bold text-xs lg:text-[13px] xl:text-sm tracking-wide whitespace-nowrap text-[#212955]">
                 Servicios de Taller
               </span>
-              <AppleChevronDownIcon size={16} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
+              <AppleChevronDownIcon size={15} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
             </button>
           </div>
 
@@ -621,15 +621,15 @@ export const Header: React.FC = () => {
               onClick={() => setCurrentView('cars')}
               className={`px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
                 currentView === 'cars' || currentView === 'vehicle-pdp' || activeDropdown === 'vehiculos'
-                  ? 'bg-primary/10 text-primary font-black'
+                  ? 'bg-primary/10 text-primary font-bold'
                   : 'text-[#212955] hover:text-primary hover:bg-surface-container-low'
               }`}
             >
-              <VehicleIcon size={22} className="text-[#212955] shrink-0" />
-              <span className="font-headline font-black text-[16px] lg:text-[17px] xl:text-[18px] tracking-tight whitespace-nowrap text-[#212955]">
+              <VehicleIcon size={20} className="text-[#212955] shrink-0" />
+              <span className="font-bold text-xs lg:text-[13px] xl:text-sm tracking-wide whitespace-nowrap text-[#212955]">
                 Vehículos 2025
               </span>
-              <AppleChevronDownIcon size={16} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
+              <AppleChevronDownIcon size={15} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
             </button>
           </div>
 
@@ -642,15 +642,15 @@ export const Header: React.FC = () => {
               onClick={() => setCurrentView('trade-in')}
               className={`px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
                 currentView === 'trade-in' || currentView === 'financing' || activeDropdown === 'finanzas'
-                  ? 'bg-primary/10 text-primary font-black'
+                  ? 'bg-primary/10 text-primary font-bold'
                   : 'text-[#212955] hover:text-primary hover:bg-surface-container-low'
               }`}
             >
-              <PlanRetomaIcon size={22} className="text-[#F07F00] shrink-0" />
-              <span className="text-[#212955] font-headline font-black text-[16px] lg:text-[17px] xl:text-[18px] tracking-tight whitespace-nowrap">
+              <PlanRetomaIcon size={20} className="text-[#F07F00] shrink-0" />
+              <span className="text-[#212955] font-bold text-xs lg:text-[13px] xl:text-sm tracking-wide whitespace-nowrap">
                 Plan Retoma &amp; Cuotas
               </span>
-              <AppleChevronDownIcon size={16} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
+              <AppleChevronDownIcon size={15} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
             </button>
           </div>
 
@@ -659,12 +659,12 @@ export const Header: React.FC = () => {
             onClick={() => setCurrentView('locations')}
             className={`px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
               currentView === 'locations'
-                ? 'bg-primary text-white font-black'
+                ? 'bg-primary text-white font-bold'
                 : 'text-[#212955] hover:text-primary hover:bg-surface-container-low'
             }`}
           >
-            <DealershipPinIcon size={22} className="text-[#F07F00] shrink-0" />
-            <span className="font-headline font-black text-[16px] lg:text-[17px] xl:text-[18px] tracking-tight whitespace-nowrap text-[#212955]">
+            <DealershipPinIcon size={20} className="text-[#F07F00] shrink-0" />
+            <span className="font-bold text-xs lg:text-[13px] xl:text-sm tracking-wide whitespace-nowrap text-[#212955]">
               Sede Cajamarca
             </span>
           </button>
@@ -674,13 +674,13 @@ export const Header: React.FC = () => {
             onClick={() => navigateToTracking()}
             className={`px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
               currentView === 'order-tracking'
-                ? 'bg-[#F07F00] text-white font-black shadow-xs'
-                : 'text-[#212955] hover:text-[#F07F00] hover:bg-[#F07F00]/10 font-black'
+                ? 'bg-[#F07F00] text-white font-bold shadow-xs'
+                : 'text-[#212955] hover:text-[#F07F00] hover:bg-[#F07F00]/10 font-bold'
             }`}
             title="Seguimiento de envíos Shalom en tiempo real"
           >
-            <span className="material-symbols-outlined text-[22px] text-[#F07F00] shrink-0">local_shipping</span>
-            <span className="font-headline font-black text-[16px] lg:text-[17px] xl:text-[18px] tracking-tight whitespace-nowrap">
+            <span className="material-symbols-outlined text-[20px] text-[#F07F00] shrink-0">local_shipping</span>
+            <span className="font-bold text-xs lg:text-[13px] xl:text-sm tracking-wide whitespace-nowrap">
               Rastrear Pedido
             </span>
           </button>

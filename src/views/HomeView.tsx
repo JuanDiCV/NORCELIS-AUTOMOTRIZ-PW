@@ -211,7 +211,7 @@ export const HomeView: React.FC = () => {
 
                 {/* Bottom Content Area */}
                 <div className="relative z-10 space-y-2">
-                  <h3 className="font-headline font-black text-3xl sm:text-4xl text-white tracking-wider leading-none uppercase drop-shadow-md group-hover:text-white transition-colors">
+                  <h3 className="font-extrabold text-xl sm:text-2xl lg:text-3xl text-white tracking-tight leading-tight uppercase drop-shadow-md group-hover:text-white transition-colors">
                     {cat.name}
                   </h3>
                   <p className="text-xs text-white/75 line-clamp-2 leading-relaxed font-medium">
@@ -220,9 +220,9 @@ export const HomeView: React.FC = () => {
 
                   {/* Action Link like "LEARN MORE ↗" in reference image */}
                   <div className="pt-3 border-t border-white/20 flex items-center justify-between">
-                    <span className="font-headline font-black tracking-widest text-sm text-white group-hover:text-[#F07F00] flex items-center gap-1.5 transition-colors">
+                    <span className="font-bold tracking-wider text-xs sm:text-sm text-white group-hover:text-[#F07F00] flex items-center gap-1.5 transition-colors">
                       <span>VER REPUESTOS</span>
-                      <span className="text-base group-hover:translate-x-1 group-hover:-translate-y-0.5 transition-transform duration-300">
+                      <span className="text-sm sm:text-base group-hover:translate-x-1 group-hover:-translate-y-0.5 transition-transform duration-300">
                         ↗
                       </span>
                     </span>
@@ -517,7 +517,7 @@ export const HomeView: React.FC = () => {
                 <span className="material-symbols-outlined text-sm">local_fire_department</span>
                 Alta Demanda &amp; Stock Inmediato
               </div>
-              <h2 className="font-headline font-black text-2xl sm:text-3xl text-white">
+              <h2 className="font-extrabold text-xl sm:text-2xl lg:text-3xl text-white tracking-tight">
                 Autopartes &amp; Repuestos Originales
               </h2>
               <p className="text-xs sm:text-sm text-white/80 mt-0.5 font-medium">
@@ -628,7 +628,7 @@ export const HomeView: React.FC = () => {
                           setSelectedPartSku(part.sku);
                           setCurrentView('part-pdp');
                         }}
-                        className="font-headline font-bold text-xs sm:text-sm text-on-surface group-hover:text-primary transition-colors cursor-pointer line-clamp-2 mt-0.5"
+                        className="font-bold text-xs sm:text-sm text-on-surface group-hover:text-primary transition-colors cursor-pointer line-clamp-2 mt-0.5"
                       >
                         {part.name}
                       </h3>
@@ -646,7 +646,7 @@ export const HomeView: React.FC = () => {
                               S/ {part.oldPriceSoles.toLocaleString()}
                             </span>
                           )}
-                          <span className="font-headline font-black text-lg text-primary font-mono leading-none whitespace-nowrap">
+                          <span className="font-black text-lg text-primary font-mono leading-none whitespace-nowrap">
                             S/ {part.priceSoles.toLocaleString()}
                           </span>
                         </div>
@@ -687,9 +687,9 @@ export const HomeView: React.FC = () => {
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header centered as in reference */}
           <div className="text-center max-w-3xl mx-auto space-y-1">
-            <h2 className="font-headline font-black text-2xl sm:text-4xl text-white tracking-tight flex items-center justify-center gap-1">
+            <h2 className="font-extrabold text-xl sm:text-2xl lg:text-3xl text-white tracking-tight flex items-center justify-center gap-1">
               <span>Especialidades &amp; Tecnología Automotriz</span>
-              <span className="text-[#F07F00] text-3xl sm:text-5xl leading-none">.</span>
+              <span className="text-[#F07F00] text-2xl sm:text-4xl leading-none">.</span>
             </h2>
             <p className="text-xs sm:text-sm text-[#9D9D9C] font-semibold">
               Potencia, seguridad y rendimiento certificado para tu vehículo con facilidades de pago en hasta 12 cuotas
@@ -763,7 +763,7 @@ export const HomeView: React.FC = () => {
 
                   {/* Bottom Category Bar on Image */}
                   <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-6 pb-2 px-3 text-center z-10">
-                    <span className="font-headline font-black text-xs sm:text-sm tracking-widest text-white uppercase drop-shadow-md">
+                    <span className="font-extrabold text-xs sm:text-sm tracking-wider text-white uppercase drop-shadow-md">
                       {item.categoryLabel}
                     </span>
                   </div>
@@ -774,7 +774,7 @@ export const HomeView: React.FC = () => {
                   {/* Left: Brand & Product Name */}
                   <div className="flex-1 min-w-0 pr-1 flex flex-col justify-between">
                     <div>
-                      <span className="text-[11px] font-black text-[#212955] uppercase tracking-wider block font-headline">
+                      <span className="text-[11px] font-black text-[#212955] uppercase tracking-wider block">
                         {item.brand}
                       </span>
                       <h4 className="text-[11px] sm:text-xs text-[#212955] font-semibold line-clamp-2 leading-tight mt-0.5" title={item.title}>
@@ -789,10 +789,10 @@ export const HomeView: React.FC = () => {
 
                   {/* Right: Price Box in Official Orange #F07F00 */}
                   <div className="w-24 sm:w-28 bg-[#F07F00] rounded-none p-2 flex flex-col items-center justify-center text-center shrink-0 shadow-xs group-hover:bg-[#d97300] transition-colors">
-                    <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-none bg-[#212955] text-white leading-tight mb-0.5 font-headline">
+                    <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-none bg-[#212955] text-white leading-tight mb-0.5">
                       OFERTA
                     </span>
-                    <div className="font-headline font-black text-base sm:text-lg text-white font-mono leading-none tracking-tight">
+                    <div className="font-black text-base sm:text-lg text-white font-mono leading-none tracking-tight">
                       S/ {item.priceSoles.toLocaleString()}
                     </div>
                     <div className="text-[9px] text-white/85 line-through font-mono mt-0.5">
@@ -828,14 +828,14 @@ export const HomeView: React.FC = () => {
                 </div>
               </div>
               <div className="flex-1 min-w-0">
-                <span className="text-[10px] font-black uppercase text-[#F07F00] tracking-wider font-headline">
+                <span className="text-[10px] font-black uppercase text-[#F07F00] tracking-wider">
                   {panoramicBanner.leftCard.brand}
                 </span>
                 <h4 className="text-xs sm:text-sm font-bold text-white line-clamp-1">
                   {panoramicBanner.leftCard.title}
                 </h4>
                 <div className="mt-1 flex items-baseline gap-2">
-                  <span className="font-headline font-black text-lg text-white font-mono">
+                  <span className="font-black text-base sm:text-lg text-white font-mono">
                     S/ {panoramicBanner.leftCard.priceSoles.toLocaleString()}
                   </span>
                   <span className="text-[10px] text-[#9D9D9C] line-through font-mono">
@@ -850,14 +850,14 @@ export const HomeView: React.FC = () => {
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-none bg-[#F07F00]/20 text-[#F07F00] text-[10px] font-black uppercase tracking-widest border border-[#F07F00]/40">
                 {panoramicBanner.tag}
               </div>
-              <h3 className="font-headline font-black text-2xl sm:text-3xl text-white tracking-wider leading-none uppercase">
+              <h3 className="font-extrabold text-xl sm:text-2xl lg:text-3xl text-white tracking-wide leading-tight uppercase">
                 {panoramicBanner.title}
               </h3>
               <div>
                 <button
                   type="button"
                   onClick={() => navigateToPartsCatalog(panoramicBanner.targetCategory || 'accesorios4x4')}
-                  className="inline-flex items-center gap-2 bg-[#F07F00] hover:bg-[#d97300] active:scale-95 text-white text-xs font-black px-6 py-2.5 rounded-none font-headline tracking-widest uppercase shadow-lg hover:shadow-[#F07F00]/30 transition-all cursor-pointer border border-white/20"
+                  className="inline-flex items-center gap-2 bg-[#F07F00] hover:bg-[#d97300] active:scale-95 text-white text-xs font-bold px-6 py-2.5 rounded-none tracking-wider uppercase shadow-lg hover:shadow-[#F07F00]/30 transition-all cursor-pointer border border-white/20"
                 >
                   <span>{panoramicBanner.buttonText || '¡VER TODO!'}</span>
                   <AppleChevronRightIcon size={14} />

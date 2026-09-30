@@ -17,24 +17,24 @@ export const Footer: React.FC = () => {
   } = useApp();
 
   return (
-    <footer className="bg-[#F07F00] text-[#212955] border-t-2 border-[#d97300] mt-16 shadow-2xl">
+    <footer className="bg-[#F07F00] text-[#212955] border-t-2 border-[#d97300] mt-16 sm:mt-20 shadow-2xl">
       {/* Top Banner Support */}
-      <div className="bg-[#d97300] py-8 px-gutter border-b border-black/10">
+      <div className="bg-[#d97300] py-8 sm:py-9 px-gutter border-b border-black/10">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-none bg-[#212955] text-white flex items-center justify-center font-bold text-2xl shadow-lg ring-2 ring-white/20">
+            <div className="w-12 h-12 rounded-none bg-[#212955] text-white flex items-center justify-center font-bold text-2xl shadow-lg ring-2 ring-white/20 shrink-0">
               <span className="material-symbols-outlined text-3xl text-[#F07F00]">support_agent</span>
             </div>
             <div>
-              <h4 className="font-headline font-extrabold text-white text-lg tracking-tight">
+              <h4 className="font-headline font-extrabold text-white text-lg sm:text-xl tracking-tight">
                 ¿Necesitas asesoría técnica especializada?
               </h4>
-              <p className="text-white/90 text-xs mt-0.5 font-medium">
+              <p className="text-white/90 text-xs sm:text-sm mt-0.5 font-medium">
                 Ingenieros automotrices y asesores oficiales en línea para verificar compatibilidad y cotizaciones.
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto shrink-0">
             <a
               href="https://wa.me/51987654321?text=Hola%20Nor%20Celis,%20deseo%20asesoria%20personalizada"
               target="_blank"
@@ -59,8 +59,8 @@ export const Footer: React.FC = () => {
       </div>
 
       {/* Main 4 Column Content */}
-      <div className="px-gutter py-12 bg-[#FFFFFF]">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="px-gutter py-12 lg:py-16 bg-[#FFFFFF]">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
           {/* Column 1: Brand & Sede */}
           <div className="space-y-4">
             <div className="flex items-center bg-[#212955] p-3 rounded-none w-fit shadow-md ring-1 ring-white/20">
