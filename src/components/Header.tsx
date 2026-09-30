@@ -11,7 +11,6 @@ import {
   VehicleIcon,
   WorkshopServiceIcon,
   PlanRetomaIcon,
-  Showroom360Icon,
   MasterCatalogIcon,
   GarageLiftIcon,
   DealershipPinIcon,
@@ -40,7 +39,6 @@ export const Header: React.FC = () => {
     wishlistTotalCount,
     user,
     showToast,
-    setIsViewer360Open,
     setIsTestDriveModalOpen,
     navigateToPartsCatalog,
     navigateToTracking,
@@ -568,120 +566,123 @@ export const Header: React.FC = () => {
 
       {/* Subnav Desktop with Interactive Hover Mega Dropdowns */}
       <div
-        className="border-t border-surface-container bg-surface-container-lowest relative px-4 sm:px-6 lg:px-8 hidden md:block"
+        className="border-t border-surface-container bg-surface-container-lowest relative px-2 sm:px-4 lg:px-6 hidden md:block"
         onMouseLeave={handleMouseLeave}
       >
-        <nav aria-label="Categorías principales" className="max-w-7xl mx-auto flex items-center justify-center gap-2 sm:gap-3 py-2 text-xs font-semibold">
+        <nav aria-label="Categorías principales" className="max-w-7xl mx-auto flex items-center justify-center gap-2 sm:gap-3 lg:gap-4 xl:gap-6 py-2.5 whitespace-nowrap overflow-x-auto scrollbar-none">
           {/* Autopartes y Accesorios Nav Item */}
           <div
-            className="relative"
+            className="relative shrink-0"
             onMouseEnter={() => handleMouseEnter('repuestos')}
           >
             <button
               onClick={() => navigateToPartsCatalog('todos')}
-              className={`px-3.5 py-2 min-h-[42px] rounded-xl transition-colors flex items-center gap-2 cursor-pointer ${
+              className={`px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
                 currentView === 'parts' || currentView === 'part-pdp' || activeDropdown === 'repuestos'
-                  ? 'bg-primary/10 text-primary font-bold'
-                  : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
+                  ? 'bg-primary/10 text-primary font-black'
+                  : 'text-[#212955] hover:text-primary hover:bg-surface-container-low'
               }`}
             >
-              <AutoPartsIcon size={20} className="text-[#F07F00]" />
-              <span className="font-headline text-base tracking-wide">Autopartes y Accesorios</span>
-              <AppleChevronDownIcon size={14} className="text-[#9D9D9C] transition-transform duration-200" />
+              <AutoPartsIcon size={22} className="text-[#F07F00] shrink-0" />
+              <span className="font-headline font-black text-[16px] lg:text-[17px] xl:text-[18px] tracking-tight whitespace-nowrap text-[#212955]">
+                Autopartes y Accesorios
+              </span>
+              <AppleChevronDownIcon size={16} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
             </button>
           </div>
 
           {/* Servicios Nav Item */}
           <div
-            className="relative"
+            className="relative shrink-0"
             onMouseEnter={() => handleMouseEnter('taller')}
           >
             <button
               onClick={() => setCurrentView('services')}
-              className={`px-3.5 py-2 min-h-[42px] rounded-xl transition-colors flex items-center gap-2 cursor-pointer ${
+              className={`px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
                 currentView === 'services' || activeDropdown === 'taller'
-                  ? 'bg-primary/10 text-primary font-bold'
-                  : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
+                  ? 'bg-primary/10 text-primary font-black'
+                  : 'text-[#212955] hover:text-primary hover:bg-surface-container-low'
               }`}
             >
-              <WorkshopServiceIcon size={20} className="text-[#212955]" />
-              <span className="font-headline text-base tracking-wide">Servicios de Taller</span>
-              <AppleChevronDownIcon size={14} className="text-[#9D9D9C] transition-transform duration-200" />
+              <WorkshopServiceIcon size={22} className="text-[#212955] shrink-0" />
+              <span className="font-headline font-black text-[16px] lg:text-[17px] xl:text-[18px] tracking-tight whitespace-nowrap text-[#212955]">
+                Servicios de Taller
+              </span>
+              <AppleChevronDownIcon size={16} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
             </button>
           </div>
 
           {/* Vehículos Nav Item */}
           <div
-            className="relative"
+            className="relative shrink-0"
             onMouseEnter={() => handleMouseEnter('vehiculos')}
           >
             <button
               onClick={() => setCurrentView('cars')}
-              className={`px-3.5 py-2 min-h-[42px] rounded-xl transition-colors flex items-center gap-2 cursor-pointer ${
+              className={`px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
                 currentView === 'cars' || currentView === 'vehicle-pdp' || activeDropdown === 'vehiculos'
-                  ? 'bg-primary/10 text-primary font-bold'
-                  : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
+                  ? 'bg-primary/10 text-primary font-black'
+                  : 'text-[#212955] hover:text-primary hover:bg-surface-container-low'
               }`}
             >
-              <VehicleIcon size={20} className="text-[#212955]" />
-              <span className="font-headline text-base tracking-wide">Vehículos 2025</span>
-              <AppleChevronDownIcon size={14} className="text-[#9D9D9C] transition-transform duration-200" />
+              <VehicleIcon size={22} className="text-[#212955] shrink-0" />
+              <span className="font-headline font-black text-[16px] lg:text-[17px] xl:text-[18px] tracking-tight whitespace-nowrap text-[#212955]">
+                Vehículos 2025
+              </span>
+              <AppleChevronDownIcon size={16} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
             </button>
           </div>
 
           {/* Plan Retoma & Financiamiento Nav Item */}
           <div
-            className="relative"
+            className="relative shrink-0"
             onMouseEnter={() => handleMouseEnter('finanzas')}
           >
             <button
               onClick={() => setCurrentView('trade-in')}
-              className={`px-3.5 py-2 min-h-[42px] rounded-xl transition-colors flex items-center gap-2 cursor-pointer ${
+              className={`px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
                 currentView === 'trade-in' || currentView === 'financing' || activeDropdown === 'finanzas'
-                  ? 'bg-primary/10 text-primary font-bold'
-                  : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
+                  ? 'bg-primary/10 text-primary font-black'
+                  : 'text-[#212955] hover:text-primary hover:bg-surface-container-low'
               }`}
             >
-              <PlanRetomaIcon size={20} className="text-[#F07F00]" />
-              <span className="text-[#212955] font-headline text-base tracking-wide">Plan Retoma &amp; Cuotas</span>
-              <AppleChevronDownIcon size={14} className="text-[#9D9D9C] transition-transform duration-200" />
+              <PlanRetomaIcon size={22} className="text-[#F07F00] shrink-0" />
+              <span className="text-[#212955] font-headline font-black text-[16px] lg:text-[17px] xl:text-[18px] tracking-tight whitespace-nowrap">
+                Plan Retoma &amp; Cuotas
+              </span>
+              <AppleChevronDownIcon size={16} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
             </button>
           </div>
-
-          {/* Showroom 360° */}
-          <button
-            onClick={() => setIsViewer360Open(true)}
-            className="px-3.5 py-2 min-h-[42px] rounded-xl bg-secondary-container/10 text-secondary hover:bg-secondary-container hover:text-white transition-all flex items-center gap-2 font-bold cursor-pointer border border-secondary-container/30"
-          >
-            <Showroom360Icon size={20} className="text-[#F07F00]" />
-            <span className="font-headline text-base tracking-wide">Showroom 360°</span>
-          </button>
 
           {/* Sede Cajamarca */}
           <button
             onClick={() => setCurrentView('locations')}
-            className={`px-3.5 py-2 min-h-[42px] rounded-xl transition-colors flex items-center gap-2 cursor-pointer ${
+            className={`px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
               currentView === 'locations'
-                ? 'bg-primary text-white font-bold'
-                : 'text-on-surface-variant hover:text-primary hover:bg-surface-container-low'
+                ? 'bg-primary text-white font-black'
+                : 'text-[#212955] hover:text-primary hover:bg-surface-container-low'
             }`}
           >
-            <DealershipPinIcon size={20} className="text-[#F07F00]" />
-            <span className="font-headline text-base tracking-wide">Sede Cajamarca</span>
+            <DealershipPinIcon size={22} className="text-[#F07F00] shrink-0" />
+            <span className="font-headline font-black text-[16px] lg:text-[17px] xl:text-[18px] tracking-tight whitespace-nowrap text-[#212955]">
+              Sede Cajamarca
+            </span>
           </button>
 
           {/* Rastrear Pedido Desktop Link */}
           <button
             onClick={() => navigateToTracking()}
-            className={`px-3.5 py-2 min-h-[42px] rounded-xl transition-colors flex items-center gap-2 cursor-pointer ${
+            className={`px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
               currentView === 'order-tracking'
-                ? 'bg-[#F07F00] text-white font-bold shadow-xs'
-                : 'text-on-surface-variant hover:text-[#F07F00] hover:bg-[#F07F00]/10 font-bold'
+                ? 'bg-[#F07F00] text-white font-black shadow-xs'
+                : 'text-[#212955] hover:text-[#F07F00] hover:bg-[#F07F00]/10 font-black'
             }`}
             title="Seguimiento de envíos Shalom en tiempo real"
           >
-            <span className="material-symbols-outlined text-[20px] text-[#F07F00]">local_shipping</span>
-            <span className="font-headline text-base tracking-wide">Rastrear Pedido</span>
+            <span className="material-symbols-outlined text-[22px] text-[#F07F00] shrink-0">local_shipping</span>
+            <span className="font-headline font-black text-[16px] lg:text-[17px] xl:text-[18px] tracking-tight whitespace-nowrap">
+              Rastrear Pedido
+            </span>
           </button>
         </nav>
 
@@ -782,15 +783,6 @@ export const Header: React.FC = () => {
                   Experiencias Digitales
                 </div>
                 <ul className="space-y-2 text-xs">
-                  <li>
-                    <button
-                      onClick={() => { setIsViewer360Open(true); setActiveDropdown('none'); }}
-                      className="text-left font-medium text-secondary hover:text-secondary-container hover:underline cursor-pointer flex items-center gap-1"
-                    >
-                      <span className="material-symbols-outlined text-sm">360</span>
-                      <span>Showroom Interactivo 360°</span>
-                    </button>
-                  </li>
                   <li>
                     <button
                       onClick={() => { setIsTestDriveModalOpen(true); setActiveDropdown('none'); }}
@@ -1341,19 +1333,6 @@ export const Header: React.FC = () => {
               <span className={`text-xs font-bold ${activeGarage ? 'text-emerald-600' : 'text-[#F07F00]'}`}>
                 {activeGarage ? activeGarage.model : '+ Agregar auto'}
               </span>
-            </button>
-
-            <button
-              onClick={() => { setIsViewer360Open(true); setIsMobileNavOpen(false); }}
-              className="w-full p-3 min-h-[46px] flex items-center justify-between text-left bg-surface-container-low border border-surface-container text-secondary rounded-xl font-bold cursor-pointer"
-            >
-              <div className="flex items-center gap-2.5">
-                <AppleIconBadge variant="subtle-orange" size="sm">
-                  <Showroom360Icon size={16} />
-                </AppleIconBadge>
-                <span>Showroom Interactivo 360°</span>
-              </div>
-              <AppleChevronDownIcon size={14} className="-rotate-90 text-[#9D9D9C]" />
             </button>
           </div>
 

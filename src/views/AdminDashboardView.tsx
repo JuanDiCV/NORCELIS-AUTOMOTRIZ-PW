@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { HeroSlide, Vehicle, AutoPart, CinematicCategory, OfficialBrand } from '../types';
+import { HeroSlide, Vehicle, AutoPart, CinematicCategory, OfficialBrand, PanoramicBannerConfig, ShowcaseOfferCard, PanoramicSideCard } from '../types';
 import { ImageUploadField } from '../components/admin/ImageUploadField';
 import { AccountingExportCenter } from '../components/admin/AccountingExportCenter';
 import { generateVehiclesCsv, generateAutoPartsCsv, downloadCsvFile } from '../utils/csvExportService';
@@ -120,9 +120,20 @@ export const AdminDashboardView: React.FC = () => {
     updateOfficialBrand,
     deleteOfficialBrand,
     resetOfficialBrands,
+    panoramicBanner,
+    updatePanoramicBanner,
+    resetPanoramicBanner,
+    topOfferCards,
+    updateTopOfferCard,
+    resetTopOfferCards,
+    bottomOfferCards,
+    updateBottomOfferCard,
+    resetBottomOfferCards,
+    resetAllBannersAndShowcase,
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<AdminTab>('banners');
+  const [bannerSubTab, setBannerSubTab] = useState<'hero' | 'panoramic' | 'showcase_cards'>('hero');
   const [vehicleViewMode, setVehicleViewMode] = useState<ViewModeDisplay>('grid');
 
   // --- STATE FOR BANNERS ---
@@ -144,6 +155,20 @@ export const AdminDashboardView: React.FC = () => {
     bgGradient: 'from-[#0284c7]/90 via-[#0369a1]/80 to-[#0f172a]/75',
     active: true,
   });
+
+  // --- STATE FOR PANORAMIC BANNER ---
+  const [panoramicFormData, setPanoramicFormData] = useState<PanoramicBannerConfig>(panoramicBanner);
+  const [isEditingPanoramic, setIsEditingPanoramic] = useState(false);
+
+  useEffect(() => {
+    setPanoramicFormData(panoramicBanner);
+  }, [panoramicBanner]);
+
+  // --- STATE FOR SHOWCASE CARDS ---
+  const [editingOfferCard, setEditingOfferCard] = useState<ShowcaseOfferCard | null>(null);
+  const [offerCardTarget, setOfferCardTarget] = useState<'top' | 'bottom'>('top');
+  const [cardFormData, setCardFormData] = useState<Partial<ShowcaseOfferCard>>({});
+  const [isCardModalOpen, setIsCardModalOpen] = useState(false);
 
   // --- STATE FOR VEHICLES ---
   const [carSearchQuery, setCarSearchQuery] = useState('');
@@ -467,6 +492,33 @@ export const AdminDashboardView: React.FC = () => {
     const nextState = slide.active === false ? true : false;
     updatePromoSlide(slide.id, { active: nextState });
     showToast(`Banner "${slide.productTitle}" ${nextState ? 'activado' : 'pausado'}`);
+  };
+
+  // --- PANORAMIC BANNER HANDLERS ---
+  const handleSavePanoramicBanner = (e: React.FormEvent) => {
+    e.preventDefault();
+    updatePanoramicBanner(panoramicFormData);
+    setIsEditingPanoramic(false);
+  };
+
+  // --- SHOWCASE CARDS HANDLERS ---
+  const handleOpenEditCard = (card: ShowcaseOfferCard, target: 'top' | 'bottom') => {
+    setEditingOfferCard(card);
+    setOfferCardTarget(target);
+    setCardFormData({ ...card });
+    setIsCardModalOpen(true);
+  };
+
+  const handleSaveCard = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingOfferCard) return;
+    if (offerCardTarget === 'top') {
+      updateTopOfferCard(editingOfferCard.id, cardFormData);
+    } else {
+      updateBottomOfferCard(editingOfferCard.id, cardFormData);
+    }
+    setIsCardModalOpen(false);
+    setEditingOfferCard(null);
   };
 
   // --- VEHICLE HANDLERS ---
@@ -1203,193 +1255,919 @@ export const AdminDashboardView: React.FC = () => {
         </section>
 
         {/* ============================================================== */}
-        {/* TAB 1: BANNERS & PUBLICIDAD                                    */}
+        {/* TAB 1: BANNERS & PUBLICIDAD CENTRALIZADA                       */}
         {/* ============================================================== */}
         {activeTab === 'banners' && (
           <div className="space-y-6 animate-in fade-in duration-150">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-[#9D9D9C]/30 shadow-xs">
+            {/* Header controls bar */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-5 rounded-none border border-[#9D9D9C]/30 shadow-xs">
               <div>
-                <h2 className="font-headline font-bold text-base text-[#212955]">
-                  Gestor de Banners Publicitarios (Carrusel Portada)
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black uppercase tracking-widest text-[#F07F00] bg-[#F07F00]/10 px-2 py-0.5 rounded-none">
+                    Centro de Contenido Web
+                  </span>
+                  <span className="text-xs text-gray-400 font-bold">• Actualización en Tiempo Real</span>
+                </div>
+                <h2 className="font-headline font-bold text-lg text-[#212955] mt-1">
+                  Gestor de Banners Publicitarios &amp; Vitrinas
                 </h2>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  Edita fotografías de fondo, imágenes de productos, textos de impacto y enlaces del carrusel superior.
+                  Administra los carruseles principales, el banner panorámico central de equipamiento y las 8 vitrinas de ofertas.
                 </p>
               </div>
+
+              <div className="flex flex-wrap items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    requestConfirmation({
+                      title: '¿Sincronizar y Restablecer Todos los Banners?',
+                      description: 'Esta acción actualizará todos los banners Hero, el banner panorámico 4x4 y las 8 tarjetas de vitrina con el catálogo de campañas oficial de Nor Celis.',
+                      confirmText: 'Sincronizar Banners',
+                      isDestructive: false,
+                      onConfirm: () => {
+                        resetAllBannersAndShowcase();
+                      },
+                    });
+                  }}
+                  className="bg-gray-100 hover:bg-gray-200 text-[#212955] text-xs font-bold px-3.5 py-2.5 rounded-none flex items-center gap-1.5 cursor-pointer min-h-[44px] transition-colors border border-gray-300"
+                  title="Sincronizar con los últimos banners y promociones"
+                >
+                  <span className="material-symbols-outlined text-base text-[#F07F00]">sync</span>
+                  <span>Sincronizar Banners</span>
+                </button>
+
+                {bannerSubTab === 'hero' && (
+                  <button
+                    type="button"
+                    onClick={handleOpenCreateSlide}
+                    className="bg-[#F07F00] hover:bg-[#d67200] text-white text-xs font-bold px-4 py-2.5 rounded-none shadow-xs flex items-center justify-center gap-2 cursor-pointer min-h-[44px] transition-all"
+                  >
+                    <span className="material-symbols-outlined text-base">add_circle</span>
+                    <span>Crear Nuevo Slide Hero</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Sub-Tabs selector: Hero Carousel, Panoramic Banner, Showcase Cards */}
+            <div className="flex flex-wrap items-center gap-2 bg-white p-2 rounded-none border border-[#9D9D9C]/30 shadow-xs">
               <button
                 type="button"
-                onClick={handleOpenCreateSlide}
-                className="bg-[#F07F00] hover:bg-[#d67200] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
+                onClick={() => setBannerSubTab('hero')}
+                className={`flex-1 sm:flex-none px-4 py-2.5 text-xs font-bold rounded-none flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  bannerSubTab === 'hero'
+                    ? 'bg-[#212955] text-white shadow-xs'
+                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                }`}
               >
-                <span className="material-symbols-outlined text-base">add_circle</span>
-                <span>Crear Nuevo Banner</span>
+                <span className="material-symbols-outlined text-base text-[#F07F00]">view_carousel</span>
+                <span>Sliders Hero Principales ({promoSlides.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBannerSubTab('panoramic')}
+                className={`flex-1 sm:flex-none px-4 py-2.5 text-xs font-bold rounded-none flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  bannerSubTab === 'panoramic'
+                    ? 'bg-[#212955] text-white shadow-xs'
+                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <span className="material-symbols-outlined text-base text-[#F07F00]">panorama_horizontal</span>
+                <span>Banner Panorámico 4x4 Overland</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBannerSubTab('showcase_cards')}
+                className={`flex-1 sm:flex-none px-4 py-2.5 text-xs font-bold rounded-none flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  bannerSubTab === 'showcase_cards'
+                    ? 'bg-[#212955] text-white shadow-xs'
+                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <span className="material-symbols-outlined text-base text-[#F07F00]">grid_view</span>
+                <span>Tarjetas de Oferta &amp; Vitrinas (8)</span>
               </button>
             </div>
 
-            {/* List of current slides */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {promoSlides.map((slide, idx) => (
-                <div
-                  key={slide.id}
-                  className={`bg-white rounded-2xl border transition-all overflow-hidden flex flex-col justify-between shadow-xs ${
-                    slide.active === false
-                      ? 'border-gray-200 opacity-60 bg-gray-50/50'
-                      : 'border-[#9D9D9C]/30 hover:border-[#212955]/40 hover:shadow-md'
-                  }`}
-                >
-                  {/* Banner Image Preview Card */}
-                  <div className="relative aspect-[16/9] w-full bg-slate-900 overflow-hidden">
-                    <img
-                      src={slide.backgroundImage}
-                      alt={slide.categoryTitle}
-                      className="w-full h-full object-cover opacity-70"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-4 flex flex-col justify-between">
-                      <div className="flex items-center justify-between">
-                        <span className="bg-[#F07F00] text-white text-[10px] font-black uppercase px-2 py-0.5 rounded shadow-xs">
-                          {slide.campaignBadge}
-                        </span>
-                        <div className="flex items-center gap-1 bg-black/60 text-white text-[10px] font-mono px-2 py-0.5 rounded backdrop-blur-xs">
-                          <span>Posición #{idx + 1}</span>
-                        </div>
-                      </div>
-
-                      <div>
-                        <span className="text-[10px] font-bold text-gray-300 block">
-                          {slide.categoryTitle}
-                        </span>
-                        <h4 className="font-headline font-bold text-sm text-white line-clamp-1">
-                          {slide.productTitle}
-                        </h4>
-                      </div>
-                    </div>
-
-                    {/* Product cutout preview */}
-                    {slide.productPng && (
-                      <div className="absolute right-3 bottom-3 w-16 h-16 rounded-xl bg-white/20 backdrop-blur-xs border border-white/30 p-1 flex items-center justify-center">
+            {/* ------------------------------------------------------------- */}
+            {/* SUB-TAB 1: HERO CAROUSEL                                      */}
+            {/* ------------------------------------------------------------- */}
+            {bannerSubTab === 'hero' && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {promoSlides.map((slide, idx) => (
+                    <div
+                      key={slide.id}
+                      className={`bg-white rounded-none border transition-all overflow-hidden flex flex-col justify-between shadow-xs ${
+                        slide.active === false
+                          ? 'border-gray-200 opacity-60 bg-gray-50/50'
+                          : 'border-[#9D9D9C]/30 hover:border-[#212955]/40 hover:shadow-md'
+                      }`}
+                    >
+                      {/* Banner Image Preview Card */}
+                      <div className="relative aspect-[16/9] w-full bg-slate-900 overflow-hidden">
                         <img
-                          src={slide.productPng}
-                          alt="Recorte"
-                          className="max-h-full max-w-full object-contain drop-shadow"
+                          src={slide.backgroundImage}
+                          alt={slide.categoryTitle}
+                          className="w-full h-full object-cover opacity-70"
                           referrerPolicy="no-referrer"
                         />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-4 flex flex-col justify-between">
+                          <div className="flex items-center justify-between">
+                            <span className="bg-[#F07F00] text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-none shadow-xs">
+                              {slide.campaignBadge}
+                            </span>
+                            <div className="flex items-center gap-1 bg-black/60 text-white text-[10px] font-mono px-2 py-0.5 rounded-none backdrop-blur-xs">
+                              <span>Posición #{idx + 1}</span>
+                            </div>
+                          </div>
+
+                          <div>
+                            <span className="text-[10px] font-bold text-gray-300 block">
+                              {slide.categoryTitle}
+                            </span>
+                            <h4 className="font-headline font-bold text-sm text-white line-clamp-1">
+                              {slide.productTitle}
+                            </h4>
+                          </div>
+                        </div>
+
+                        {/* Product cutout preview */}
+                        {slide.productPng && (
+                          <div className="absolute right-3 bottom-3 w-16 h-16 rounded-none bg-white/20 backdrop-blur-xs border border-white/30 p-1 flex items-center justify-center">
+                            <img
+                              src={slide.productPng}
+                              alt="Recorte"
+                              className="max-h-full max-w-full object-contain drop-shadow"
+                              referrerPolicy="no-referrer"
+                            />
+                          </div>
+                        )}
                       </div>
-                    )}
+
+                      {/* Body Content & Reorder buttons */}
+                      <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+                        <div className="space-y-1.5 text-xs">
+                          <div className="flex items-center justify-between text-gray-500">
+                            <span>Marca: <strong>{slide.productBrand}</strong></span>
+                            <span className="bg-gray-100 px-2 py-0.5 rounded-none text-[10px] font-bold uppercase text-[#212955]">
+                              Destino: {slide.targetView}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 pt-1 font-mono">
+                            <span className="text-emerald-700 font-bold text-sm">
+                              S/ {slide.productPrice}
+                            </span>
+                            <span className="text-xs text-gray-400 line-through">
+                              S/ {slide.normalPrice}
+                            </span>
+                            {slide.normalPrice > slide.productPrice && (
+                              <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-none font-bold">
+                                -{Math.round(((slide.normalPrice - slide.productPrice) / slide.normalPrice) * 100)}%
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Reorder and Action Buttons */}
+                        <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-1.5">
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => handleMoveSlide(idx, 'up')}
+                              className="w-7 h-7 rounded-none bg-gray-100 hover:bg-gray-200 text-[#212955] disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer"
+                              title="Mover arriba"
+                            >
+                              <span className="material-symbols-outlined text-sm">arrow_upward</span>
+                            </button>
+                            <button
+                              type="button"
+                              disabled={idx === promoSlides.length - 1}
+                              onClick={() => handleMoveSlide(idx, 'down')}
+                              className="w-7 h-7 rounded-none bg-gray-100 hover:bg-gray-200 text-[#212955] disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer"
+                              title="Mover abajo"
+                            >
+                              <span className="material-symbols-outlined text-sm">arrow_downward</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleSlideActive(slide)}
+                              className={`text-[11px] font-bold px-2 py-1 rounded-none cursor-pointer transition-colors ${
+                                slide.active === false
+                                  ? 'bg-gray-200 text-gray-700'
+                                  : 'bg-emerald-50 text-emerald-700'
+                              }`}
+                            >
+                              {slide.active === false ? 'Pausado' : '✓ Activo'}
+                            </button>
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleDuplicateSlide(slide)}
+                              className="p-1.5 rounded-none bg-gray-100 hover:bg-gray-200 text-gray-700 cursor-pointer"
+                              title="Duplicar banner"
+                            >
+                              <span className="material-symbols-outlined text-base">content_copy</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleEditSlide(slide)}
+                              className="p-1.5 rounded-none bg-[#212955] hover:bg-[#181e40] text-white cursor-pointer"
+                              title="Editar banner"
+                            >
+                              <span className="material-symbols-outlined text-base">edit</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                requestConfirmation({
+                                  title: '¿Eliminar Banner Promocional?',
+                                  description: `¿Estás seguro de eliminar el banner "${slide.productTitle}" (${slide.categoryTitle}) del carrusel principal?`,
+                                  confirmText: 'Eliminar Banner',
+                                  isDestructive: true,
+                                  onConfirm: () => {
+                                    deletePromoSlide(slide.id);
+                                    showToast('Banner eliminado del carrusel');
+                                  },
+                                });
+                              }}
+                              className="p-1.5 rounded-none bg-red-50 hover:bg-red-100 text-red-600 cursor-pointer"
+                              title="Eliminar banner"
+                            >
+                              <span className="material-symbols-outlined text-base">delete</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ------------------------------------------------------------- */}
+            {/* SUB-TAB 2: PANORAMIC 4X4 BANNER                               */}
+            {/* ------------------------------------------------------------- */}
+            {bannerSubTab === 'panoramic' && (
+              <div className="space-y-6">
+                {/* Visual Live Preview of the Panoramic Banner */}
+                <div className="bg-white p-5 rounded-none border border-[#9D9D9C]/30 space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-headline font-bold text-base text-[#212955]">
+                        Vista Previa en Vivo: Banner Panorámico Intermedio
+                      </h3>
+                      <p className="text-xs text-gray-500">
+                        Ubicado en el centro de la página de inicio entre las vitrinas de repuestos.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        requestConfirmation({
+                          title: '¿Restablecer Banner Panorámico?',
+                          description: 'Se restaurarán los productos KEKO y WARN con sus configuraciones oficiales.',
+                          confirmText: 'Restablecer',
+                          isDestructive: false,
+                          onConfirm: () => resetPanoramicBanner(),
+                        });
+                      }}
+                      className="text-xs font-bold text-gray-600 hover:text-[#F07F00] bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-none cursor-pointer"
+                    >
+                      Restablecer Original
+                    </button>
                   </div>
 
-                  {/* Body Content & Reorder buttons */}
-                  <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
-                    <div className="space-y-1.5 text-xs">
-                      <div className="flex items-center justify-between text-gray-500">
-                        <span>Marca: <strong>{slide.productBrand}</strong></span>
-                        <span className="bg-gray-100 px-2 py-0.5 rounded text-[10px] font-bold uppercase text-[#212955]">
-                          Destino: {slide.targetView}
-                        </span>
+                  {/* Render Mockup */}
+                  <div className={`w-full bg-[#212955] border border-white/20 rounded-none overflow-hidden shadow-xl p-4 sm:p-6 flex flex-col lg:flex-row items-center justify-between gap-6 relative group ${panoramicFormData.bgGradient || ''}`}>
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#212955] via-[#212955]/95 to-[#181e40] z-0 pointer-events-none" />
+
+                    {/* Left Card */}
+                    <div className="relative z-10 flex items-center gap-4 bg-white/10 p-3 rounded-none border border-white/15 w-full lg:w-auto lg:min-w-[280px] flex-1">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-900 rounded-none overflow-hidden shrink-0 relative">
+                        <img
+                          src={panoramicFormData.leftCard.image}
+                          alt={panoramicFormData.leftCard.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-1 left-1 bg-[#F07F00] text-white text-[8px] font-black px-1.5 py-0.5 rounded-none">
+                          {panoramicFormData.leftCard.installmentText}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 pt-1 font-mono">
-                        <span className="text-emerald-700 font-bold text-sm">
-                          S/ {slide.productPrice}
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[10px] font-black uppercase text-[#F07F00] tracking-wider font-headline">
+                          {panoramicFormData.leftCard.brand}
                         </span>
-                        <span className="text-xs text-gray-400 line-through">
-                          S/ {slide.normalPrice}
-                        </span>
-                        {slide.normalPrice > slide.productPrice && (
-                          <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-bold">
-                            -{Math.round(((slide.normalPrice - slide.productPrice) / slide.normalPrice) * 100)}%
+                        <h4 className="text-xs font-bold text-white line-clamp-1">
+                          {panoramicFormData.leftCard.title}
+                        </h4>
+                        <div className="mt-1 flex items-baseline gap-2">
+                          <span className="font-headline font-black text-base text-white font-mono">
+                            S/ {panoramicFormData.leftCard.priceSoles.toLocaleString()}
                           </span>
-                        )}
+                          <span className="text-[10px] text-gray-400 line-through font-mono">
+                            S/ {panoramicFormData.leftCard.normalPrice.toLocaleString()}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Reorder and Action Buttons */}
-                    <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-1.5">
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          disabled={idx === 0}
-                          onClick={() => handleMoveSlide(idx, 'up')}
-                          className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#212955] disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer"
-                          title="Mover arriba"
-                        >
-                          <span className="material-symbols-outlined text-sm">arrow_upward</span>
-                        </button>
-                        <button
-                          type="button"
-                          disabled={idx === promoSlides.length - 1}
-                          onClick={() => handleMoveSlide(idx, 'down')}
-                          className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#212955] disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer"
-                          title="Mover abajo"
-                        >
-                          <span className="material-symbols-outlined text-sm">arrow_downward</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleToggleSlideActive(slide)}
-                          className={`text-[11px] font-bold px-2 py-1 rounded-lg cursor-pointer transition-colors ${
-                            slide.active === false
-                              ? 'bg-gray-200 text-gray-700'
-                              : 'bg-emerald-50 text-emerald-700'
-                          }`}
-                        >
-                          {slide.active === false ? 'Pausado' : '✓ Activo'}
-                        </button>
+                    {/* Center Call to Action */}
+                    <div className="relative z-10 text-center space-y-2 px-4 max-w-md shrink-0">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-none bg-[#F07F00]/20 text-[#F07F00] text-[10px] font-black uppercase tracking-widest border border-[#F07F00]/40">
+                        {panoramicFormData.tag}
                       </div>
+                      <h3 className="font-headline font-black text-xl sm:text-2xl text-white tracking-wider leading-none uppercase">
+                        {panoramicFormData.title}
+                      </h3>
+                      <div>
+                        <span className="inline-flex items-center gap-1 bg-[#F07F00] text-white text-xs font-black px-5 py-2 rounded-none font-headline tracking-widest uppercase shadow-md">
+                          {panoramicFormData.buttonText}
+                        </span>
+                      </div>
+                    </div>
 
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleDuplicateSlide(slide)}
-                          className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 cursor-pointer"
-                          title="Duplicar banner"
-                        >
-                          <span className="material-symbols-outlined text-base">content_copy</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleEditSlide(slide)}
-                          className="p-1.5 rounded-lg bg-[#212955] hover:bg-[#181e40] text-white cursor-pointer"
-                          title="Editar banner"
-                        >
-                          <span className="material-symbols-outlined text-base">edit</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            requestConfirmation({
-                              title: '¿Eliminar Banner Promocional?',
-                              description: `¿Estás seguro de eliminar el banner "${slide.productTitle}" (${slide.categoryTitle}) del carrusel principal?`,
-                              confirmText: 'Eliminar Banner',
-                              isDestructive: true,
-                              onConfirm: () => {
-                                deletePromoSlide(slide.id);
-                                showToast('Banner eliminado del carrusel');
-                              },
-                            });
-                          }}
-                          className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 cursor-pointer"
-                          title="Eliminar banner"
-                        >
-                          <span className="material-symbols-outlined text-base">delete</span>
-                        </button>
+                    {/* Right Card */}
+                    <div className="relative z-10 flex items-center gap-4 bg-white/10 p-3 rounded-none border border-white/15 w-full lg:w-auto lg:min-w-[280px] flex-1">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-900 rounded-none overflow-hidden shrink-0 relative">
+                        <img
+                          src={panoramicFormData.rightCard.image}
+                          alt={panoramicFormData.rightCard.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-1 left-1 bg-[#F07F00] text-white text-[8px] font-black px-1.5 py-0.5 rounded-none">
+                          {panoramicFormData.rightCard.installmentText}
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[10px] font-black uppercase text-[#F07F00] tracking-wider font-headline">
+                          {panoramicFormData.rightCard.brand}
+                        </span>
+                        <h4 className="text-xs font-bold text-white line-clamp-1">
+                          {panoramicFormData.rightCard.title}
+                        </h4>
+                        <div className="mt-1 flex items-baseline gap-2">
+                          <span className="font-headline font-black text-base text-white font-mono">
+                            S/ {panoramicFormData.rightCard.priceSoles.toLocaleString()}
+                          </span>
+                          <span className="text-[10px] text-gray-400 line-through font-mono">
+                            S/ {panoramicFormData.rightCard.normalPrice.toLocaleString()}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
 
-            {/* MODAL TO CREATE / EDIT BANNER WITH LIVE PREVIEW */}
+                {/* Edit Form for Panoramic Banner */}
+                <form onSubmit={handleSavePanoramicBanner} className="bg-white p-6 rounded-none border border-[#9D9D9C]/30 shadow-xs space-y-6">
+                  <h3 className="font-headline font-bold text-base text-[#212955] border-b pb-2">
+                    Configuración de Textos y Productos del Banner Panorámico
+                  </h3>
+
+                  {/* Section: Central Texts */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-[#212955] mb-1">
+                        Etiqueta Superior (Badge)
+                      </label>
+                      <input
+                        type="text"
+                        value={panoramicFormData.tag}
+                        onChange={(e) => setPanoramicFormData({ ...panoramicFormData, tag: e.target.value })}
+                        className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-none px-3 py-2 text-xs text-[#212955]"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-[#212955] mb-1">
+                        Título Principal
+                      </label>
+                      <input
+                        type="text"
+                        value={panoramicFormData.title}
+                        onChange={(e) => setPanoramicFormData({ ...panoramicFormData, title: e.target.value })}
+                        className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-none px-3 py-2 text-xs text-[#212955]"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-[#212955] mb-1">
+                        Texto del Botón CTA
+                      </label>
+                      <input
+                        type="text"
+                        value={panoramicFormData.buttonText}
+                        onChange={(e) => setPanoramicFormData({ ...panoramicFormData, buttonText: e.target.value })}
+                        className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-none px-3 py-2 text-xs text-[#212955]"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Section: Left Card Product */}
+                  <div className="p-4 bg-gray-50 rounded-none border border-gray-200 space-y-4">
+                    <div className="flex items-center gap-2 text-xs font-bold text-[#212955]">
+                      <span className="w-2.5 h-2.5 bg-[#F07F00] rounded-none"></span>
+                      <span>Producto Destacado Izquierdo:</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-600 mb-1">Marca</label>
+                        <input
+                          type="text"
+                          value={panoramicFormData.leftCard.brand}
+                          onChange={(e) =>
+                            setPanoramicFormData({
+                              ...panoramicFormData,
+                              leftCard: { ...panoramicFormData.leftCard, brand: e.target.value },
+                            })
+                          }
+                          className="w-full bg-white border border-[#9D9D9C]/40 rounded-none px-3 py-1.5 text-xs text-[#212955]"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-[11px] font-bold text-gray-600 mb-1">Nombre del Producto</label>
+                        <input
+                          type="text"
+                          value={panoramicFormData.leftCard.title}
+                          onChange={(e) =>
+                            setPanoramicFormData({
+                              ...panoramicFormData,
+                              leftCard: { ...panoramicFormData.leftCard, title: e.target.value },
+                            })
+                          }
+                          className="w-full bg-white border border-[#9D9D9C]/40 rounded-none px-3 py-1.5 text-xs text-[#212955]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-600 mb-1">Precio Oferta (S/)</label>
+                        <input
+                          type="number"
+                          value={panoramicFormData.leftCard.priceSoles}
+                          onChange={(e) =>
+                            setPanoramicFormData({
+                              ...panoramicFormData,
+                              leftCard: { ...panoramicFormData.leftCard, priceSoles: parseFloat(e.target.value) || 0 },
+                            })
+                          }
+                          className="w-full bg-white border border-[#9D9D9C]/40 rounded-none px-3 py-1.5 text-xs text-[#212955]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-600 mb-1">Precio Normal (S/)</label>
+                        <input
+                          type="number"
+                          value={panoramicFormData.leftCard.normalPrice}
+                          onChange={(e) =>
+                            setPanoramicFormData({
+                              ...panoramicFormData,
+                              leftCard: { ...panoramicFormData.leftCard, normalPrice: parseFloat(e.target.value) || 0 },
+                            })
+                          }
+                          className="w-full bg-white border border-[#9D9D9C]/40 rounded-none px-3 py-1.5 text-xs text-[#212955]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-600 mb-1">Badge de Cuotas</label>
+                        <input
+                          type="text"
+                          value={panoramicFormData.leftCard.installmentText}
+                          onChange={(e) =>
+                            setPanoramicFormData({
+                              ...panoramicFormData,
+                              leftCard: { ...panoramicFormData.leftCard, installmentText: e.target.value },
+                            })
+                          }
+                          className="w-full bg-white border border-[#9D9D9C]/40 rounded-none px-3 py-1.5 text-xs text-[#212955]"
+                        />
+                      </div>
+                    </div>
+                    <ImageUploadField
+                      label="URL de Foto del Producto Izquierdo"
+                      value={panoramicFormData.leftCard.image}
+                      onChange={(url) =>
+                        setPanoramicFormData({
+                          ...panoramicFormData,
+                          leftCard: { ...panoramicFormData.leftCard, image: url },
+                        })
+                      }
+                      aspectRatio="1:1"
+                      helpText="Foto de producto para el lado izquierdo del banner panorámico"
+                    />
+                  </div>
+
+                  {/* Section: Right Card Product */}
+                  <div className="p-4 bg-gray-50 rounded-none border border-gray-200 space-y-4">
+                    <div className="flex items-center gap-2 text-xs font-bold text-[#212955]">
+                      <span className="w-2.5 h-2.5 bg-[#F07F00] rounded-none"></span>
+                      <span>Producto Destacado Derecho:</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-600 mb-1">Marca</label>
+                        <input
+                          type="text"
+                          value={panoramicFormData.rightCard.brand}
+                          onChange={(e) =>
+                            setPanoramicFormData({
+                              ...panoramicFormData,
+                              rightCard: { ...panoramicFormData.rightCard, brand: e.target.value },
+                            })
+                          }
+                          className="w-full bg-white border border-[#9D9D9C]/40 rounded-none px-3 py-1.5 text-xs text-[#212955]"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-[11px] font-bold text-gray-600 mb-1">Nombre del Producto</label>
+                        <input
+                          type="text"
+                          value={panoramicFormData.rightCard.title}
+                          onChange={(e) =>
+                            setPanoramicFormData({
+                              ...panoramicFormData,
+                              rightCard: { ...panoramicFormData.rightCard, title: e.target.value },
+                            })
+                          }
+                          className="w-full bg-white border border-[#9D9D9C]/40 rounded-none px-3 py-1.5 text-xs text-[#212955]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-600 mb-1">Precio Oferta (S/)</label>
+                        <input
+                          type="number"
+                          value={panoramicFormData.rightCard.priceSoles}
+                          onChange={(e) =>
+                            setPanoramicFormData({
+                              ...panoramicFormData,
+                              rightCard: { ...panoramicFormData.rightCard, priceSoles: parseFloat(e.target.value) || 0 },
+                            })
+                          }
+                          className="w-full bg-white border border-[#9D9D9C]/40 rounded-none px-3 py-1.5 text-xs text-[#212955]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-600 mb-1">Precio Normal (S/)</label>
+                        <input
+                          type="number"
+                          value={panoramicFormData.rightCard.normalPrice}
+                          onChange={(e) =>
+                            setPanoramicFormData({
+                              ...panoramicFormData,
+                              rightCard: { ...panoramicFormData.rightCard, normalPrice: parseFloat(e.target.value) || 0 },
+                            })
+                          }
+                          className="w-full bg-white border border-[#9D9D9C]/40 rounded-none px-3 py-1.5 text-xs text-[#212955]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-600 mb-1">Badge de Cuotas</label>
+                        <input
+                          type="text"
+                          value={panoramicFormData.rightCard.installmentText}
+                          onChange={(e) =>
+                            setPanoramicFormData({
+                              ...panoramicFormData,
+                              rightCard: { ...panoramicFormData.rightCard, installmentText: e.target.value },
+                            })
+                          }
+                          className="w-full bg-white border border-[#9D9D9C]/40 rounded-none px-3 py-1.5 text-xs text-[#212955]"
+                        />
+                      </div>
+                    </div>
+                    <ImageUploadField
+                      label="URL de Foto del Producto Derecho"
+                      value={panoramicFormData.rightCard.image}
+                      onChange={(url) =>
+                        setPanoramicFormData({
+                          ...panoramicFormData,
+                          rightCard: { ...panoramicFormData.rightCard, image: url },
+                        })
+                      }
+                      aspectRatio="1:1"
+                      helpText="Foto de producto para el lado derecho del banner panorámico"
+                    />
+                  </div>
+
+                  <div className="flex justify-end pt-3">
+                    <button
+                      type="submit"
+                      className="bg-[#F07F00] hover:bg-[#d67200] text-white text-xs font-bold px-6 py-3 rounded-none shadow-md cursor-pointer transition-all flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-sm">save</span>
+                      <span>Guardar Banner Panorámico</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* ------------------------------------------------------------- */}
+            {/* SUB-TAB 3: SHOWCASE CARDS (TOP 4 & BOTTOM 4)                 */}
+            {/* ------------------------------------------------------------- */}
+            {bannerSubTab === 'showcase_cards' && (
+              <div className="space-y-8">
+                {/* Section A: TOP 4 CARDS */}
+                <div className="bg-white p-5 rounded-none border border-[#9D9D9C]/30 shadow-xs space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3">
+                    <div>
+                      <h3 className="font-headline font-bold text-base text-[#212955] flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 bg-[#F07F00] rounded-none"></span>
+                        <span>Vitrina Superior: 4 Especialidades Automotrices</span>
+                      </h3>
+                      <p className="text-xs text-gray-500">
+                        Tarjetas principales ubicadas inmediatamente arriba del banner panorámico.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => resetTopOfferCards()}
+                      className="text-xs font-bold text-gray-600 hover:text-[#F07F00] bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-none cursor-pointer self-start sm:self-auto"
+                    >
+                      Restablecer Superior
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {topOfferCards.map((card, idx) => (
+                      <div
+                        key={card.id || idx}
+                        className="bg-gray-50 border border-gray-200 rounded-none overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow"
+                      >
+                        <div className="relative aspect-video bg-slate-900 overflow-hidden">
+                          <img
+                            src={card.image}
+                            alt={card.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute top-1 left-1 bg-[#F07F00] text-white text-[9px] font-black px-1.5 py-0.5 rounded-none">
+                            12c S/ {card.cuota}
+                          </div>
+                          <div className="absolute bottom-0 inset-x-0 bg-black/70 px-2 py-0.5 text-center">
+                            <span className="text-[10px] text-white font-bold uppercase tracking-wider">
+                              {card.categoryLabel}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="p-3 space-y-2 flex-1 flex flex-col justify-between">
+                          <div>
+                            <span className="text-[10px] font-black text-[#212955] uppercase block">
+                              {card.brand}
+                            </span>
+                            <h4 className="text-xs font-semibold text-[#212955] line-clamp-2 mt-0.5">
+                              {card.title}
+                            </h4>
+                            <div className="mt-1 flex items-baseline gap-2 font-mono">
+                              <span className="text-sm font-black text-[#212955]">
+                                S/ {card.priceSoles}
+                              </span>
+                              <span className="text-[10px] text-gray-400 line-through">
+                                S/ {card.normalPrice}
+                              </span>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditCard(card, 'top')}
+                            className="w-full mt-2 bg-[#212955] hover:bg-[#181e40] text-white text-xs font-bold py-1.5 rounded-none flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-xs">edit</span>
+                            <span>Editar Tarjeta</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Section B: BOTTOM 4 CARDS */}
+                <div className="bg-white p-5 rounded-none border border-[#9D9D9C]/30 shadow-xs space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3">
+                    <div>
+                      <h3 className="font-headline font-bold text-base text-[#212955] flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 bg-[#212955] rounded-none"></span>
+                        <span>Vitrina Inferior: 4 Servicios de Taller &amp; Accesorios</span>
+                      </h3>
+                      <p className="text-xs text-gray-500">
+                        Tarjetas ubicadas debajo del banner panorámico (Mantenimiento, Detailing, etc.).
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => resetBottomOfferCards()}
+                      className="text-xs font-bold text-gray-600 hover:text-[#F07F00] bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-none cursor-pointer self-start sm:self-auto"
+                    >
+                      Restablecer Inferior
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {bottomOfferCards.map((card, idx) => (
+                      <div
+                        key={card.id || idx}
+                        className="bg-gray-50 border border-gray-200 rounded-none overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow"
+                      >
+                        <div className="relative aspect-video bg-slate-900 overflow-hidden">
+                          <img
+                            src={card.image}
+                            alt={card.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute top-1 left-1 bg-[#F07F00] text-white text-[9px] font-black px-1.5 py-0.5 rounded-none">
+                            12c S/ {card.cuota}
+                          </div>
+                          <div className="absolute bottom-0 inset-x-0 bg-black/70 px-2 py-0.5 text-center">
+                            <span className="text-[10px] text-white font-bold uppercase tracking-wider">
+                              {card.categoryLabel}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="p-3 space-y-2 flex-1 flex flex-col justify-between">
+                          <div>
+                            <span className="text-[10px] font-black text-[#212955] uppercase block">
+                              {card.brand}
+                            </span>
+                            <h4 className="text-xs font-semibold text-[#212955] line-clamp-2 mt-0.5">
+                              {card.title}
+                            </h4>
+                            <div className="mt-1 flex items-baseline gap-2 font-mono">
+                              <span className="text-sm font-black text-[#212955]">
+                                S/ {card.priceSoles}
+                              </span>
+                              <span className="text-[10px] text-gray-400 line-through">
+                                S/ {card.normalPrice}
+                              </span>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditCard(card, 'bottom')}
+                            className="w-full mt-2 bg-[#212955] hover:bg-[#181e40] text-white text-xs font-bold py-1.5 rounded-none flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-xs">edit</span>
+                            <span>Editar Tarjeta</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* MODAL TO EDIT SHOWCASE CARD */}
+            {isCardModalOpen && editingOfferCard && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+                <div className="bg-white rounded-none max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl border border-[#9D9D9C]/30 space-y-5">
+                  <div className="flex items-center justify-between border-b pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[#F07F00] text-2xl">edit_square</span>
+                      <h3 className="font-headline font-bold text-base text-[#212955]">
+                        Editar Tarjeta de Vitrina ({offerCardTarget === 'top' ? 'Superior' : 'Inferior'})
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsCardModalOpen(false)}
+                      className="p-1.5 text-gray-400 hover:text-gray-700 cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-xl">close</span>
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSaveCard} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-[#212955] mb-1">
+                          Categoría (Etiqueta Inferior Foto)
+                        </label>
+                        <input
+                          type="text"
+                          value={cardFormData.categoryLabel || ''}
+                          onChange={(e) => setCardFormData({ ...cardFormData, categoryLabel: e.target.value })}
+                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-none px-3 py-2 text-xs text-[#212955]"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-[#212955] mb-1">
+                          Marca del Producto / Servicio
+                        </label>
+                        <input
+                          type="text"
+                          value={cardFormData.brand || ''}
+                          onChange={(e) => setCardFormData({ ...cardFormData, brand: e.target.value })}
+                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-none px-3 py-2 text-xs text-[#212955]"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-[#212955] mb-1">
+                        Título / Descripción del Producto
+                      </label>
+                      <input
+                        type="text"
+                        value={cardFormData.title || ''}
+                        onChange={(e) => setCardFormData({ ...cardFormData, title: e.target.value })}
+                        className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-none px-3 py-2 text-xs text-[#212955]"
+                        required
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-[#212955] mb-1">
+                          Precio Oferta (S/)
+                        </label>
+                        <input
+                          type="number"
+                          value={cardFormData.priceSoles || ''}
+                          onChange={(e) => setCardFormData({ ...cardFormData, priceSoles: parseFloat(e.target.value) || 0 })}
+                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-none px-3 py-2 text-xs text-[#212955]"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-[#212955] mb-1">
+                          Precio Normal (S/)
+                        </label>
+                        <input
+                          type="number"
+                          value={cardFormData.normalPrice || ''}
+                          onChange={(e) => setCardFormData({ ...cardFormData, normalPrice: parseFloat(e.target.value) || 0 })}
+                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-none px-3 py-2 text-xs text-[#212955]"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-[#212955] mb-1">
+                          Cuota Mensual (S/)
+                        </label>
+                        <input
+                          type="text"
+                          value={cardFormData.cuota || ''}
+                          onChange={(e) => setCardFormData({ ...cardFormData, cuota: e.target.value })}
+                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-none px-3 py-2 text-xs text-[#212955]"
+                          placeholder="Ej. 49.90"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <ImageUploadField
+                        label="Foto de la Tarjeta"
+                        value={cardFormData.image || ''}
+                        onChange={(url) => setCardFormData({ ...cardFormData, image: url })}
+                        aspectRatio="1:1"
+                        helpText="Foto de producto o servicio para la vitrina"
+                        required
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-end gap-3 pt-4 border-t">
+                      <button
+                        type="button"
+                        onClick={() => setIsCardModalOpen(false)}
+                        className="px-4 py-2.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-none cursor-pointer"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-5 py-2.5 text-xs font-bold bg-[#F07F00] hover:bg-[#d67200] text-white rounded-none shadow-xs cursor-pointer"
+                      >
+                        Guardar Tarjeta
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* MODAL TO CREATE / EDIT HERO SLIDE */}
             {isCreatingSlide && (
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-                <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl border border-[#9D9D9C]/30 space-y-5">
+                <div className="bg-white rounded-none max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl border border-[#9D9D9C]/30 space-y-5">
                   <div className="flex items-center justify-between border-b pb-3">
                     <div className="flex items-center gap-2">
                       <span className="material-symbols-outlined text-[#F07F00] text-2xl">
                         {editingSlide ? 'edit_square' : 'add_photo_alternate'}
                       </span>
                       <h3 className="font-headline font-bold text-base text-[#212955]">
-                        {editingSlide ? 'Editar Banner Publicitario' : 'Nuevo Banner Publicitario'}
+                        {editingSlide ? 'Editar Banner Hero Publicitario' : 'Nuevo Banner Hero Publicitario'}
                       </h3>
                     </div>
                     <button
@@ -1406,7 +2184,7 @@ export const AdminDashboardView: React.FC = () => {
                     <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
                       Vista Previa en Vivo (Cómo se verá en la portada):
                     </span>
-                    <div className="relative aspect-[16/8] sm:aspect-[16/7] w-full rounded-2xl overflow-hidden shadow-md bg-slate-900">
+                    <div className="relative aspect-[16/8] sm:aspect-[16/7] w-full rounded-none overflow-hidden shadow-md bg-slate-900">
                       {slideFormData.backgroundImage && (
                         <img
                           src={slideFormData.backgroundImage}
@@ -1417,7 +2195,7 @@ export const AdminDashboardView: React.FC = () => {
                       )}
                       <div className={`absolute inset-0 bg-gradient-to-r ${slideFormData.bgGradient || 'from-blue-900/90 to-transparent'} p-5 sm:p-6 flex items-center justify-between`}>
                         <div className="max-w-md space-y-2 text-white">
-                          <span className="bg-[#F07F00] text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded shadow-xs inline-block">
+                          <span className="bg-[#F07F00] text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-none shadow-xs inline-block">
                             {slideFormData.campaignBadge || 'Campaña'}
                           </span>
                           <h4 className="font-headline font-black text-sm sm:text-lg leading-tight">
@@ -1437,7 +2215,7 @@ export const AdminDashboardView: React.FC = () => {
                         </div>
 
                         {slideFormData.productPng && (
-                          <div className="hidden sm:flex w-28 h-28 rounded-2xl bg-white/10 backdrop-blur-xs border border-white/20 p-2 items-center justify-center">
+                          <div className="hidden sm:flex w-28 h-28 rounded-none bg-white/10 backdrop-blur-xs border border-white/20 p-2 items-center justify-center">
                             <img
                               src={slideFormData.productPng}
                               alt="Recorte"
@@ -1464,7 +2242,7 @@ export const AdminDashboardView: React.FC = () => {
                             setSlideFormData({ ...slideFormData, campaignBadge: e.target.value })
                           }
                           placeholder="Ej: Cyber Nor Celis, Día del Repuesto"
-                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-xl px-3 py-2 text-xs text-[#212955]"
+                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-none px-3 py-2 text-xs text-[#212955]"
                         />
                       </div>
                       <div>
@@ -1479,7 +2257,7 @@ export const AdminDashboardView: React.FC = () => {
                             setSlideFormData({ ...slideFormData, categoryTitle: e.target.value })
                           }
                           placeholder="Ej: CAMIONETAS 4X4, FRENOS OEM"
-                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-xl px-3 py-2 text-xs text-[#212955]"
+                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-none px-3 py-2 text-xs text-[#212955]"
                         />
                       </div>
                     </div>
@@ -1496,7 +2274,7 @@ export const AdminDashboardView: React.FC = () => {
                           setSlideFormData({ ...slideFormData, productTitle: e.target.value })
                         }
                         placeholder="Ej: Toyota Hilux Revo 4x4 o Kit Frenos Brembo"
-                        className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-xl px-3 py-2 text-xs text-[#212955]"
+                        className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-none px-3 py-2 text-xs text-[#212955]"
                       />
                     </div>
 
@@ -1511,13 +2289,13 @@ export const AdminDashboardView: React.FC = () => {
                             key={p.name}
                             type="button"
                             onClick={() => setSlideFormData({ ...slideFormData, bgGradient: p.class })}
-                            className={`p-2 rounded-xl text-left border text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                            className={`p-2 rounded-none text-left border text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
                               slideFormData.bgGradient === p.class
                                 ? 'border-[#F07F00] bg-[#F07F00]/10 text-[#212955]'
                                 : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100'
                             }`}
                           >
-                            <span className={`w-3.5 h-3.5 rounded-full bg-gradient-to-r ${p.class}`} />
+                            <span className={`w-3.5 h-3.5 rounded-none bg-gradient-to-r ${p.class}`} />
                             <span className="text-[11px] truncate">{p.name}</span>
                           </button>
                         ))}
@@ -1525,7 +2303,7 @@ export const AdminDashboardView: React.FC = () => {
                     </div>
 
                     {/* Image Upload 1: Background */}
-                    <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 space-y-2">
+                    <div className="p-4 bg-gray-50 rounded-none border border-gray-200 space-y-2">
                       <ImageUploadField
                         label="Foto Panorámica de Fondo (16:9)"
                         value={slideFormData.backgroundImage || ''}
@@ -1539,7 +2317,7 @@ export const AdminDashboardView: React.FC = () => {
                     </div>
 
                     {/* Image Upload 2: Cutout */}
-                    <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 space-y-2">
+                    <div className="p-4 bg-gray-50 rounded-none border border-gray-200 space-y-2">
                       <ImageUploadField
                         label="Foto Destacada del Producto o Auto (Opcional)"
                         value={slideFormData.productPng || ''}
@@ -1566,7 +2344,7 @@ export const AdminDashboardView: React.FC = () => {
                               productPrice: parseFloat(e.target.value) || 0,
                             })
                           }
-                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-xl px-3 py-2 text-xs text-[#212955]"
+                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-none px-3 py-2 text-xs text-[#212955]"
                         />
                       </div>
                       <div>
@@ -1582,7 +2360,7 @@ export const AdminDashboardView: React.FC = () => {
                               normalPrice: parseFloat(e.target.value) || 0,
                             })
                           }
-                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-xl px-3 py-2 text-xs text-[#212955]"
+                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-none px-3 py-2 text-xs text-[#212955]"
                         />
                       </div>
                       <div>
@@ -1597,7 +2375,7 @@ export const AdminDashboardView: React.FC = () => {
                               targetView: e.target.value as any,
                             })
                           }
-                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-xl px-3 py-2 text-xs text-[#212955] min-h-[38px]"
+                          className="w-full bg-gray-50 border border-[#9D9D9C]/40 rounded-none px-3 py-2 text-xs text-[#212955] min-h-[38px]"
                         >
                           <option value="cars">Catálogo de Autos</option>
                           <option value="parts">Catálogo de Repuestos OEM</option>
@@ -1610,13 +2388,13 @@ export const AdminDashboardView: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setIsCreatingSlide(false)}
-                        className="px-4 py-2.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer"
+                        className="px-4 py-2.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-none cursor-pointer"
                       >
                         Cancelar
                       </button>
                       <button
                         type="submit"
-                        className="px-5 py-2.5 text-xs font-bold bg-[#F07F00] hover:bg-[#d67200] text-white rounded-xl shadow-xs cursor-pointer"
+                        className="px-5 py-2.5 text-xs font-bold bg-[#F07F00] hover:bg-[#d67200] text-white rounded-none shadow-xs cursor-pointer"
                       >
                         {editingSlide ? 'Guardar Cambios' : 'Publicar Banner'}
                       </button>
@@ -3599,11 +4377,11 @@ export const AdminDashboardView: React.FC = () => {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
                       
-                      <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#F07F00] bg-black/80 px-2.5 py-0.5 rounded-full border border-[#F07F00]/30 backdrop-blur-xs">
+                      <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10 pointer-events-none">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[#F07F00] drop-shadow-sm">
                           {cat.tag}
                         </span>
-                        <span className="text-[10px] font-bold text-white/80 bg-white/20 px-2 py-0.5 rounded-full border border-white/20 backdrop-blur-xs">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-white/90 drop-shadow-sm">
                           {cat.badge}
                         </span>
                       </div>
@@ -3831,11 +4609,11 @@ export const AdminDashboardView: React.FC = () => {
                         className="w-full h-full object-cover grayscale contrast-125 brightness-75 transition-all duration-300"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
-                      <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#F07F00] bg-black/80 px-2.5 py-0.5 rounded-full border border-[#F07F00]/30">
+                      <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10 pointer-events-none">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[#F07F00] drop-shadow-sm">
                           {categoryFormData.tag || 'TAG SUPERIOR'}
                         </span>
-                        <span className="text-[10px] font-bold text-white/80 bg-white/20 px-2 py-0.5 rounded-full border border-white/20">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-white/90 drop-shadow-sm">
                           {categoryFormData.badge || 'BADGE'}
                         </span>
                       </div>

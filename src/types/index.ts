@@ -38,6 +38,41 @@ export interface HeroSlide {
   active?: boolean;
 }
 
+export interface PanoramicSideCard {
+  brand: string;
+  title: string;
+  sku: string;
+  priceSoles: number;
+  normalPrice: number;
+  installmentText: string;
+  image: string;
+}
+
+export interface PanoramicBannerConfig {
+  id: string;
+  tag: string;
+  title: string;
+  buttonText: string;
+  targetCategory: string;
+  leftCard: PanoramicSideCard;
+  rightCard: PanoramicSideCard;
+  bgGradient?: string;
+}
+
+export interface ShowcaseOfferCard {
+  id: string;
+  type: 'part' | 'service';
+  categoryLabel: string;
+  brand: string;
+  title: string;
+  priceSoles: number;
+  normalPrice: number;
+  cuota: string;
+  image: string;
+  sku: string;
+  stockText?: string;
+}
+
 export interface Vehicle {
   id: string;
   name: string;

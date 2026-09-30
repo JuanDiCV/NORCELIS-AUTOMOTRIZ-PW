@@ -110,7 +110,7 @@ export const FloatingHub: React.FC = () => {
       ref={hubRef}
       className="fixed bottom-6 right-6 z-40 flex flex-col items-end pointer-events-auto select-none"
     >
-      {/* SPEED DIAL EXPANDED ITEMS (Organizados verticalmente con Stagger y Rebote Suave) */}
+      {/* SPEED DIAL EXPANDED ITEMS */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -135,7 +135,7 @@ export const FloatingHub: React.FC = () => {
                 Asesor Virtual Don Celis IA (24/7)
               </motion.span>
               <motion.button
-                whileHover={{ scale: 1.1, rotate: 2 }}
+                whileHover={{ scale: 1.08, rotate: 2 }}
                 whileTap={{ scale: 0.92 }}
                 onClick={() => {
                   setIsAdvisorChatOpen(true);
@@ -146,7 +146,7 @@ export const FloatingHub: React.FC = () => {
                 aria-label="Asesor Virtual IA"
               >
                 <span className="material-symbols-outlined text-2xl text-[#F07F00]">smart_toy</span>
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 border-2 border-[#212955] rounded-full animate-pulse" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 border-2 border-[#212955] rounded-full animate-pulse indicator-dot" />
               </motion.button>
             </motion.div>
 
@@ -164,7 +164,7 @@ export const FloatingHub: React.FC = () => {
                 WhatsApp Oficial (+51 965 171 717)
               </motion.span>
               <motion.a
-                whileHover={{ scale: 1.1, rotate: -2 }}
+                whileHover={{ scale: 1.08, rotate: -2 }}
                 whileTap={{ scale: 0.92 }}
                 href="https://wa.me/51965171717?text=Hola%20Nor%20Celis,%20deseo%20asesoria%20personalizada%20y%20cotizaciones"
                 target="_blank"
@@ -192,7 +192,7 @@ export const FloatingHub: React.FC = () => {
               animate={{ opacity: 1, scale: 1, rotate: 0 }}
               exit={{ opacity: 0, scale: 0.7, rotate: 45 }}
               transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-              whileHover={{ scale: 1.1, backgroundColor: 'rgba(15, 23, 42, 1)' }}
+              whileHover={{ scale: 1.08, backgroundColor: 'rgba(15, 23, 42, 1)' }}
               whileTap={{ scale: 0.9 }}
               onClick={() => setIsExpanded(false)}
               className="w-10 h-10 rounded-full bg-slate-800/90 text-white flex items-center justify-center shadow-md border border-white/20 transition-colors cursor-pointer"
@@ -212,11 +212,9 @@ export const FloatingHub: React.FC = () => {
           transition={{ type: 'spring', stiffness: 450, damping: 25 }}
           onClick={() => {
             if (isExpanded) {
-              // Si ya está expandido y hace clic en el botón principal naranja, abre la cotización
               openQuickQuote();
               setIsExpanded(false);
             } else {
-              // Si está cerrado, expande el menú Speed Dial con los otros dos iconos
               setIsExpanded(true);
             }
           }}
@@ -243,7 +241,7 @@ export const FloatingHub: React.FC = () => {
               request_quote
             </motion.span>
             {!isExpanded && (
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-white rounded-full animate-ping" />
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-white rounded-full animate-ping indicator-dot" />
             )}
           </div>
 

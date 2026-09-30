@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { ViewMode, ActiveGarageVehicle, CartItem, WishlistItem, Vehicle, AutoPart, WorkshopService, HeroSlide, AppUser, UserRole, StoredUserAccount, CinematicCategory, OfficialBrand } from '../types';
+import { ViewMode, ActiveGarageVehicle, CartItem, WishlistItem, Vehicle, AutoPart, WorkshopService, HeroSlide, AppUser, UserRole, StoredUserAccount, CinematicCategory, OfficialBrand, PanoramicBannerConfig, ShowcaseOfferCard } from '../types';
 import { INITIAL_ACTIVE_GARAGE, AVAILABLE_GARAGE_VEHICLES, VEHICLES_DATA, AUTO_PARTS_DATA, WORKSHOP_SERVICES_DATA, INITIAL_HERO_SLIDES } from '../data/mockData';
-import { DEFAULT_CINEMATIC_CATEGORIES, DEFAULT_OFFICIAL_BRANDS } from '../data/homeShowcaseData';
+import { DEFAULT_CINEMATIC_CATEGORIES, DEFAULT_OFFICIAL_BRANDS, DEFAULT_PANORAMIC_BANNER, DEFAULT_TOP_OFFER_CARDS, DEFAULT_BOTTOM_OFFER_CARDS } from '../data/homeShowcaseData';
 import { PdfModalData } from '../components/PdfPreviewModal';
 import {
   getNotificationPermission,
@@ -13,6 +13,7 @@ import {
   NotificationPermissionStatus,
   PriceAlertCheckResult,
 } from '../services/notificationService';
+import { parseCurrentUrl, buildUrlForRoute, RouteState } from '../utils/urlRouter';
 
 export interface QuickQuoteItem {
   type: 'vehicle' | 'part' | 'service' | 'custom';
@@ -181,14 +182,31 @@ interface AppContextType {
   updateOfficialBrand: (code: string, updated: Partial<OfficialBrand>) => void;
   deleteOfficialBrand: (code: string) => void;
   resetOfficialBrands: () => void;
+
+  panoramicBanner: PanoramicBannerConfig;
+  updatePanoramicBanner: (updated: Partial<PanoramicBannerConfig>) => void;
+  resetPanoramicBanner: () => void;
+
+  topOfferCards: ShowcaseOfferCard[];
+  updateTopOfferCard: (id: string, updated: Partial<ShowcaseOfferCard>) => void;
+  resetTopOfferCards: () => void;
+
+  bottomOfferCards: ShowcaseOfferCard[];
+  updateBottomOfferCard: (id: string, updated: Partial<ShowcaseOfferCard>) => void;
+  resetBottomOfferCards: () => void;
+
+  resetAllBannersAndShowcase: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentView, setCurrentView] = useState<ViewMode>('home');
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string>('veh-rav4-2025');
-  const [selectedPartSku, setSelectedPartSku] = useState<string>('PART-TOY-BRK-01');
+  const initialRouteRef = useRef<RouteState>(typeof window !== 'undefined' ? parseCurrentUrl() : { view: 'home' });
+  const initialRoute = initialRouteRef.current;
+
+  const [currentView, setCurrentView] = useState<ViewMode>(initialRoute.view || 'home');
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>(initialRoute.vehicleId || 'veh-rav4-2025');
+  const [selectedPartSku, setSelectedPartSku] = useState<string>(initialRoute.partSku || 'PART-TOY-BRK-01');
 
   const [garageVehicles, setGarageVehicles] = useState<ActiveGarageVehicle[]>(() => {
     try {
@@ -304,7 +322,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
   
-  const [isGarageModalOpen, setIsGarageModalOpen] = useState(false);
+  const [isGarageModalOpen, setIsGarageModalOpen] = useState(() => initialRoute.modal === 'garage');
 
   // Notification & Price Alerts State
   const [alertsEnabled, setAlertsEnabledState] = useState<boolean>(() => getPriceAlertsEnabled());
@@ -382,10 +400,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return triggerTestPriceAlertNotification(targetVeh, undefined, onNavigateToVehicle);
   }, [activeGarage, garageVehicles]);
 
-  const [isViewer360Open, setIsViewer360Open] = useState(false);
-  const [isTestDriveModalOpen, setIsTestDriveModalOpen] = useState(false);
+  const [isViewer360Open, setIsViewer360Open] = useState(() => initialRoute.modal === 'viewer-360');
+  const [isTestDriveModalOpen, setIsTestDriveModalOpen] = useState(() => initialRoute.modal === 'test-drive');
   const [pdfModalData, setPdfModalData] = useState<PdfModalData | null>(null);
-  const [isQuickQuoteOpen, setIsQuickQuoteOpen] = useState(false);
+  const [isQuickQuoteOpen, setIsQuickQuoteOpen] = useState(() => initialRoute.modal === 'quote');
   const [quickQuoteItem, setQuickQuoteItem] = useState<QuickQuoteItem | null>(null);
 
   const openQuickQuote = (item?: QuickQuoteItem) => {
@@ -646,9 +664,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [activeGarage, user.isLoggedIn, user.id]);
 
-  const [catalogCategoryFilter, setCatalogCategoryFilter] = useState<string>('todos');
-  const [catalogBrandFilter, setCatalogBrandFilter] = useState<string>('todos');
-  const [catalogSearchQuery, setCatalogSearchQuery] = useState<string>('');
+  const [catalogCategoryFilter, setCatalogCategoryFilter] = useState<string>(() => initialRoute.category || 'todos');
+  const [catalogBrandFilter, setCatalogBrandFilter] = useState<string>(() => initialRoute.brand || 'todos');
+  const [catalogSearchQuery, setCatalogSearchQuery] = useState<string>(() => initialRoute.search || '');
 
   const navigateToPartsCatalog = (category?: string, brand?: string, search?: string) => {
     setSelectedPartSku('');
@@ -658,8 +676,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCurrentView('parts');
   };
 
-  const [trackingOrderCode, setTrackingOrderCode] = useState<string>('');
-  const [termsActiveTab, setTermsActiveTab] = useState<'terms' | 'privacy' | 'warranty' | 'shipping'>('terms');
+  const [trackingOrderCode, setTrackingOrderCode] = useState<string>(() => initialRoute.trackingCode || '');
+  const [termsActiveTab, setTermsActiveTab] = useState<'terms' | 'privacy' | 'warranty' | 'shipping'>(() => initialRoute.termsTab || 'terms');
 
   const navigateToTracking = (orderCode?: string) => {
     if (orderCode) setTrackingOrderCode(orderCode);
@@ -915,18 +933,152 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('Pasarela de marcas restablecida a los valores oficiales');
   };
 
+  // Panoramic Power Banner state & persistence
+  const [panoramicBanner, setPanoramicBanner] = useState<PanoramicBannerConfig>(() => {
+    try {
+      const saved = localStorage.getItem('norcelis_panoramic_banner');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.title && parsed.leftCard && parsed.rightCard) return parsed;
+      }
+    } catch (e) {
+      console.error('Error loading panoramic banner from localStorage', e);
+    }
+    return DEFAULT_PANORAMIC_BANNER;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('norcelis_panoramic_banner', JSON.stringify(panoramicBanner));
+    } catch (e) {
+      console.error('Error saving panoramic banner to localStorage', e);
+    }
+  }, [panoramicBanner]);
+
+  const updatePanoramicBanner = (updatedData: Partial<PanoramicBannerConfig>) => {
+    setPanoramicBanner((prev) => ({
+      ...prev,
+      ...updatedData,
+      leftCard: updatedData.leftCard ? { ...prev.leftCard, ...updatedData.leftCard } : prev.leftCard,
+      rightCard: updatedData.rightCard ? { ...prev.rightCard, ...updatedData.rightCard } : prev.rightCard,
+    }));
+    showToast('Banner Panorámico 4x4 actualizado con éxito');
+  };
+
+  const resetPanoramicBanner = () => {
+    setPanoramicBanner(DEFAULT_PANORAMIC_BANNER);
+    try {
+      localStorage.setItem('norcelis_panoramic_banner', JSON.stringify(DEFAULT_PANORAMIC_BANNER));
+    } catch (e) {}
+    showToast('Banner Panorámico 4x4 restablecido a su diseño original');
+  };
+
+  // Top 4 Retail Offer Cards state & persistence
+  const [topOfferCards, setTopOfferCards] = useState<ShowcaseOfferCard[]>(() => {
+    try {
+      const saved = localStorage.getItem('norcelis_top_offer_cards');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error('Error loading top offer cards from localStorage', e);
+    }
+    return DEFAULT_TOP_OFFER_CARDS;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('norcelis_top_offer_cards', JSON.stringify(topOfferCards));
+    } catch (e) {
+      console.error('Error saving top offer cards to localStorage', e);
+    }
+  }, [topOfferCards]);
+
+  const updateTopOfferCard = (id: string, updatedData: Partial<ShowcaseOfferCard>) => {
+    setTopOfferCards((prev) =>
+      prev.map((card) => (card.id === id ? { ...card, ...updatedData } : card))
+    );
+    showToast('Tarjeta de oferta actualizada correctamente');
+  };
+
+  const resetTopOfferCards = () => {
+    setTopOfferCards(DEFAULT_TOP_OFFER_CARDS);
+    try {
+      localStorage.setItem('norcelis_top_offer_cards', JSON.stringify(DEFAULT_TOP_OFFER_CARDS));
+    } catch (e) {}
+    showToast('Tarjetas superiores restablecidas');
+  };
+
+  // Bottom 4 Retail Offer Cards state & persistence
+  const [bottomOfferCards, setBottomOfferCards] = useState<ShowcaseOfferCard[]>(() => {
+    try {
+      const saved = localStorage.getItem('norcelis_bottom_offer_cards');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error('Error loading bottom offer cards from localStorage', e);
+    }
+    return DEFAULT_BOTTOM_OFFER_CARDS;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('norcelis_bottom_offer_cards', JSON.stringify(bottomOfferCards));
+    } catch (e) {
+      console.error('Error saving bottom offer cards to localStorage', e);
+    }
+  }, [bottomOfferCards]);
+
+  const updateBottomOfferCard = (id: string, updatedData: Partial<ShowcaseOfferCard>) => {
+    setBottomOfferCards((prev) =>
+      prev.map((card) => (card.id === id ? { ...card, ...updatedData } : card))
+    );
+    showToast('Tarjeta de servicio/repuesto actualizada');
+  };
+
+  const resetBottomOfferCards = () => {
+    setBottomOfferCards(DEFAULT_BOTTOM_OFFER_CARDS);
+    try {
+      localStorage.setItem('norcelis_bottom_offer_cards', JSON.stringify(DEFAULT_BOTTOM_OFFER_CARDS));
+    } catch (e) {}
+    showToast('Tarjetas inferiores restablecidas');
+  };
+
+  const resetAllBannersAndShowcase = () => {
+    setPromoSlides(INITIAL_HERO_SLIDES);
+    setPanoramicBanner(DEFAULT_PANORAMIC_BANNER);
+    setTopOfferCards(DEFAULT_TOP_OFFER_CARDS);
+    setBottomOfferCards(DEFAULT_BOTTOM_OFFER_CARDS);
+    try {
+      localStorage.setItem('norcelis_promo_slides', JSON.stringify(INITIAL_HERO_SLIDES));
+      localStorage.setItem('norcelis_panoramic_banner', JSON.stringify(DEFAULT_PANORAMIC_BANNER));
+      localStorage.setItem('norcelis_top_offer_cards', JSON.stringify(DEFAULT_TOP_OFFER_CARDS));
+      localStorage.setItem('norcelis_bottom_offer_cards', JSON.stringify(DEFAULT_BOTTOM_OFFER_CARDS));
+    } catch (e) {}
+    showToast('¡Todos los banners publicitarios y vitrinas sincronizados con la última versión oficial!');
+  };
+
   const resetToDefaultData = () => {
     setVehicles(VEHICLES_DATA);
     setPromoSlides(INITIAL_HERO_SLIDES);
     setAutoParts(AUTO_PARTS_DATA);
     setHomeCategories(DEFAULT_CINEMATIC_CATEGORIES);
     setOfficialBrands(DEFAULT_OFFICIAL_BRANDS);
+    setPanoramicBanner(DEFAULT_PANORAMIC_BANNER);
+    setTopOfferCards(DEFAULT_TOP_OFFER_CARDS);
+    setBottomOfferCards(DEFAULT_BOTTOM_OFFER_CARDS);
     setAdminPinState('1234');
     setCartItems([]);
     setWishlistItems([]);
     try {
       localStorage.removeItem('norcelis_custom_vehicles');
       localStorage.removeItem('norcelis_promo_slides');
+      localStorage.removeItem('norcelis_panoramic_banner');
+      localStorage.removeItem('norcelis_top_offer_cards');
+      localStorage.removeItem('norcelis_bottom_offer_cards');
       localStorage.removeItem('norcelis_custom_parts');
       localStorage.removeItem('norcelis_home_categories');
       localStorage.removeItem('norcelis_official_brands');
@@ -1469,6 +1621,103 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   };
 
+  // Flag to avoid pushing history entry when popstate (browser back/forward) triggered the update
+  const isPopstateRef = useRef(false);
+
+  // Synchronize state changes to Browser History (pushState)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    if (isPopstateRef.current) {
+      isPopstateRef.current = false;
+      return;
+    }
+
+    const activeModal: RouteState['modal'] =
+      isGarageModalOpen ? 'garage' :
+      isQuickQuoteOpen ? 'quote' :
+      isTestDriveModalOpen ? 'test-drive' :
+      isViewer360Open ? 'viewer-360' :
+      pdfModalData ? 'pdf' : null;
+
+    const targetUrl = buildUrlForRoute({
+      view: currentView,
+      vehicleId: selectedVehicleId,
+      partSku: selectedPartSku,
+      category: catalogCategoryFilter !== 'todos' ? catalogCategoryFilter : undefined,
+      brand: catalogBrandFilter !== 'todos' ? catalogBrandFilter : undefined,
+      search: catalogSearchQuery || undefined,
+      trackingCode: trackingOrderCode || undefined,
+      termsTab: termsActiveTab !== 'terms' ? termsActiveTab : undefined,
+      modal: activeModal,
+    });
+
+    const currentFullUrl = window.location.pathname + window.location.search + window.location.hash;
+    if (targetUrl !== currentFullUrl) {
+      window.history.pushState(
+        {
+          view: currentView,
+          vehicleId: selectedVehicleId,
+          partSku: selectedPartSku,
+          category: catalogCategoryFilter,
+          brand: catalogBrandFilter,
+          search: catalogSearchQuery,
+          trackingCode: trackingOrderCode,
+          termsTab: termsActiveTab,
+          modal: activeModal,
+        },
+        '',
+        targetUrl
+      );
+    }
+  }, [
+    currentView,
+    selectedVehicleId,
+    selectedPartSku,
+    catalogCategoryFilter,
+    catalogBrandFilter,
+    catalogSearchQuery,
+    trackingOrderCode,
+    termsActiveTab,
+    isGarageModalOpen,
+    isQuickQuoteOpen,
+    isTestDriveModalOpen,
+    isViewer360Open,
+    pdfModalData,
+  ]);
+
+  // Handle Browser Back / Forward buttons (popstate)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handlePopState = () => {
+      isPopstateRef.current = true;
+      const route = parseCurrentUrl();
+
+      // Sincronizar Modales
+      setIsGarageModalOpen(route.modal === 'garage');
+      setIsQuickQuoteOpen(route.modal === 'quote');
+      setIsTestDriveModalOpen(route.modal === 'test-drive');
+      setIsViewer360Open(route.modal === 'viewer-360');
+      if (route.modal !== 'pdf') {
+        setPdfModalData(null);
+      }
+
+      // Sincronizar Vista y Parámetros
+      setCurrentView(route.view);
+      if (route.vehicleId) setSelectedVehicleId(route.vehicleId);
+      if (route.partSku) setSelectedPartSku(route.partSku);
+      if (route.category !== undefined) setCatalogCategoryFilter(route.category || 'todos');
+      if (route.brand !== undefined) setCatalogBrandFilter(route.brand || 'todos');
+      if (route.search !== undefined) setCatalogSearchQuery(route.search);
+      if (route.trackingCode !== undefined) setTrackingOrderCode(route.trackingCode);
+      if (route.termsTab) setTermsActiveTab(route.termsTab);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   return (
     <AppContext.Provider
       value={{
@@ -1574,6 +1823,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateOfficialBrand,
         deleteOfficialBrand,
         resetOfficialBrands,
+        panoramicBanner,
+        updatePanoramicBanner,
+        resetPanoramicBanner,
+        topOfferCards,
+        updateTopOfferCard,
+        resetTopOfferCards,
+        bottomOfferCards,
+        updateBottomOfferCard,
+        resetBottomOfferCards,
+        resetAllBannersAndShowcase,
       }}
     >
       {children}

@@ -9,7 +9,6 @@ import {
   Drivetrain4wdIcon,
   CertifiedShieldIcon,
   SpeedometerGaugeIcon,
-  Showroom360Icon,
   OfficialQuoteIcon,
   BankFinancingIcon,
   OnlineAdvisorIcon,
@@ -31,7 +30,6 @@ export const VehiclePdpView: React.FC = () => {
   const {
     vehicles,
     selectedVehicleId,
-    setIsViewer360Open,
     setIsTestDriveModalOpen,
     addToCart,
     toggleWishlist,
@@ -217,15 +215,6 @@ export const VehiclePdpView: React.FC = () => {
                 <span>Pasa el mouse para zoom guiado</span>
               </div>
             )}
-
-            {/* Interactive 360 Overlay Trigger */}
-            <button
-              onClick={() => setIsViewer360Open(true)}
-              className="absolute bottom-4 left-4 bg-primary/90 hover:bg-primary text-white text-xs font-bold px-4 py-2.5 rounded-xl backdrop-blur-md border border-white/20 shadow-lg flex items-center gap-2 transition-all cursor-pointer group-hover:scale-105 z-10"
-            >
-              <Showroom360Icon size={18} className="text-[#F07F00]" />
-              <span>Lanzar Visor 360° &amp; Modo Noche</span>
-            </button>
 
             {/* Favorite button */}
             <button
@@ -417,20 +406,13 @@ export const VehiclePdpView: React.FC = () => {
                 <span>Reservar esta Unidad (S/ 1,850)</span>
               </button>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div>
                 <button
                   onClick={() => setIsTestDriveModalOpen(true)}
-                  className="min-h-[42px] btn-secondary text-xs uppercase py-2.5 px-3 flex items-center justify-center gap-1.5"
+                  className="w-full min-h-[42px] btn-secondary text-xs uppercase py-2.5 px-4 flex items-center justify-center gap-2 font-bold cursor-pointer"
                 >
-                  <SpeedometerGaugeIcon size={16} className="shrink-0" />
-                  <span>Agendar Test Drive</span>
-                </button>
-                <button
-                  onClick={() => setIsViewer360Open(true)}
-                  className="min-h-[42px] btn-ghost text-xs py-2.5 px-3 flex items-center justify-center gap-1.5"
-                >
-                  <Showroom360Icon size={16} className="shrink-0" />
-                  <span>Showroom 360°</span>
+                  <SpeedometerGaugeIcon size={18} className="shrink-0" />
+                  <span>Agendar Test Drive a Domicilio</span>
                 </button>
               </div>
 

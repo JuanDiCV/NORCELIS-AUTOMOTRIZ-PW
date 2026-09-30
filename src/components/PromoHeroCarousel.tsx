@@ -92,7 +92,7 @@ export const PromoHeroCarousel: React.FC = () => {
         onMouseLeave={() => setIsHovered(false)}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className="relative max-w-7xl mx-auto overflow-hidden sm:rounded-3xl shadow-2xl select-none group bg-[#212955] border border-white/15"
+        className="relative max-w-7xl mx-auto overflow-hidden sm:rounded-lg shadow-2xl select-none group bg-[#212955]/[0.98] border border-white/15"
         style={{ minHeight: '360px' }}
       >
         {/* Slides Stack Container with Elegant Fade-In Transitions */}
@@ -110,16 +110,16 @@ export const PromoHeroCarousel: React.FC = () => {
                 }`}
               >
                 {/* Background Automotive Image with High Visibility & Subtle Corporate Gradient */}
-                <div className="absolute inset-0 z-0 overflow-hidden">
+                <div className="absolute inset-0 z-0 overflow-hidden bg-[#212955]/[0.98]">
                   <img
                     src={slide.backgroundImage}
                     alt={slide.categoryTitle}
-                    className="w-full h-full object-cover object-center opacity-85 sm:opacity-90 transform scale-100 group-hover:scale-105 transition-transform duration-1000 ease-out"
+                    className="w-full h-full object-cover object-center opacity-[0.98] transform scale-100 group-hover:scale-105 transition-transform duration-1000 ease-out"
                   />
-                  {/* Gradiente sutil de Azul Empresarial (#212955) a transparente para contraste del texto sin oscurecer */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#212955]/90 via-[#212955]/50 to-transparent transition-opacity duration-700" />
+                  {/* Gradiente de Azul Empresarial (#212955) al 98% de opacidad */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#212955]/[0.98] via-[#212955]/70 to-transparent transition-opacity duration-700" />
                   {/* Gradiente sutil inferior hacia transparente para soporte de controles */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#212955]/60 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#212955]/[0.98] via-transparent to-transparent pointer-events-none" />
                 </div>
 
                 {/* Slide Interactive Content */}
@@ -130,7 +130,7 @@ export const PromoHeroCarousel: React.FC = () => {
                   {/* LEFT ZONE: Campaign badge, Category Title, Call to Action */}
                   <div className="w-full md:w-5/12 flex flex-col items-start justify-center space-y-3.5 lg:space-y-4.5 z-20">
                     {/* Badge de Campaña Oficial */}
-                    <div className="inline-flex items-center gap-2.5 bg-[#212955]/90 backdrop-blur-md text-white px-3.5 py-1.5 rounded-xl shadow-lg border border-[#F07F00]/50 ring-1 ring-white/15 transition-transform hover:scale-105 duration-300">
+                    <div className="inline-flex items-center gap-2.5 bg-[#212955]/[0.98] backdrop-blur-md text-white px-3.5 py-1.5 rounded-xl shadow-lg border border-[#F07F00]/50 ring-1 ring-white/15 transition-transform hover:scale-105 duration-300">
                       <div className="bg-[#F07F00] text-white font-black text-sm px-2 py-0.5 rounded-md leading-none tracking-tight shadow-xs font-headline">
                         NC
                       </div>
@@ -158,10 +158,10 @@ export const PromoHeroCarousel: React.FC = () => {
                     <div className="pt-1">
                       <button
                         type="button"
-                        className="bg-[#F07F00] hover:bg-[#d97300] active:scale-95 text-white px-7 sm:px-9 py-2.5 sm:py-3 rounded-full font-black text-sm tracking-wider flex items-center gap-3 shadow-xl hover:shadow-[#F07F00]/30 hover:scale-105 transition-all duration-300 cursor-pointer border border-white/25 font-headline"
+                        className="bg-[#F07F00] hover:bg-[#d97300] active:scale-95 text-white px-7 sm:px-9 py-2.5 sm:py-3 rounded-xl font-black text-sm tracking-wider flex items-center gap-3 shadow-xl hover:shadow-[#F07F00]/30 hover:scale-105 transition-all duration-300 cursor-pointer border border-white/25 font-headline"
                       >
                         <span>{slide.buttonText || '¡VER TODO!'}</span>
-                        <span className="w-5 h-5 rounded-full bg-white/25 flex items-center justify-center text-xs font-bold">
+                        <span className="w-5 h-5 rounded-md bg-white/25 flex items-center justify-center text-xs font-bold">
                           ›
                         </span>
                       </button>
@@ -172,7 +172,7 @@ export const PromoHeroCarousel: React.FC = () => {
                   <div className="w-full md:w-7/12 flex flex-col sm:flex-row items-center justify-end mt-6 md:mt-0 gap-6 lg:gap-8 z-20">
                     {/* Transparent Cutout PNG Product with Radial Studio Backlight */}
                     <div className="relative flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-700">
-                      <div className="absolute inset-0 w-full h-full bg-gradient-to-tr from-[#F07F00]/30 to-[#212955]/10 rounded-full blur-2xl transform scale-95" />
+                      <div className="absolute inset-0 w-full h-full bg-gradient-to-tr from-[#F07F00]/30 to-[#212955]/10 rounded-xl blur-2xl transform scale-95" />
                       <img
                         src={slide.productPng}
                         alt={slide.productTitle}
@@ -192,9 +192,9 @@ export const PromoHeroCarousel: React.FC = () => {
                       </div>
 
                       {/* Clean Corporate Price Box */}
-                      <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 bg-[#212955]/90 backdrop-blur-md p-2.5 rounded-2xl border border-white/20 shadow-2xl">
+                      <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 bg-[#212955]/[0.98] backdrop-blur-md p-2.5 rounded-xl border border-white/20 shadow-2xl">
                         {/* Orange Price Tag */}
-                        <div className="bg-[#F07F00] text-white px-4 py-2 rounded-xl text-center shadow-lg flex flex-col justify-center min-w-[110px]">
+                        <div className="bg-[#F07F00] text-white px-4 py-2 rounded-lg text-center shadow-lg flex flex-col justify-center min-w-[110px]">
                           <span className="font-headline font-black text-xl sm:text-2xl lg:text-3xl leading-none tracking-tight">
                             S/ {slide.productPrice.toLocaleString(undefined, { minimumFractionDigits: slide.productPrice % 1 !== 0 ? 2 : 0 })}
                           </span>
@@ -221,12 +221,18 @@ export const PromoHeroCarousel: React.FC = () => {
           })}
         </div>
 
-        {/* BOTTOM PAGINATION INDICATORS (Restored Clean Design with Nor Celis Corporate Orange Active Pill) */}
-        <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-[#212955]/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 shadow-xl">
-          {/* Dots Navigation with Active Elongated Orange Pill */}
-          <div className="flex items-center gap-2">
+        {/* BOTTOM PAGINATION INDICATORS (Falabella Style Wheel Indicator: Clean rgba(52, 62, 73, 0.8) Capsule, No Heavy Borders) */}
+        <div className="absolute bottom-2.5 sm:bottom-3.5 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center pointer-events-auto">
+          <div className="flex items-center gap-1.5 bg-[#343e49]/80 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-sm">
             {slides.map((slide, idx) => {
               const isActive = idx === currentSlideIndex;
+              const distance = Math.abs(idx - currentSlideIndex);
+
+              let dotClass = 'w-2 h-2 bg-white/70';
+              if (distance === 1) dotClass = 'w-2 h-2 bg-white/60';
+              else if (distance === 2) dotClass = 'w-1.5 h-1.5 bg-white/45';
+              else if (distance >= 3) dotClass = 'w-1.5 h-1.5 bg-white/35';
+
               return (
                 <button
                   key={idx}
@@ -236,18 +242,18 @@ export const PromoHeroCarousel: React.FC = () => {
                     setCurrentSlideIndex(idx);
                     setProgress(0);
                   }}
-                  className={`transition-all duration-300 rounded-full cursor-pointer relative overflow-hidden ${
+                  className={`transition-all duration-300 rounded-full cursor-pointer relative overflow-hidden shrink-0 ${
                     isActive
-                      ? 'w-7 sm:w-8 h-2.5 bg-gradient-to-r from-[#F07F00] to-[#ff9926] shadow-md shadow-[#F07F00]/50 ring-1 ring-white/50'
-                      : 'w-2.5 h-2.5 bg-white/35 hover:bg-white/70 hover:scale-125'
+                      ? 'w-6 h-2 bg-white'
+                      : `${dotClass} hover:bg-white hover:scale-125`
                   }`}
                   aria-label={`Ir a diapositiva ${idx + 1}: ${slide.categoryTitle}`}
                   title={slide.categoryTitle}
                 >
-                  {/* Subtle timer progress inside active pill */}
+                  {/* Active progress fill */}
                   {isActive && (
                     <div
-                      className="absolute inset-0 bg-white/25 transition-all duration-75"
+                      className="absolute inset-0 bg-[#F07F00] transition-all duration-75"
                       style={{ width: `${progress}%` }}
                     />
                   )}

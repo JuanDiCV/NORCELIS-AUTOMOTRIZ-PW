@@ -21,7 +21,6 @@ import {
   AppleCartIcon,
   AppleChevronRightIcon,
   ExpressDeliveryVanIcon,
-  Showroom360Icon,
   BrakeDiscIcon,
   EngineIcon,
   CarBatteryIcon,
@@ -36,7 +35,6 @@ export const HomeView: React.FC = () => {
     setCurrentView,
     setSelectedVehicleId,
     setSelectedPartSku,
-    setIsViewer360Open,
     vehicles,
     autoParts,
     addToCart,
@@ -46,6 +44,9 @@ export const HomeView: React.FC = () => {
     navigateToPartsCatalog,
     homeCategories,
     officialBrands,
+    panoramicBanner,
+    topOfferCards,
+    bottomOfferCards,
   } = useApp();
 
   const categoriesList = useMemo(
@@ -130,11 +131,11 @@ export const HomeView: React.FC = () => {
 
             <div className="flex flex-wrap items-center gap-2.5">
               {/* Toggle 4 Flagship vs 6 All */}
-              <div className="flex bg-white/10 p-1 rounded-xl border border-white/15 text-xs font-bold">
+              <div className="flex bg-white/10 p-1 rounded-md border border-white/15 text-xs font-bold">
                 <button
                   type="button"
                   onClick={() => setCategoryDisplayMode('flagship')}
-                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-sm transition-all cursor-pointer ${
                     categoryDisplayMode === 'flagship'
                       ? 'bg-[#F07F00] text-white shadow-sm'
                       : 'text-white/70 hover:text-white'
@@ -145,7 +146,7 @@ export const HomeView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setCategoryDisplayMode('all')}
-                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-sm transition-all cursor-pointer ${
                     categoryDisplayMode === 'all'
                       ? 'bg-[#F07F00] text-white shadow-sm'
                       : 'text-white/70 hover:text-white'
@@ -158,7 +159,7 @@ export const HomeView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => navigateToPartsCatalog('todos')}
-                className="min-h-[40px] px-4 py-2 text-xs font-bold text-white hover:text-[#F07F00] bg-white/10 hover:bg-white/20 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer border border-white/20"
+                className="min-h-[40px] px-4 py-2 text-xs font-bold text-white hover:text-[#F07F00] bg-white/10 hover:bg-white/20 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer border border-white/20"
               >
                 <span>Ver Catálogo Completo ({autoParts.length})</span>
                 <AppleChevronRightIcon size={16} />
@@ -168,7 +169,7 @@ export const HomeView: React.FC = () => {
 
           {/* Cinematic Category Cards (Inspired by Fox Factory / Live Valve Reference) */}
           <div
-            className={`grid gap-4 sm:gap-5 ${
+            className={`grid gap-2.5 sm:gap-3 lg:gap-3.5 ${
               categoryDisplayMode === 'flagship'
                 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
                 : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
@@ -182,7 +183,7 @@ export const HomeView: React.FC = () => {
                 key={cat.code}
                 type="button"
                 onClick={() => navigateToPartsCatalog(cat.code)}
-                className="group relative h-[440px] sm:h-[480px] rounded-3xl overflow-hidden border border-white/15 hover:border-white/80 transition-all duration-500 text-left flex flex-col justify-end p-6 cursor-pointer shadow-2xl hover:shadow-[0_0_35px_rgba(255,255,255,0.25)] hover:-translate-y-1"
+                className="group relative h-[440px] sm:h-[480px] rounded-md overflow-hidden border border-white/15 hover:border-white/80 transition-all duration-500 text-left flex flex-col justify-end p-5 sm:p-6 cursor-pointer shadow-2xl hover:shadow-[0_0_35px_rgba(255,255,255,0.25)] hover:-translate-y-1"
               >
                 {/* Background Image with Grayscale-to-Color + Smooth Scale on hover */}
                 <img
@@ -198,12 +199,12 @@ export const HomeView: React.FC = () => {
                 {/* Ambient warm glow at the base on hover */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#F07F00]/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
-                {/* Top Floating Badge */}
-                <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
-                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#F07F00] bg-black/75 px-3 py-1 rounded-full border border-[#F07F00]/30 backdrop-blur-md">
+                {/* Top Floating Category Labels */}
+                <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10 pointer-events-none">
+                  <span className="text-[11px] font-black uppercase tracking-widest text-[#F07F00] drop-shadow-md">
                     {cat.tag}
                   </span>
-                  <span className="text-[10px] font-bold text-white/70 bg-white/10 px-2.5 py-1 rounded-full border border-white/15 backdrop-blur-md">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-white/90 drop-shadow-md">
                     {cat.badge}
                   </span>
                 </div>
@@ -255,9 +256,9 @@ export const HomeView: React.FC = () => {
                     key={`brand-1-${bIdx}`}
                     type="button"
                     onClick={() => navigateToPartsCatalog('todos', brand.code)}
-                    className="group shrink-0 flex items-center gap-3.5 px-5 py-3 rounded-2xl bg-white/[0.05] hover:bg-white/[0.14] border border-white/10 hover:border-[#F07F00]/70 transition-all duration-300 text-left cursor-pointer shadow-md hover:shadow-[0_0_25px_rgba(240,127,0,0.3)] hover:scale-105"
+                    className="group shrink-0 flex items-center gap-3.5 px-5 py-3 rounded-md bg-white/[0.05] hover:bg-white/[0.14] border border-white/10 hover:border-[#F07F00]/70 transition-all duration-300 text-left cursor-pointer shadow-md hover:shadow-[0_0_25px_rgba(240,127,0,0.3)] hover:scale-105"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center font-headline font-black text-sm text-white/90 border border-white/15 group-hover:border-[#F07F00] group-hover:text-[#F07F00] group-hover:bg-[#F07F00]/15 transition-all overflow-hidden p-1">
+                    <div className="w-10 h-10 rounded-sm bg-white/10 flex items-center justify-center font-headline font-black text-sm text-white/90 border border-white/15 group-hover:border-[#F07F00] group-hover:text-[#F07F00] group-hover:bg-[#F07F00]/15 transition-all overflow-hidden p-1">
                       {brand.logoUrl ? (
                         <img src={brand.logoUrl} alt={brand.name} className="w-full h-full object-contain" />
                       ) : (
@@ -286,9 +287,9 @@ export const HomeView: React.FC = () => {
                     key={`brand-2-${bIdx}`}
                     type="button"
                     onClick={() => navigateToPartsCatalog('todos', brand.code)}
-                    className="group shrink-0 flex items-center gap-3.5 px-5 py-3 rounded-2xl bg-white/[0.05] hover:bg-white/[0.14] border border-white/10 hover:border-[#F07F00]/70 transition-all duration-300 text-left cursor-pointer shadow-md hover:shadow-[0_0_25px_rgba(240,127,0,0.3)] hover:scale-105"
+                    className="group shrink-0 flex items-center gap-3.5 px-5 py-3 rounded-md bg-white/[0.05] hover:bg-white/[0.14] border border-white/10 hover:border-[#F07F00]/70 transition-all duration-300 text-left cursor-pointer shadow-md hover:shadow-[0_0_25px_rgba(240,127,0,0.3)] hover:scale-105"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center font-headline font-black text-sm text-white/90 border border-white/15 group-hover:border-[#F07F00] group-hover:text-[#F07F00] group-hover:bg-[#F07F00]/15 transition-all overflow-hidden p-1">
+                    <div className="w-10 h-10 rounded-sm bg-white/10 flex items-center justify-center font-headline font-black text-sm text-white/90 border border-white/15 group-hover:border-[#F07F00] group-hover:text-[#F07F00] group-hover:bg-[#F07F00]/15 transition-all overflow-hidden p-1">
                       {brand.logoUrl ? (
                         <img src={brand.logoUrl} alt={brand.name} className="w-full h-full object-contain" />
                       ) : (
@@ -319,7 +320,7 @@ export const HomeView: React.FC = () => {
       {/* 3. Quick Compatibility & Auto Parts Finder */}
       <section className="px-gutter">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-surface-container-lowest text-on-surface rounded-3xl shadow-xl border border-surface-container overflow-hidden">
+          <div className="bg-surface-container-lowest text-on-surface rounded-lg shadow-xl border border-surface-container overflow-hidden">
             {/* Tabs */}
             <div className="grid grid-cols-2 sm:grid-cols-4 bg-surface-container-low border-b border-surface-container text-xs font-bold">
               <button
@@ -387,7 +388,7 @@ export const HomeView: React.FC = () => {
                     {heroTab === 'used_cars' && 'Seminuevos certificados con 150 puntos y garantía mecánica'}
                   </p>
                 </div>
-                <span className="text-[10px] bg-[#212955] text-white font-bold px-3 py-1 rounded-full border border-[#F07F00]/50 shrink-0 font-headline uppercase tracking-wider shadow-xs flex items-center gap-1.5">
+                <span className="text-[10px] bg-[#212955] text-white font-bold px-2.5 py-1 rounded-md border border-[#F07F00]/50 shrink-0 font-headline uppercase tracking-wider shadow-xs flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#F07F00] animate-pulse"></span>
                   Compatibilidad &amp; Stock en Tiempo Real
                 </span>
@@ -402,7 +403,7 @@ export const HomeView: React.FC = () => {
                   <select
                     value={filterYear}
                     onChange={(e) => setFilterYear(e.target.value)}
-                    className="w-full min-h-[44px] bg-surface-container-low border border-surface-container rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary cursor-pointer"
+                    className="w-full min-h-[44px] bg-surface-container-low border border-surface-container rounded-md px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary cursor-pointer"
                   >
                     <option value="2025">2025</option>
                     <option value="2024">2024</option>
@@ -420,7 +421,7 @@ export const HomeView: React.FC = () => {
                   <select
                     value={filterBrand}
                     onChange={(e) => setFilterBrand(e.target.value)}
-                    className="w-full min-h-[44px] bg-surface-container-low border border-surface-container rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary cursor-pointer"
+                    className="w-full min-h-[44px] bg-surface-container-low border border-surface-container rounded-md px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary cursor-pointer"
                   >
                     <option value="Toyota">Toyota</option>
                     <option value="Nissan">Nissan</option>
@@ -443,7 +444,7 @@ export const HomeView: React.FC = () => {
                   <select
                     value={filterModel}
                     onChange={(e) => setFilterModel(e.target.value)}
-                    className="w-full min-h-[44px] bg-surface-container-low border border-surface-container rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary cursor-pointer"
+                    className="w-full min-h-[44px] bg-surface-container-low border border-surface-container rounded-md px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary cursor-pointer"
                   >
                     <option value="RAV4 Hybrid">RAV4 Hybrid</option>
                     <option value="Hilux Revo">Hilux Revo</option>
@@ -468,7 +469,7 @@ export const HomeView: React.FC = () => {
                       onChange={(e) => setFilterPlate(e.target.value.toUpperCase())}
                       placeholder="Ej: ABC-123 / 4T1B11..."
                       maxLength={17}
-                      className="w-full min-h-[44px] bg-surface-container-low border border-surface-container rounded-xl px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider focus:outline-none focus:border-primary font-mono"
+                      className="w-full min-h-[44px] bg-surface-container-low border border-surface-container rounded-md px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider focus:outline-none focus:border-primary font-mono"
                     />
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-outline">
                       <AppleVerifiedSealIcon size={18} />
@@ -481,7 +482,7 @@ export const HomeView: React.FC = () => {
                     Categoría / Sistema
                   </label>
                   <select
-                    className="w-full min-h-[44px] bg-surface-container-low border border-surface-container rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary cursor-pointer"
+                    className="w-full min-h-[44px] bg-surface-container-low border border-surface-container rounded-md px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary cursor-pointer"
                   >
                     <option value="todos">Todos los Sistemas &amp; Accesorios</option>
                     <option value="frenos">Frenos &amp; Pastillas OEM</option>
@@ -507,57 +508,12 @@ export const HomeView: React.FC = () => {
         </div>
       </section>
 
-      {/* 4. Trust Strip con Estilo Apple y Microgradientes */}
-      <section className="px-gutter">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 rounded-2xl bg-surface-container-low border border-surface-container flex items-center gap-3.5 shadow-sm group hover:border-emerald-500/40 transition-colors">
-            <AppleIconBadge variant="emerald" size="md">
-              <AppleVerifiedSealIcon size={22} className="text-white" />
-            </AppleIconBadge>
-            <div>
-              <div className="text-xs font-bold text-primary">Autopartes 100% Originales</div>
-              <div className="text-[11px] text-outline">Garantía oficial de fábrica y boleta/factura</div>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-surface-container-low border border-surface-container flex items-center gap-3.5 shadow-sm group hover:border-[#212955]/40 transition-colors">
-            <AppleIconBadge variant="secondary" size="md">
-              <AutoPartsIcon size={22} className="text-white" />
-            </AppleIconBadge>
-            <div>
-              <div className="text-xs font-bold text-primary">Compatibilidad Verificada</div>
-              <div className="text-[11px] text-outline">Por catálogo técnico OEM y chasis VIN</div>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-surface-container-low border border-surface-container flex items-center gap-3.5 shadow-sm group hover:border-[#F07F00]/40 transition-colors">
-            <AppleIconBadge variant="primary" size="md">
-              <ExpressDeliveryVanIcon size={22} className="text-white" />
-            </AppleIconBadge>
-            <div>
-              <div className="text-xs font-bold text-primary">Despacho 24h &amp; Retiro</div>
-              <div className="text-[11px] text-outline">Sede Cajamarca: Av. Vía de Evitamiento Sur 6003</div>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-surface-container-low border border-surface-container flex items-center gap-3.5 shadow-sm group hover:border-[#212955]/40 transition-colors">
-            <AppleIconBadge variant="subtle-blue" size="md">
-              <WorkshopServiceIcon size={22} className="text-[#212955]" />
-            </AppleIconBadge>
-            <div>
-              <div className="text-xs font-bold text-primary">Instalación Opcional en Taller</div>
-              <div className="text-[11px] text-outline">Mano de obra certificada e inspección</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. MAIN SPOTLIGHT: AUTOPARTES & REPUESTOS MÁS VENDIDOS (PRIORIDAD PRINCIPAL) */}
+      {/* 4. MAIN SPOTLIGHT: AUTOPARTES & REPUESTOS MÁS VENDIDOS (PRIORIDAD PRINCIPAL) */}
       <section className="px-gutter">
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 border-b border-white/15 pb-4">
             <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F07F00]/20 text-[#F07F00] text-xs font-extrabold uppercase tracking-wider mb-1 border border-[#F07F00]/30">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#F07F00]/20 text-[#F07F00] text-xs font-extrabold uppercase tracking-wider mb-1 border border-[#F07F00]/30">
                 <span className="material-symbols-outlined text-sm">local_fire_department</span>
                 Alta Demanda &amp; Stock Inmediato
               </div>
@@ -611,7 +567,7 @@ export const HomeView: React.FC = () => {
               return (
                 <div
                   key={part.sku}
-                  className="bg-surface-container-lowest rounded-2xl border border-surface-container hover:border-primary/40 hover:shadow-xl transition-all overflow-hidden flex flex-col justify-between group"
+                  className="bg-surface-container-lowest rounded-md border border-surface-container hover:border-primary/40 hover:shadow-xl transition-all overflow-hidden flex flex-col justify-between group"
                 >
                   {/* Image and Badges */}
                   <div className="relative aspect-[4/3] bg-surface-container-low p-4 flex items-center justify-center overflow-hidden">
@@ -623,7 +579,7 @@ export const HomeView: React.FC = () => {
 
                     {/* Brand Badge */}
                     <div className="absolute top-3 left-3">
-                      <span className="bg-primary/90 backdrop-blur-xs text-white text-[10px] font-extrabold px-2.5 py-1 rounded-lg uppercase tracking-wider shadow-sm">
+                      <span className="bg-primary/90 backdrop-blur-xs text-white text-[10px] font-extrabold px-2 py-0.5 rounded-xs uppercase tracking-wider shadow-sm">
                         {part.brand}
                       </span>
                     </div>
@@ -643,7 +599,7 @@ export const HomeView: React.FC = () => {
                           categoryBadge: part.category,
                         })
                       }
-                      className={`absolute top-3 right-3 w-8 h-8 rounded-xl flex items-center justify-center transition-colors shadow-sm cursor-pointer ${
+                      className={`absolute top-3 right-3 w-8 h-8 rounded-md flex items-center justify-center transition-colors shadow-sm cursor-pointer ${
                         inWish ? 'bg-secondary-container text-white' : 'bg-white/90 hover:bg-white text-on-surface'
                       }`}
                       aria-label="Favorito"
@@ -652,7 +608,7 @@ export const HomeView: React.FC = () => {
                     </button>
 
                     {part.stockText && (
-                      <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between text-[10px] bg-white/90 backdrop-blur-xs px-2 py-0.5 rounded-md text-emerald-800 font-bold border border-emerald-200">
+                      <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between text-[10px] bg-white/90 backdrop-blur-xs px-2 py-0.5 rounded-xs text-emerald-800 font-bold border border-emerald-200">
                         <span className="flex items-center gap-1">
                           {part.stockText}
                         </span>
@@ -694,7 +650,7 @@ export const HomeView: React.FC = () => {
                             S/ {part.priceSoles.toLocaleString()}
                           </span>
                         </div>
-                        <span className="text-[10px] text-secondary font-bold bg-secondary-container/10 px-2 py-0.5 rounded-md shrink-0 whitespace-nowrap">
+                        <span className="text-[10px] text-secondary font-bold bg-secondary-container/10 px-2 py-0.5 rounded-xs shrink-0 whitespace-nowrap">
                           Instalación +S/ 45
                         </span>
                       </div>
@@ -726,186 +682,332 @@ export const HomeView: React.FC = () => {
         </div>
       </section>
 
-      {/* 5. WORKSHOP & DETAILING SERVICES SECTION */}
+      {/* 5. ESCAPARATE COMERCIAL DE OFERTAS & ESPECIALIDADES (ESTILO RETAIL / SAGA FALABELLA EXACT LAYOUT) */}
       <section className="px-gutter">
         <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-2 border-b border-white/15 pb-4">
-            <div>
-              <span className="text-xs font-bold text-[#F07F00] uppercase tracking-wider flex items-center gap-1">
-                <WorkshopServiceIcon size={16} className="text-[#F07F00]" />
-                Centro de Alta Ingeniería Automotriz • Sede Cajamarca
-              </span>
-              <h2 className="font-headline font-bold text-2xl text-white">
-                Servicios Especializados de Taller &amp; Detailing
-              </h2>
-            </div>
-            <button
-              onClick={() => setCurrentView('services')}
-              className="min-h-[44px] px-3.5 py-2 text-xs font-bold text-white hover:text-[#F07F00] bg-white/10 hover:bg-white/20 rounded-xl flex items-center gap-1 transition-colors cursor-pointer border border-white/20"
-            >
-              <span>Ver los 8 Paquetes &amp; Agendar Cita</span>
-              <AppleChevronRightIcon size={16} />
-            </button>
+          {/* Header centered as in reference */}
+          <div className="text-center max-w-3xl mx-auto space-y-1">
+            <h2 className="font-headline font-black text-2xl sm:text-4xl text-white tracking-tight flex items-center justify-center gap-1">
+              <span>Especialidades &amp; Tecnología Automotriz</span>
+              <span className="text-[#F07F00] text-3xl sm:text-5xl leading-none">.</span>
+            </h2>
+            <p className="text-xs sm:text-sm text-[#9D9D9C] font-semibold">
+              Potencia, seguridad y rendimiento certificado para tu vehículo con facilidades de pago en hasta 12 cuotas
+            </p>
           </div>
 
-          {/* Quick Service Cards Grid con Iconos Apple Especializados */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[
-              {
-                title: 'Mantenimiento Preventivo 10k/20k/40k',
-                desc: 'Escaneo Techstream, cambio de fluidos Mobil 1 y 25 puntos de inspección.',
-                price: 'Desde S/ 280',
-                time: 'Tiempo: 90 min',
-                icon: WorkshopServiceIcon,
-                badge: 'Más Solicitado',
-                badgeColor: 'bg-primary text-white',
-                badgeVariant: 'primary' as const,
-              },
-              {
-                title: 'Alineamiento 3D & Enllantado',
-                desc: 'Alineación láser sin contacto de aro y balanceo dinámico con plomos adhesivos.',
-                price: 'Desde S/ 49 /rueda',
-                time: 'Tiempo: 45 min',
-                icon: TireOffRoadIcon,
-                badge: 'Tecnología Láser',
-                badgeColor: 'bg-amber-600 text-white',
-                badgeVariant: 'amber' as const,
-              },
-              {
-                title: 'Láminas Nanocerámicas LLumar',
-                desc: '96% de rechazo infrarrojo, 99% bloqueo UV y certificado para permiso PNP.',
-                price: 'Desde S/ 420',
-                time: 'Cabina presurizada',
-                icon: CertifiedShieldIcon,
-                badge: 'Garantía 10 Años',
-                badgeColor: 'bg-emerald-600 text-white',
-                badgeVariant: 'emerald' as const,
-              },
-              {
-                title: 'Detailing Cerámico 9H 3M',
-                desc: 'Corrección de laca en 3 pasos, descontaminado de pintura y sellado 9H.',
-                price: 'Desde S/ 850',
-                time: 'Tiempo: 24h',
-                icon: DetailingPPFIcon,
-                badge: 'Acabado Espejo',
-                badgeColor: 'bg-purple-600 text-white',
-                badgeVariant: 'secondary' as const,
-              },
-              {
-                title: 'Frenos & Discos OEM Brembo/Toyota',
-                desc: 'Cambio de pastillas cerámicas, rectificado de discos y purga electrónica.',
-                price: 'Desde S/ 190',
-                time: 'Tiempo: 60 min',
-                icon: BrakeDiscIcon,
-                badge: 'Repuesto Original',
-                badgeColor: 'bg-blue-600 text-white',
-                badgeVariant: 'subtle-orange' as const,
-              },
-              {
-                title: 'Suspensión Pesada & Lift Kits 4x4',
-                desc: 'Instalación de paquetes TRAKKO® +2", amortiguadores reforzados y gemelas.',
-                price: 'Cotización a medida',
-                time: 'Para Trocha y Minería',
-                icon: SuspensionHDIcon,
-                badge: 'Off-Road Pro',
-                badgeColor: 'bg-cyan-700 text-white',
-                badgeVariant: 'subtle-blue' as const,
-              },
-            ].map((svc, idx) => {
-              const ServiceIcon = svc.icon;
-              return (
-                <div
-                  key={idx}
-                  onClick={() => setCurrentView('services')}
-                  className="bg-surface-container-lowest p-5 rounded-2xl border border-surface-container hover:border-primary hover:shadow-lg transition-all cursor-pointer flex flex-col justify-between group"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <AppleIconBadge variant={svc.badgeVariant} size="md">
-                        <ServiceIcon size={20} />
-                      </AppleIconBadge>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${svc.badgeColor}`}>
-                        {svc.badge}
-                      </span>
-                    </div>
-                    <div>
-                      <h3 className="font-headline font-bold text-sm text-on-surface group-hover:text-primary transition-colors">
-                        {svc.title}
-                      </h3>
-                      <p className="text-xs text-outline mt-1 leading-relaxed">
-                        {svc.desc}
-                      </p>
-                    </div>
+          {/* LEVEL 1: TOP 4 CARDS (Exact Saga Falabella Retail Grid) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {topOfferCards.map((item, idx) => (
+              <div
+                key={item.id || idx}
+                onClick={() => {
+                  if (item.type === 'service') {
+                    setCurrentView('services');
+                    showToast(`Redirigiendo a agenda de ${item.title}`);
+                  } else {
+                    setSelectedPartSku(item.sku);
+                    setCurrentView('part-pdp');
+                  }
+                }}
+                className="bg-[#FFFFFF] rounded-none overflow-hidden shadow-lg border border-[#9D9D9C]/25 hover:border-[#F07F00] transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl flex flex-col justify-between group cursor-pointer"
+              >
+                {/* Image Container with Top Installment Badge & Bottom Category Bar */}
+                <div className="relative h-48 sm:h-56 w-full overflow-hidden bg-slate-900">
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                    loading="lazy"
+                  />
+
+                  {/* Top-Left Cuotas Badge in Corporate Orange #F07F00 */}
+                  <div className="absolute top-2 left-2 bg-[#F07F00] text-white px-2 py-0.5 rounded-none shadow-md flex items-center gap-1 border border-white/30 z-10">
+                    <span className="w-1.5 h-1.5 rounded-none bg-white animate-pulse"></span>
+                    <span className="text-[9px] font-extrabold uppercase tracking-tight text-white leading-none">
+                      12 cuotas
+                    </span>
+                    <span className="text-[11px] font-black text-white font-mono leading-none">
+                      S/ {item.cuota}
+                    </span>
                   </div>
-                  <div className="mt-4 pt-3 border-t border-surface-container flex items-center justify-between text-xs">
-                    <div>
-                      <span className="font-bold text-primary font-mono">{svc.price}</span>
-                      <div className="text-[10px] text-outline">{svc.time}</div>
-                    </div>
-                    <span className="text-xs font-bold text-secondary group-hover:translate-x-1 transition-transform flex items-center gap-1">
-                      <span>Agendar</span>
-                      <AppleChevronRightIcon size={14} />
+
+                  {/* Top-Right Quick Add Button */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (item.type === 'service') {
+                        setCurrentView('services');
+                        showToast(`Agendando ${item.title}`);
+                      } else {
+                        addToCart({
+                          type: 'part',
+                          title: item.title,
+                          skuOrCode: item.sku,
+                          priceSoles: item.priceSoles,
+                          image: item.image,
+                          specsSubtitle: `${item.brand} • ${item.categoryLabel}`,
+                          hasWorkshopInstallation: false,
+                          installationFeeSoles: 0,
+                          quantity: 1,
+                        });
+                        showToast(`${item.title} agregado al carrito`);
+                      }
+                    }}
+                    className="absolute top-2 right-2 w-8 h-8 rounded-none bg-white/90 hover:bg-[#F07F00] text-[#212955] hover:text-white flex items-center justify-center transition-colors shadow-sm z-10 cursor-pointer"
+                    title={item.type === 'service' ? 'Agendar cita' : 'Agregar al carrito'}
+                  >
+                    <AppleCartIcon size={16} />
+                  </button>
+
+                  {/* Bottom Category Bar on Image */}
+                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-6 pb-2 px-3 text-center z-10">
+                    <span className="font-headline font-black text-xs sm:text-sm tracking-widest text-white uppercase drop-shadow-md">
+                      {item.categoryLabel}
                     </span>
                   </div>
                 </div>
-              );
-            })}
+
+                {/* Bottom Information Block (Split Left & Right) */}
+                <div className="p-3 bg-[#FFFFFF] flex items-stretch justify-between gap-2 border-t border-[#9D9D9C]/20 flex-1">
+                  {/* Left: Brand & Product Name */}
+                  <div className="flex-1 min-w-0 pr-1 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[11px] font-black text-[#212955] uppercase tracking-wider block font-headline">
+                        {item.brand}
+                      </span>
+                      <h4 className="text-[11px] sm:text-xs text-[#212955] font-semibold line-clamp-2 leading-tight mt-0.5" title={item.title}>
+                        {item.title}
+                      </h4>
+                    </div>
+                    <div className="mt-2 text-[10px] text-[#9D9D9C] font-bold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-none bg-emerald-500"></span>
+                      <span>{item.stockText || 'Stock en Cajamarca'}</span>
+                    </div>
+                  </div>
+
+                  {/* Right: Price Box in Official Orange #F07F00 */}
+                  <div className="w-24 sm:w-28 bg-[#F07F00] rounded-none p-2 flex flex-col items-center justify-center text-center shrink-0 shadow-xs group-hover:bg-[#d97300] transition-colors">
+                    <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-none bg-[#212955] text-white leading-tight mb-0.5 font-headline">
+                      OFERTA
+                    </span>
+                    <div className="font-headline font-black text-base sm:text-lg text-white font-mono leading-none tracking-tight">
+                      S/ {item.priceSoles.toLocaleString()}
+                    </div>
+                    <div className="text-[9px] text-white/85 line-through font-mono mt-0.5">
+                      S/ {item.normalPrice.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
 
-          {/* Workshop & Detailing Hero Feature Banner */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-gradient-to-br from-slate-900 via-neutral-900 to-slate-950 text-white p-8 sm:p-10 rounded-3xl shadow-2xl border border-white/10 overflow-hidden relative">
-            <div className="lg:col-span-7 space-y-4 z-10">
-              <span className="text-xs uppercase font-bold tracking-widest text-[#F07F00]">
-                Taller Oficial &amp; Centro de Mantenimiento Nor Celis
-              </span>
-              <h3 className="font-headline font-extrabold text-2xl sm:text-3xl text-white">
-                Equipamiento de Última Generación en Cajamarca
-              </h3>
-              <p className="text-xs sm:text-sm text-surface-container-highest/80 leading-relaxed">
-                Contamos con alineadoras láser 3D, cabina presurizada de pintura y detailing, escáneres multimarca oficiales y técnicos certificados con garantía en cada servicio.
-              </p>
-              <div className="pt-2">
-                <button
-                  onClick={() => setCurrentView('services')}
-                  className="min-h-[46px] btn-primary text-sm uppercase px-7 py-3.5 flex items-center gap-2"
-                >
-                  <WorkshopServiceIcon size={18} />
-                  <span>Agendar Cita en Taller Sin Colas</span>
-                </button>
+          {/* LEVEL 2: PANORAMIC POWER BANNER (Dynamic Center Feature) */}
+          <div className={`w-full bg-[#212955] border border-white/20 rounded-none overflow-hidden shadow-2xl p-4 sm:p-6 flex flex-col lg:flex-row items-center justify-between gap-6 relative group ${panoramicBanner.bgGradient || ''}`}>
+            {/* Background Pattern Subtle Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#212955] via-[#212955]/95 to-[#181e40] z-0 pointer-events-none" />
+
+            {/* Left Featured Item */}
+            <div
+              onClick={() => {
+                setSelectedPartSku(panoramicBanner.leftCard.sku || 'PART-KEKO-BAR-01');
+                setCurrentView('part-pdp');
+              }}
+              className="relative z-10 flex items-center gap-4 bg-white/10 hover:bg-white/15 p-3 rounded-none border border-white/15 cursor-pointer transition-all duration-300 w-full lg:w-auto lg:min-w-[300px] flex-1"
+            >
+              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-slate-900 rounded-none overflow-hidden shrink-0 relative">
+                <img
+                  src={panoramicBanner.leftCard.image}
+                  alt={panoramicBanner.leftCard.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                />
+                <div className="absolute top-1 left-1 bg-[#F07F00] text-white text-[8px] font-black px-1.5 py-0.5 rounded-none">
+                  {panoramicBanner.leftCard.installmentText || '12c'}
+                </div>
               </div>
-            </div>
-
-            <div className="lg:col-span-5 z-10">
-              <div
-                onClick={() => setCurrentView('services')}
-                className="w-full h-56 sm:h-64 rounded-2xl p-6 bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/15 hover:border-[#F07F00]/50 shadow-2xl flex flex-col items-center justify-center text-center group transition-all duration-300 cursor-pointer relative overflow-hidden"
-              >
-                {/* Subtle ambient light */}
-                <div className="absolute -top-10 -right-10 w-36 h-36 bg-[#F07F00]/15 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
-                <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
-
-                {/* Garage Icon Emblem */}
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-[#F07F00] to-[#d97300] text-white flex items-center justify-center shadow-xl shadow-[#F07F00]/30 mb-3.5 group-hover:scale-110 group-hover:rotate-1 transition-all duration-300">
-                  <span className="material-symbols-outlined text-4xl sm:text-5xl">garage</span>
-                </div>
-
-                <div className="space-y-1 relative z-10">
-                  <h4 className="font-headline font-bold text-base sm:text-lg text-white group-hover:text-[#F07F00] transition-colors flex items-center justify-center gap-1.5">
-                    <span>Garaje &amp; Bahías de Taller</span>
-                  </h4>
-                  <p className="text-xs text-white/70 max-w-xs leading-relaxed">
-                    Equipamiento oficial, elevadores hidráulicos y diagnóstico por escáner OEM.
-                  </p>
-                </div>
-
-                <div className="mt-3.5 flex items-center gap-2 relative z-10">
-                  <span className="text-[11px] font-bold text-[#F07F00] bg-[#F07F00]/15 px-3 py-1 rounded-full border border-[#F07F00]/30 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#F07F00] animate-pulse"></span>
-                    <span>Bahías de Servicio Activas</span>
+              <div className="flex-1 min-w-0">
+                <span className="text-[10px] font-black uppercase text-[#F07F00] tracking-wider font-headline">
+                  {panoramicBanner.leftCard.brand}
+                </span>
+                <h4 className="text-xs sm:text-sm font-bold text-white line-clamp-1">
+                  {panoramicBanner.leftCard.title}
+                </h4>
+                <div className="mt-1 flex items-baseline gap-2">
+                  <span className="font-headline font-black text-lg text-white font-mono">
+                    S/ {panoramicBanner.leftCard.priceSoles.toLocaleString()}
+                  </span>
+                  <span className="text-[10px] text-[#9D9D9C] line-through font-mono">
+                    S/ {panoramicBanner.leftCard.normalPrice.toLocaleString()}
                   </span>
                 </div>
               </div>
             </div>
+
+            {/* Center Call to Action & Category Teaser */}
+            <div className="relative z-10 text-center space-y-2.5 px-4 max-w-md shrink-0">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-none bg-[#F07F00]/20 text-[#F07F00] text-[10px] font-black uppercase tracking-widest border border-[#F07F00]/40">
+                {panoramicBanner.tag}
+              </div>
+              <h3 className="font-headline font-black text-2xl sm:text-3xl text-white tracking-wider leading-none uppercase">
+                {panoramicBanner.title}
+              </h3>
+              <div>
+                <button
+                  type="button"
+                  onClick={() => navigateToPartsCatalog(panoramicBanner.targetCategory || 'accesorios4x4')}
+                  className="inline-flex items-center gap-2 bg-[#F07F00] hover:bg-[#d97300] active:scale-95 text-white text-xs font-black px-6 py-2.5 rounded-none font-headline tracking-widest uppercase shadow-lg hover:shadow-[#F07F00]/30 transition-all cursor-pointer border border-white/20"
+                >
+                  <span>{panoramicBanner.buttonText || '¡VER TODO!'}</span>
+                  <AppleChevronRightIcon size={14} />
+                </button>
+              </div>
+            </div>
+
+            {/* Right Featured Item */}
+            <div
+              onClick={() => {
+                setSelectedPartSku(panoramicBanner.rightCard.sku || 'PART-WARN-WINCH-01');
+                setCurrentView('part-pdp');
+              }}
+              className="relative z-10 flex items-center gap-4 bg-white/10 hover:bg-white/15 p-3 rounded-none border border-white/15 cursor-pointer transition-all duration-300 w-full lg:w-auto lg:min-w-[300px] flex-1"
+            >
+              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-slate-900 rounded-none overflow-hidden shrink-0 relative">
+                <img
+                  src={panoramicBanner.rightCard.image}
+                  alt={panoramicBanner.rightCard.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                />
+                <div className="absolute top-1 left-1 bg-[#F07F00] text-white text-[8px] font-black px-1.5 py-0.5 rounded-none">
+                  {panoramicBanner.rightCard.installmentText || '12c'}
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="text-[10px] font-black uppercase text-[#F07F00] tracking-wider font-headline">
+                  {panoramicBanner.rightCard.brand}
+                </span>
+                <h4 className="text-xs sm:text-sm font-bold text-white line-clamp-1">
+                  {panoramicBanner.rightCard.title}
+                </h4>
+                <div className="mt-1 flex items-baseline gap-2">
+                  <span className="font-headline font-black text-lg text-white font-mono">
+                    S/ {panoramicBanner.rightCard.priceSoles.toLocaleString()}
+                  </span>
+                  <span className="text-[10px] text-[#9D9D9C] line-through font-mono">
+                    S/ {panoramicBanner.rightCard.normalPrice.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* LEVEL 3: BOTTOM 4 CARDS (Exact Saga Falabella Retail Grid) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {bottomOfferCards.map((item, idx) => (
+              <div
+                key={item.id || idx}
+                onClick={() => {
+                  if (item.type === 'service') {
+                    setCurrentView('services');
+                    showToast(`Redirigiendo a agenda de ${item.title}`);
+                  } else {
+                    setSelectedPartSku(item.sku);
+                    setCurrentView('part-pdp');
+                  }
+                }}
+                className="bg-[#FFFFFF] rounded-none overflow-hidden shadow-lg border border-[#9D9D9C]/25 hover:border-[#F07F00] transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl flex flex-col justify-between group cursor-pointer"
+              >
+                {/* Image Container with Top Installment Badge & Bottom Category Bar */}
+                <div className="relative h-48 sm:h-56 w-full overflow-hidden bg-slate-900">
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                    loading="lazy"
+                  />
+
+                  {/* Top-Left Cuotas Badge in Corporate Orange #F07F00 */}
+                  <div className="absolute top-2 left-2 bg-[#F07F00] text-white px-2 py-0.5 rounded-none shadow-md flex items-center gap-1 border border-white/30 z-10">
+                    <span className="w-1.5 h-1.5 rounded-none bg-white animate-pulse"></span>
+                    <span className="text-[9px] font-extrabold uppercase tracking-tight text-white leading-none">
+                      12 cuotas
+                    </span>
+                    <span className="text-[11px] font-black text-white font-mono leading-none">
+                      S/ {item.cuota}
+                    </span>
+                  </div>
+
+                  {/* Top-Right Quick Add/Book Button */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (item.type === 'service') {
+                        setCurrentView('services');
+                        showToast(`Agendando ${item.title}`);
+                      } else {
+                        addToCart({
+                          type: 'part',
+                          title: item.title,
+                          skuOrCode: item.sku,
+                          priceSoles: item.priceSoles,
+                          image: item.image,
+                          specsSubtitle: `${item.brand} • ${item.categoryLabel}`,
+                          hasWorkshopInstallation: false,
+                          installationFeeSoles: 0,
+                          quantity: 1,
+                        });
+                        showToast(`${item.title} agregado al carrito`);
+                      }
+                    }}
+                    className="absolute top-2 right-2 w-8 h-8 rounded-none bg-white/90 hover:bg-[#F07F00] text-[#212955] hover:text-white flex items-center justify-center transition-colors shadow-sm z-10 cursor-pointer"
+                    title={item.type === 'service' ? 'Agendar cita' : 'Agregar al carrito'}
+                  >
+                    <AppleCartIcon size={16} />
+                  </button>
+
+                  {/* Bottom Category Bar on Image */}
+                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-6 pb-2 px-3 text-center z-10">
+                    <span className="font-headline font-black text-xs sm:text-sm tracking-widest text-white uppercase drop-shadow-md">
+                      {item.categoryLabel}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Bottom Information Block */}
+                <div className="p-3 bg-[#FFFFFF] flex items-stretch justify-between gap-2 border-t border-[#9D9D9C]/20 flex-1">
+                  {/* Left: Brand & Product Name */}
+                  <div className="flex-1 min-w-0 pr-1 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[11px] font-black text-[#212955] uppercase tracking-wider block font-headline">
+                        {item.brand}
+                      </span>
+                      <h4 className="text-[11px] sm:text-xs text-[#212955] font-semibold line-clamp-2 leading-tight mt-0.5" title={item.title}>
+                        {item.title}
+                      </h4>
+                    </div>
+                    <div className="mt-2 text-[10px] text-[#9D9D9C] font-bold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-none bg-emerald-500"></span>
+                      <span>{item.stockText || (item.type === 'service' ? 'Taller Cajamarca' : 'Stock en Cajamarca')}</span>
+                    </div>
+                  </div>
+
+                  {/* Right: Price Box in Official Orange #F07F00 */}
+                  <div className="w-24 sm:w-28 bg-[#F07F00] rounded-none p-2 flex flex-col items-center justify-center text-center shrink-0 shadow-xs group-hover:bg-[#d97300] transition-colors">
+                    <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-none bg-[#212955] text-white leading-tight mb-0.5 font-headline">
+                      OFERTA
+                    </span>
+                    <div className="font-headline font-black text-base sm:text-lg text-white font-mono leading-none tracking-tight">
+                      S/ {item.priceSoles.toLocaleString()}
+                    </div>
+                    <div className="text-[9px] text-white/85 line-through font-mono mt-0.5">
+                      S/ {item.normalPrice.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -941,7 +1043,7 @@ export const HomeView: React.FC = () => {
               return (
                 <div
                   key={car.id}
-                  className="bg-surface-container-lowest rounded-2xl border border-surface-container hover:border-primary/40 hover:shadow-xl transition-all overflow-hidden flex flex-col group"
+                  className="bg-surface-container-lowest rounded-md border border-surface-container hover:border-primary/40 hover:shadow-xl transition-all overflow-hidden flex flex-col group"
                 >
                   {/* Photo & Badges */}
                   <div className="relative aspect-[16/10] bg-surface-container-low overflow-hidden group">
@@ -953,11 +1055,11 @@ export const HomeView: React.FC = () => {
                       className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110 hover:scale-110 cursor-pointer"
                     />
                     <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-                      <span className="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm">
+                      <span className="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-xs shadow-sm">
                         0 KM 2025
                       </span>
                       {car.discountBonus && (
-                        <span className="bg-secondary-container text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm">
+                        <span className="bg-secondary-container text-white text-[10px] font-bold px-2 py-0.5 rounded-xs shadow-sm">
                           {car.discountBonus}
                         </span>
                       )}
@@ -978,7 +1080,7 @@ export const HomeView: React.FC = () => {
                           categoryBadge: 'Vehículo Nuevo 2025',
                         })
                       }
-                      className={`absolute top-3 right-3 min-w-[38px] min-h-[38px] rounded-xl flex items-center justify-center transition-colors shadow-md cursor-pointer ${
+                      className={`absolute top-3 right-3 min-w-[38px] min-h-[38px] rounded-md flex items-center justify-center transition-colors shadow-md cursor-pointer ${
                         inWish ? 'bg-secondary-container text-white' : 'bg-white/90 hover:bg-white text-on-surface'
                       }`}
                       aria-label="Guardar en lista de deseos"
@@ -1028,25 +1130,16 @@ export const HomeView: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 mt-3">
+                      <div className="mt-3">
                         <button
                           onClick={() => {
                             setSelectedVehicleId(car.id);
                             setCurrentView('vehicle-pdp');
                           }}
-                          className="min-h-[38px] px-3 py-2 btn-secondary text-xs uppercase"
+                          className="w-full min-h-[38px] px-4 py-2 btn-secondary text-xs uppercase font-bold flex items-center justify-center gap-1.5 cursor-pointer"
                         >
-                          Ficha Técnica
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedVehicleId(car.id);
-                            setIsViewer360Open(true);
-                          }}
-                          className="min-h-[38px] px-3 py-2 btn-ghost text-xs flex items-center justify-center gap-1.5"
-                        >
-                          <Showroom360Icon size={16} />
-                          <span>Visor 360°</span>
+                          <span>Ver Ficha Técnica</span>
+                          <AppleChevronRightIcon size={14} />
                         </button>
                       </div>
                     </div>
@@ -1060,7 +1153,7 @@ export const HomeView: React.FC = () => {
 
       {/* 7. SEMINUEVOS CERTIFICADOS BANNER */}
       <section className="px-gutter">
-        <div className="max-w-7xl mx-auto bg-gradient-to-r from-surface-container-high via-surface-container-low to-surface-container rounded-3xl p-6 sm:p-10 border border-surface-container flex flex-col lg:flex-row items-center justify-between gap-8">
+        <div className="max-w-7xl mx-auto bg-gradient-to-r from-surface-container-high via-surface-container-low to-surface-container rounded-lg p-6 sm:p-10 border border-surface-container flex flex-col lg:flex-row items-center justify-between gap-8">
           <div className="space-y-3 max-w-xl">
             <h3 className="font-headline font-extrabold text-2xl sm:text-3xl text-primary">
               Seminuevos con la misma confianza que un auto nuevo.
@@ -1071,14 +1164,14 @@ export const HomeView: React.FC = () => {
             <div className="flex flex-wrap gap-3 pt-2">
               <button
                 onClick={() => setCurrentView('cars')}
-                className="min-h-[44px] bg-primary hover:bg-primary-container text-white text-xs font-bold px-5 py-3 rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer"
+                className="min-h-[44px] bg-primary hover:bg-primary-container text-white text-xs font-bold px-5 py-3 rounded-md shadow-md transition-all flex items-center gap-2 cursor-pointer"
               >
                 <span>Ver Seminuevos Disponibles ({usedCars.length})</span>
                 <AppleChevronRightIcon size={16} />
               </button>
               <button
                 onClick={() => setCurrentView('trade-in')}
-                className="min-h-[44px] bg-white hover:bg-surface-container-lowest text-primary text-xs font-bold px-5 py-3 rounded-xl border border-surface-container transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
+                className="min-h-[44px] bg-white hover:bg-surface-container-lowest text-primary text-xs font-bold px-5 py-3 rounded-md border border-surface-container transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
               >
                 <PlanRetomaIcon size={18} className="text-secondary" />
                 <span>Plan Retoma: Tasar mi auto actual</span>
@@ -1094,15 +1187,15 @@ export const HomeView: React.FC = () => {
                   setSelectedVehicleId(u.id);
                   setCurrentView('cars');
                 }}
-                className="bg-white p-3 rounded-2xl border border-surface-container hover:shadow-lg transition-all cursor-pointer group"
+                className="bg-white p-3 rounded-md border border-surface-container hover:shadow-lg transition-all cursor-pointer group"
               >
-                <div className="overflow-hidden rounded-xl mb-2">
+                <div className="overflow-hidden rounded-sm mb-2">
                   <SafeImage
                     src={u.image}
                     fallbackSrc={FALLBACK_IMAGES.vehicleSedan}
                     typeHint="vehicle"
                     alt={u.name}
-                    className="w-44 h-28 object-cover rounded-xl transition-transform duration-500 ease-out group-hover:scale-110 hover:scale-110"
+                    className="w-44 h-28 object-cover rounded-sm transition-transform duration-500 ease-out group-hover:scale-110 hover:scale-110"
                   />
                 </div>
                 <div className="text-xs font-bold text-on-surface truncate">{u.name}</div>

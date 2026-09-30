@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useApp } from '../../context/AppContext';
 
 interface AdminPinModalProps {
   isOpen: boolean;
@@ -16,180 +15,283 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({
 }) => {
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(() => {
+    try {
+      const saved = localStorage.getItem('norcelis_admin_failed_attempts');
+      return saved ? parseInt(saved, 10) : 0;
+    } catch {
+      return 0;
+    }
+  });
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(() => {
+    try {
+      const saved = localStorage.getItem('norcelis_admin_lockout_until');
+      return saved ? parseInt(saved, 10) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [remainingCooldown, setRemainingCooldown] = useState<number>(0);
+  const [honeypot, setHoneypot] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Handle countdown if locked out
   useEffect(() => {
-    if (isOpen) {
+    if (!lockoutUntil) {
+      setRemainingCooldown(0);
+      return;
+    }
+
+    const checkLockout = () => {
+      const now = Date.now();
+      const diff = Math.max(0, Math.ceil((lockoutUntil - now) / 1000));
+      setRemainingCooldown(diff);
+      if (diff <= 0) {
+        setLockoutUntil(null);
+        setFailedAttempts(0);
+        try {
+          localStorage.removeItem('norcelis_admin_lockout_until');
+          localStorage.removeItem('norcelis_admin_failed_attempts');
+        } catch {}
+      }
+    };
+
+    checkLockout();
+    const interval = setInterval(checkLockout, 1000);
+    return () => clearInterval(interval);
+  }, [lockoutUntil]);
+
+  useEffect(() => {
+    if (isOpen && remainingCooldown <= 0) {
       setPin('');
       setError(false);
       setTimeout(() => {
         inputRef.current?.focus();
       }, 150);
     }
-  }, [isOpen]);
+  }, [isOpen, remainingCooldown]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (pin === currentPin) {
-      setError(false);
-      onSuccess();
-    } else {
-      setError(true);
-      setPin('');
-      inputRef.current?.focus();
+  const handleFailedAttempt = () => {
+    setError(true);
+    setPin('');
+    const newCount = failedAttempts + 1;
+    setFailedAttempts(newCount);
+
+    try {
+      localStorage.setItem('norcelis_admin_failed_attempts', newCount.toString());
+    } catch {}
+
+    if (newCount >= 5) {
+      // 5 minutes lockout
+      const lockTime = Date.now() + 5 * 60 * 1000;
+      setLockoutUntil(lockTime);
+      try {
+        localStorage.setItem('norcelis_admin_lockout_until', lockTime.toString());
+      } catch {}
+    } else if (newCount >= 3) {
+      // 60 seconds cooldown
+      const lockTime = Date.now() + 60 * 1000;
+      setLockoutUntil(lockTime);
+      try {
+        localStorage.setItem('norcelis_admin_lockout_until', lockTime.toString());
+      } catch {}
     }
   };
 
+  const verifyPin = (candidatePin: string) => {
+    if (remainingCooldown > 0) return;
+    if (honeypot.trim()) {
+      // Bot detected via honeypot
+      setError(true);
+      return;
+    }
+
+    if (candidatePin === currentPin) {
+      setError(false);
+      setFailedAttempts(0);
+      try {
+        localStorage.removeItem('norcelis_admin_failed_attempts');
+        localStorage.removeItem('norcelis_admin_lockout_until');
+      } catch {}
+      onSuccess();
+    } else {
+      handleFailedAttempt();
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    verifyPin(pin);
+  };
+
   const handleKeyPress = (num: string) => {
+    if (remainingCooldown > 0) return;
     if (pin.length < 4) {
       const nextPin = pin + num;
       setPin(nextPin);
       setError(false);
       if (nextPin.length === 4) {
-        if (nextPin === currentPin) {
-          onSuccess();
-        } else {
-          setError(true);
-          setTimeout(() => setPin(''), 300);
-        }
+        verifyPin(nextPin);
       }
     }
   };
 
   const handleDelete = () => {
+    if (remainingCooldown > 0) return;
     setPin((prev) => prev.slice(0, -1));
     setError(false);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-[#9D9D9C]/30 space-y-5">
-        <div className="flex items-center justify-between">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-[#181e40] text-white rounded-none max-w-sm w-full p-6 shadow-2xl border border-white/20 space-y-5">
+        <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-[#212955] text-white flex items-center justify-center">
-              <span className="material-symbols-outlined text-xl text-[#F07F00]">admin_panel_settings</span>
+            <div className="w-10 h-10 rounded-none bg-[#212955] text-white flex items-center justify-center border border-[#F07F00]/50">
+              <span className="material-symbols-outlined text-xl text-[#F07F00]">shield_lock</span>
             </div>
             <div>
-              <h3 className="font-headline font-bold text-base text-[#212955]">
-                Acceso Administrativo
+              <h3 className="font-headline font-bold text-base text-white tracking-wide">
+                Autenticación 2FA
               </h3>
-              <p className="text-[11px] text-gray-500">
-                Nor Celis Automotriz
+              <p className="text-[11px] text-slate-300">
+                Consola Administrativa Segura
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-700 flex items-center justify-center cursor-pointer transition-colors"
+            className="w-8 h-8 rounded-none hover:bg-white/10 text-slate-300 hover:text-white flex items-center justify-center cursor-pointer transition-colors"
           >
             <span className="material-symbols-outlined text-lg">close</span>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="text-center space-y-1">
-            <p className="text-xs text-gray-600">
-              Ingresa el código PIN de 4 dígitos para ingresar al panel de publicidad y catálogo:
+        {remainingCooldown > 0 ? (
+          <div className="p-4 bg-red-950/60 border border-red-500/50 rounded-none text-center space-y-2">
+            <span className="material-symbols-outlined text-3xl text-red-400 animate-pulse">lock_clock</span>
+            <div className="font-headline font-bold text-sm text-red-200 uppercase tracking-wide">
+              Acceso Bloqueado por Seguridad
+            </div>
+            <p className="text-xs text-red-300">
+              Demasiados intentos fallidos. Por protección de la plataforma, intenta de nuevo en:
             </p>
+            <div className="font-mono font-black text-2xl text-red-400 py-1">
+              {Math.floor(remainingCooldown / 60)}:{(remainingCooldown % 60).toString().padStart(2, '0')} min
+            </div>
           </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Honeypot field for bot protection */}
+            <input
+              type="text"
+              name="admin_verification_token"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+              className="sr-only"
+              tabIndex={-1}
+              autoComplete="off"
+            />
 
-          {/* Dots Indicator */}
-          <div className="flex justify-center items-center gap-3 py-2">
-            {[0, 1, 2, 3].map((i) => {
-              const isFilled = pin.length > i;
-              return (
-                <div
-                  key={i}
-                  className={`w-3.5 h-3.5 rounded-full transition-all duration-150 ${
-                    error
-                      ? 'bg-red-500 scale-110'
-                      : isFilled
-                      ? 'bg-[#F07F00] scale-125'
-                      : 'bg-gray-200 border border-[#9D9D9C]/40'
-                  }`}
-                />
-              );
-            })}
-          </div>
+            <div className="text-center space-y-1">
+              <p className="text-xs text-slate-300">
+                Ingresa el PIN de seguridad de 4 dígitos para acceder al panel de control:
+              </p>
+            </div>
 
-          {/* Hidden input for direct typing */}
-          <input
-            ref={inputRef}
-            type="password"
-            maxLength={4}
-            value={pin}
-            onChange={(e) => {
-              const val = e.target.value.replace(/\D/g, '').slice(0, 4);
-              setPin(val);
-              setError(false);
-              if (val.length === 4) {
-                if (val === currentPin) {
-                  onSuccess();
-                } else {
-                  setError(true);
-                  setTimeout(() => setPin(''), 300);
-                }
-              }
-            }}
-            className="sr-only"
-            autoFocus
-          />
+            {/* Dots Indicator */}
+            <div className="flex justify-center items-center gap-3 py-2">
+              {[0, 1, 2, 3].map((i) => {
+                const isFilled = pin.length > i;
+                return (
+                  <div
+                    key={i}
+                    className={`w-3.5 h-3.5 rounded-none transition-all duration-150 ${
+                      error
+                        ? 'bg-red-500 scale-110'
+                        : isFilled
+                        ? 'bg-[#F07F00] scale-125 shadow-md shadow-[#F07F00]/50'
+                        : 'bg-white/20 border border-white/40'
+                    }`}
+                  />
+                );
+              })}
+            </div>
 
-          {error && (
-            <p className="text-center text-xs text-red-600 font-bold animate-pulse">
-              PIN incorrecto. Intenta nuevamente.
-            </p>
-          )}
-
-          {/* Numeric Keypad for fast touch & mouse interaction */}
-          <div className="grid grid-cols-3 gap-2 pt-1">
-            {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
-              <button
-                key={digit}
-                type="button"
-                onClick={() => handleKeyPress(digit)}
-                className="h-11 rounded-xl bg-gray-50 hover:bg-[#212955] hover:text-white text-[#212955] font-bold text-base transition-colors border border-[#9D9D9C]/20 active:scale-95 cursor-pointer"
-              >
-                {digit}
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => {
-                setPin('');
+            {/* Hidden input for direct physical keyboard typing */}
+            <input
+              ref={inputRef}
+              type="password"
+              maxLength={4}
+              value={pin}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+                setPin(val);
                 setError(false);
+                if (val.length === 4) {
+                  verifyPin(val);
+                }
               }}
-              className="h-11 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold cursor-pointer"
-            >
-              Borrar
-            </button>
-            <button
-              type="button"
-              onClick={() => handleKeyPress('0')}
-              className="h-11 rounded-xl bg-gray-50 hover:bg-[#212955] hover:text-white text-[#212955] font-bold text-base transition-colors border border-[#9D9D9C]/20 active:scale-95 cursor-pointer"
-            >
-              0
-            </button>
-            <button
-              type="button"
-              onClick={handleDelete}
-              className="h-11 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center cursor-pointer"
-              title="Retroceder"
-            >
-              <span className="material-symbols-outlined text-lg">backspace</span>
-            </button>
-          </div>
+              className="sr-only"
+              autoFocus
+            />
 
-          <div className="pt-2 text-center border-t border-gray-100">
-            <span className="text-[11px] text-gray-400 block">
-              PIN predeterminado de fábrica:{' '}
-              <strong className="text-[#212955] font-mono">1234</strong>
-            </span>
-          </div>
-        </form>
+            {error && (
+              <p className="text-center text-xs text-red-400 font-bold animate-pulse">
+                PIN incorrecto ({Math.max(0, 3 - failedAttempts)} intentos restantes antes de bloqueo temporal)
+              </p>
+            )}
+
+            {/* Numeric Keypad */}
+            <div className="grid grid-cols-3 gap-2 pt-1">
+              {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
+                <button
+                  key={digit}
+                  type="button"
+                  onClick={() => handleKeyPress(digit)}
+                  className="h-11 rounded-none bg-white/10 hover:bg-[#F07F00] hover:text-white text-white font-bold text-base transition-colors border border-white/15 active:scale-95 cursor-pointer"
+                >
+                  {digit}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setPin('');
+                  setError(false);
+                }}
+                className="h-11 rounded-none bg-white/5 hover:bg-white/15 text-slate-300 text-xs font-semibold cursor-pointer"
+              >
+                Limpiar
+              </button>
+              <button
+                type="button"
+                onClick={() => handleKeyPress('0')}
+                className="h-11 rounded-none bg-white/10 hover:bg-[#F07F00] hover:text-white text-white font-bold text-base transition-colors border border-white/15 active:scale-95 cursor-pointer"
+              >
+                0
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="h-11 rounded-none bg-white/5 hover:bg-white/15 text-slate-300 flex items-center justify-center cursor-pointer"
+                title="Retroceder"
+              >
+                <span className="material-symbols-outlined text-lg">backspace</span>
+              </button>
+            </div>
+
+            <div className="pt-2 text-center border-t border-white/10">
+              <span className="text-[10px] text-slate-400 flex items-center justify-center gap-1">
+                <span className="material-symbols-outlined text-xs text-emerald-400">verified_user</span>
+                Cifrado y protección contra fuerza bruta activa
+              </span>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

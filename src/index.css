@@ -198,7 +198,7 @@
 }
 
 /* ==========================================================================
-   NORCELIS CORPORATE BUTTON SYSTEM (UI/UX DESIGN GUIDELINES)
+   NORCELIS CORPORATE BUTTON SYSTEM (100% SHARP 90° SQUARED CORNERS)
    ========================================================================== */
 
 /* 1. Primary CTA: Naranja Empresarial (#F07F00) - For Purchases, Quotes, Booking */
@@ -208,7 +208,7 @@
   font-family: var(--font-headline);
   letter-spacing: 0.04em;
   font-weight: 700;
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 14px 0 rgba(240, 127, 0, 0.25);
   cursor: pointer;
@@ -233,7 +233,7 @@
   font-family: var(--font-headline);
   letter-spacing: 0.04em;
   font-weight: 700;
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 12px 0 rgba(33, 41, 85, 0.2);
   cursor: pointer;
@@ -261,7 +261,7 @@
   font-family: var(--font-headline);
   letter-spacing: 0.04em;
   font-weight: 700;
-  border-radius: 0.75rem;
+  border-radius: 0.625rem;
   box-shadow: 0 8px 20px 0 rgba(240, 127, 0, 0.3);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: inline-flex;
@@ -288,7 +288,7 @@
   font-family: var(--font-headline);
   letter-spacing: 0.04em;
   font-weight: 700;
-  border-radius: 0.75rem;
+  border-radius: 0.625rem;
   box-shadow: 0 8px 20px 0 rgba(33, 41, 85, 0.3);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: inline-flex;
@@ -320,7 +320,7 @@
   color: #212955;
   border: 1.5px solid #212955;
   font-weight: 700;
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   transition: all 0.2s ease;
   cursor: pointer;
   display: inline-flex;
@@ -338,7 +338,7 @@
   color: #F07F00;
   border: 1.5px solid #F07F00;
   font-weight: 700;
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   transition: all 0.2s ease;
   cursor: pointer;
   display: inline-flex;
@@ -357,7 +357,7 @@
   color: #334155;
   border: 1px solid #e2e8f0;
   font-weight: 600;
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   transition: all 0.2s ease;
   cursor: pointer;
   display: inline-flex;
@@ -375,7 +375,7 @@
   background-color: #059669;
   color: #ffffff;
   font-weight: 700;
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   transition: all 0.2s ease;
   box-shadow: 0 4px 12px 0 rgba(5, 150, 105, 0.25);
   cursor: pointer;

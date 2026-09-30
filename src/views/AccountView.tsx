@@ -281,7 +281,7 @@ export const AccountView: React.FC = () => {
             {user.role === 'admin' && (
               <button
                 onClick={() => setCurrentView('admin')}
-                className="flex-1 md:flex-none bg-gradient-to-r from-[#F07F00] to-[#d97300] hover:brightness-110 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="flex-1 md:flex-none bg-gradient-to-r from-[#F07F00] to-[#d97300] hover:brightness-110 text-white font-bold text-xs px-4 py-2.5 rounded-none shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-base">admin_panel_settings</span>
                 Panel de Administración
@@ -289,7 +289,7 @@ export const AccountView: React.FC = () => {
             )}
             <button
               onClick={() => setIsGarageModalOpen(true)}
-              className="flex-1 md:flex-none bg-surface-container-low hover:bg-surface-container text-primary font-bold text-xs px-4 py-2.5 rounded-xl border border-surface-container transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              className="flex-1 md:flex-none bg-surface-container-low hover:bg-surface-container text-primary font-bold text-xs px-4 py-2.5 rounded-none border border-surface-container transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <span className="material-symbols-outlined text-base">directions_car</span>
               Cambiar Garaje Activo

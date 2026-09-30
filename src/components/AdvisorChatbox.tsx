@@ -389,7 +389,7 @@ Contamos con stock en tiempo real de marcas líderes:
       {/* CHATBOX WINDOW */}
       {isOpen && (
         <div
-          className={`fixed bottom-24 right-4 sm:right-6 z-50 w-[94vw] sm:w-[420px] max-w-[440px] bg-white text-slate-800 rounded-2xl shadow-2xl border border-slate-300 flex flex-col overflow-hidden transition-all duration-300 animate-in fade-in zoom-in-95 ${
+          className={`fixed bottom-24 right-4 sm:right-6 z-50 w-[94vw] sm:w-[420px] max-w-[440px] bg-white text-slate-800 rounded-none shadow-2xl border border-slate-300 flex flex-col overflow-hidden transition-all duration-300 animate-in fade-in zoom-in-95 ${
             isMinimized ? 'h-14' : 'h-[620px] max-h-[82vh]'
           }`}
           style={{ boxShadow: '0 25px 50px -12px rgba(33, 41, 85, 0.45)' }}
@@ -398,20 +398,20 @@ Contamos con stock en tiempo real de marcas líderes:
           <div className="bg-[#212955] text-white p-3.5 flex items-center justify-between border-b border-[#F07F00] shrink-0">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-[#F07F00] text-white flex items-center justify-center font-bold text-sm shadow-md">
+                <div className="w-10 h-10 rounded-none bg-[#F07F00] text-white flex items-center justify-center font-bold text-sm shadow-md">
                   <span className="material-symbols-outlined text-xl">smart_toy</span>
                 </div>
-                <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-[#212955] rounded-full" />
+                <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-[#212955] rounded-full indicator-dot" />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
                   <h3 className="font-headline font-bold text-base tracking-wide text-white">Don Celis</h3>
-                  <span className="bg-[#F07F00] text-white text-[10px] font-black px-1.5 py-0.5 rounded font-headline uppercase tracking-wider shadow-2xs">
+                  <span className="bg-[#F07F00] text-white text-[10px] font-black px-1.5 py-0.5 rounded-none font-headline uppercase tracking-wider shadow-2xs">
                     IA NORCELIS
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-300 flex items-center gap-1 font-sans">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 indicator-dot" />
                   En línea 24/7 • Asesor Automotriz Oficial
                 </p>
               </div>
@@ -422,7 +422,7 @@ Contamos con stock en tiempo real de marcas líderes:
               {/* Reset History */}
               <button
                 onClick={handleClearHistory}
-                className="p-1.5 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+                className="p-1.5 hover:text-white hover:bg-white/10 rounded-none transition-colors cursor-pointer"
                 title="Reiniciar conversación"
               >
                 <span className="material-symbols-outlined text-lg">restart_alt</span>
@@ -431,7 +431,7 @@ Contamos con stock en tiempo real de marcas líderes:
               {/* Minimize */}
               <button
                 onClick={() => setIsMinimized((prev) => !prev)}
-                className="p-1.5 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+                className="p-1.5 hover:text-white hover:bg-white/10 rounded-none transition-colors cursor-pointer"
                 title={isMinimized ? 'Expandir chat' : 'Minimizar chat'}
               >
                 <span className="material-symbols-outlined text-lg">
@@ -442,7 +442,7 @@ Contamos con stock en tiempo real de marcas líderes:
               {/* Close */}
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1.5 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+                className="p-1.5 hover:text-white hover:bg-white/10 rounded-none transition-colors cursor-pointer"
                 title="Cerrar chatbox"
               >
                 <span className="material-symbols-outlined text-lg">close</span>
@@ -467,10 +467,10 @@ Contamos con stock en tiempo real de marcas líderes:
                 </div>
 
                 {/* Model switcher */}
-                <div className="flex items-center gap-1 bg-white rounded-lg p-0.5 border border-slate-300 shadow-2xs">
+                <div className="flex items-center gap-1 bg-white rounded-none p-0.5 border border-slate-300 shadow-2xs">
                   <button
                     onClick={() => setSelectedModel('gemini-3.8-flash')}
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors cursor-pointer ${
+                    className={`px-2 py-0.5 rounded-none text-[10px] font-bold transition-colors cursor-pointer ${
                       selectedModel === 'gemini-3.8-flash'
                         ? 'bg-[#212955] text-white'
                         : 'text-slate-600 hover:text-[#212955]'
@@ -481,7 +481,7 @@ Contamos con stock en tiempo real de marcas líderes:
                   </button>
                   <button
                     onClick={() => setSelectedModel('gemini-3.1-flash-lite')}
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors cursor-pointer ${
+                    className={`px-2 py-0.5 rounded-none text-[10px] font-bold transition-colors cursor-pointer ${
                       selectedModel === 'gemini-3.1-flash-lite'
                         ? 'bg-[#212955] text-white'
                         : 'text-slate-600 hover:text-[#212955]'
@@ -505,16 +505,16 @@ Contamos con stock en tiempo real de marcas líderes:
                     >
                       <div className="flex items-end gap-2 max-w-[88%]">
                         {!isUser && (
-                          <div className="w-7 h-7 rounded-full bg-[#212955] text-white flex items-center justify-center shrink-0 text-[11px] shadow-sm font-headline font-black">
+                          <div className="w-7 h-7 rounded-none bg-[#212955] text-white flex items-center justify-center shrink-0 text-[11px] shadow-sm font-headline font-black">
                             NC
                           </div>
                         )}
 
                         <div
-                          className={`rounded-2xl px-3.5 py-2.5 text-xs shadow-sm ${
+                          className={`rounded-none px-3.5 py-2.5 text-xs shadow-sm ${
                             isUser
-                              ? 'bg-[#212955] text-white rounded-br-none shadow-md'
-                              : 'bg-white text-slate-800 border border-slate-200/90 rounded-bl-none shadow-sm'
+                              ? 'bg-[#212955] text-white shadow-md'
+                              : 'bg-white text-slate-800 border border-slate-200/90 shadow-sm'
                           }`}
                         >
                           {isUser ? (
@@ -540,7 +540,7 @@ Contamos con stock en tiempo real de marcas líderes:
                             <button
                               key={actIdx}
                               onClick={act.action}
-                              className="flex items-center gap-1 bg-white hover:bg-[#212955] text-[#212955] hover:text-white border border-slate-300 hover:border-[#212955] text-[11px] font-bold px-2.5 py-1 rounded-full shadow-2xs transition-all cursor-pointer font-sans"
+                              className="flex items-center gap-1 bg-white hover:bg-[#212955] text-[#212955] hover:text-white border border-slate-300 hover:border-[#212955] text-[11px] font-bold px-2.5 py-1 rounded-none shadow-2xs transition-all cursor-pointer font-sans"
                             >
                               {act.icon && (
                                 <span className="material-symbols-outlined text-xs text-[#F07F00]">{act.icon}</span>
@@ -558,24 +558,24 @@ Contamos con stock en tiempo real de marcas líderes:
                 {/* Typing Indicator */}
                 {isLoading && (
                   <div className="flex items-end gap-2 max-w-[85%]">
-                    <div className="w-7 h-7 rounded-full bg-[#212955] text-white flex items-center justify-center shrink-0 text-[11px] shadow-sm font-headline font-black">
+                    <div className="w-7 h-7 rounded-none bg-[#212955] text-white flex items-center justify-center shrink-0 text-[11px] shadow-sm font-headline font-black">
                       NC
                     </div>
-                    <div className="bg-white text-slate-800 border border-slate-200 rounded-2xl rounded-bl-none px-4 py-3 shadow-sm flex items-center gap-2">
+                    <div className="bg-white text-slate-800 border border-slate-200 rounded-none px-4 py-3 shadow-sm flex items-center gap-2">
                       <span className="text-[11px] text-slate-600 font-medium">
                         Don Celis está respondiendo
                       </span>
                       <div className="flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 bg-[#F07F00] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <span className="w-1.5 h-1.5 bg-[#F07F00] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <span className="w-1.5 h-1.5 bg-[#F07F00] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        <span className="w-1.5 h-1.5 bg-[#F07F00] rounded-full animate-bounce indicator-dot" style={{ animationDelay: '0ms' }} />
+                        <span className="w-1.5 h-1.5 bg-[#F07F00] rounded-full animate-bounce indicator-dot" style={{ animationDelay: '150ms' }} />
+                        <span className="w-1.5 h-1.5 bg-[#F07F00] rounded-full animate-bounce indicator-dot" style={{ animationDelay: '300ms' }} />
                       </div>
                     </div>
                   </div>
                 )}
 
                 {errorMessage && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-2.5 rounded-xl flex items-center justify-between gap-2">
+                  <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-2.5 rounded-none flex items-center justify-between gap-2">
                     <span className="flex items-center gap-1.5">
                       <span className="material-symbols-outlined text-sm text-red-600">warning</span>
                       <span>{errorMessage}</span>
@@ -603,7 +603,7 @@ Contamos con stock en tiempo real de marcas líderes:
                       key={idx}
                       onClick={() => handleSendMessage(chip)}
                       disabled={isLoading}
-                      className="text-[11px] bg-white hover:bg-[#212955] text-slate-800 hover:text-white px-2.5 py-1 rounded-full border border-slate-300 hover:border-[#212955] transition-all font-semibold cursor-pointer disabled:opacity-50 shadow-2xs"
+                      className="text-[11px] bg-white hover:bg-[#212955] text-slate-800 hover:text-white px-2.5 py-1 rounded-none border border-slate-300 hover:border-[#212955] transition-all font-semibold cursor-pointer disabled:opacity-50 shadow-2xs"
                     >
                       {chip}
                     </button>
@@ -620,7 +620,7 @@ Contamos con stock en tiempo real de marcas líderes:
                   }}
                   className="flex items-end gap-2"
                 >
-                  <div className="flex-1 relative bg-slate-50 rounded-xl border border-slate-300 focus-within:border-[#212955] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#212955]/15 transition-all">
+                  <div className="flex-1 relative bg-slate-50 rounded-none border border-slate-300 focus-within:border-[#212955] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#212955]/15 transition-all">
                     <textarea
                       ref={inputRef}
                       value={inputMessage}
@@ -636,7 +636,7 @@ Contamos con stock en tiempo real de marcas líderes:
                   <button
                     type="submit"
                     disabled={!inputMessage.trim() || isLoading}
-                    className="w-10 h-10 rounded-xl bg-[#F07F00] hover:bg-[#d97300] disabled:bg-slate-200 disabled:text-slate-400 text-white flex items-center justify-center transition-colors shadow-md disabled:cursor-not-allowed shrink-0 cursor-pointer"
+                    className="w-10 h-10 rounded-none bg-[#F07F00] hover:bg-[#d97300] disabled:bg-slate-200 disabled:text-slate-400 text-white flex items-center justify-center transition-colors shadow-md disabled:cursor-not-allowed shrink-0 cursor-pointer"
                     title="Enviar mensaje"
                   >
                     <span className="material-symbols-outlined text-lg">send</span>

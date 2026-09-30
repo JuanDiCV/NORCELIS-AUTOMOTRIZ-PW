@@ -4,7 +4,6 @@ import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { GarageModal } from './components/GarageModal';
 import { TestDriveModal } from './components/TestDriveModal';
-import { Viewer360Modal } from './components/Viewer360Modal';
 import { PdfPreviewModal } from './components/PdfPreviewModal';
 import { QuickQuoteModal } from './components/QuickQuoteModal';
 import { FloatingHub } from './components/FloatingHub';
@@ -41,6 +40,8 @@ const MainContent: React.FC = () => {
     setIsAdminPinModalOpen,
     adminPin,
     setIsAdminUnlocked,
+    isAdminUnlocked,
+    user,
   } = useApp();
 
   // Scroll to top whenever current view changes
@@ -86,7 +87,81 @@ const MainContent: React.FC = () => {
         {currentView === 'locations' && <LocationsView />}
         {currentView === 'claims' && <ClaimsBookView />}
         {currentView === 'about' && <AboutView />}
-        {currentView === 'admin' && <AdminDashboardView />}
+        {currentView === 'admin' && (
+          user.isLoggedIn && user.role === 'admin' ? (
+            isAdminUnlocked ? (
+              <AdminDashboardView />
+            ) : (
+              <div className="max-w-md mx-auto my-16 p-8 bg-[#181e40] rounded-none border border-[#F07F00]/50 text-center space-y-4 shadow-2xl">
+                <div className="w-14 h-14 rounded-none bg-[#212955] text-[#F07F00] flex items-center justify-center mx-auto border border-[#F07F00]/40">
+                  <span className="material-symbols-outlined text-3xl">key</span>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[10px] uppercase font-mono tracking-widest text-[#F07F00] font-bold">
+                    Autenticación en Dos Pasos (2FA)
+                  </span>
+                  <h2 className="font-headline font-bold text-xl text-white">
+                    Consola de Administración Segura
+                  </h2>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Has iniciado sesión como <strong>{user.name}</strong> (Administrador). Para acceder al panel de control y base de datos, ingresa tu PIN de seguridad.
+                </p>
+                <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentView('home')}
+                    className="btn-secondary px-5 py-2.5 text-xs font-bold w-full sm:w-auto rounded-none"
+                  >
+                    Volver a la Tienda
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsAdminPinModalOpen(true)}
+                    className="btn-primary px-5 py-2.5 text-xs font-bold w-full sm:w-auto rounded-none flex items-center justify-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-sm">lock_open</span>
+                    Desbloquear con PIN
+                  </button>
+                </div>
+              </div>
+            )
+          ) : (
+            /* Stealth 404 / Access Denied for non-admin accounts to prevent route enumeration & hacking */
+            <div className="max-w-lg mx-auto my-20 p-8 bg-[#181e40]/90 rounded-none border border-white/10 text-center space-y-5 shadow-2xl">
+              <div className="w-16 h-16 rounded-none bg-red-500/10 text-red-400 flex items-center justify-center mx-auto border border-red-500/30">
+                <span className="material-symbols-outlined text-4xl">error_outline</span>
+              </div>
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-mono font-bold text-red-400 tracking-wider uppercase">
+                  Código 404 • Recurso Privado o Inexistente
+                </span>
+                <h2 className="font-headline font-bold text-2xl text-white">
+                  Página No Encontrada
+                </h2>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                La ruta solicitada no está disponible públicamente o requiere credenciales de seguridad de nivel institucional no asociadas a esta sesión.
+              </p>
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('home')}
+                  className="btn-primary px-6 py-2.5 text-xs font-bold w-full sm:w-auto rounded-none"
+                >
+                  Ir al Inicio de Nor Celis
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('cars')}
+                  className="btn-secondary px-5 py-2.5 text-xs font-bold w-full sm:w-auto rounded-none"
+                >
+                  Ver Catálogo de Autos
+                </button>
+              </div>
+            </div>
+          )
+        )}
         {currentView === 'order-tracking' && <OrderTrackingView />}
         {currentView === 'terms-policies' && <TermsPoliciesView />}
       </main>
@@ -97,7 +172,6 @@ const MainContent: React.FC = () => {
       {/* Modals & Dialogs */}
       <GarageModal />
       <TestDriveModal />
-      <Viewer360Modal />
       <QuickQuoteModal />
       <PdfPreviewModal data={pdfModalData} onClose={closePdfModal} onShowToast={showToast} />
       <AdminPinModal
@@ -107,7 +181,7 @@ const MainContent: React.FC = () => {
           setIsAdminUnlocked(true);
           setIsAdminPinModalOpen(false);
           setCurrentView('admin');
-          showToast('Acceso administrativo concedido');
+          showToast('✓ Acceso administrativo concedido');
         }}
         currentPin={adminPin}
       />
@@ -120,7 +194,7 @@ const MainContent: React.FC = () => {
 
       {/* Toast Notification Banner */}
       {toastMessage && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-primary text-white text-xs font-semibold px-5 py-3 rounded-2xl shadow-2xl border border-primary-container flex items-center gap-2.5 animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#212955] text-white text-xs font-semibold px-5 py-3 rounded-none shadow-2xl border border-[#F07F00] flex items-center gap-2.5 animate-in fade-in slide-in-from-bottom-4 duration-200">
           <span className="material-symbols-outlined text-emerald-400 text-base">check_circle</span>
           <span>{toastMessage}</span>
         </div>

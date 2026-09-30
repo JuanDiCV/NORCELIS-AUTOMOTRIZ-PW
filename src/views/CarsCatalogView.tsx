@@ -10,7 +10,6 @@ export const CarsCatalogView: React.FC = () => {
     vehicles,
     setSelectedVehicleId,
     setCurrentView,
-    setIsViewer360Open,
     toggleWishlist,
     isInWishlist,
     showToast,
@@ -1362,25 +1361,16 @@ export const CarsCatalogView: React.FC = () => {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2">
+                        <div>
                           <button
                             onClick={() => {
                               setSelectedVehicleId(car.id);
                               setCurrentView('vehicle-pdp');
                             }}
-                            className="bg-primary hover:bg-primary-container text-white py-2.5 rounded-xl font-bold text-xs transition-colors cursor-pointer text-center"
+                            className="w-full bg-primary hover:bg-primary-container text-white py-2.5 rounded-xl font-bold text-xs transition-colors cursor-pointer text-center flex items-center justify-center gap-1.5"
                           >
-                            Ficha Técnica &amp; Cuotas
-                          </button>
-                          <button
-                            onClick={() => {
-                              setSelectedVehicleId(car.id);
-                              setIsViewer360Open(true);
-                            }}
-                            className="bg-surface-container hover:bg-surface-container-high text-primary py-2.5 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                          >
-                            <span className="material-symbols-outlined text-[16px]">360</span>
-                            <span>Visor 360°</span>
+                            <span>Ficha Técnica &amp; Cuotas</span>
+                            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                           </button>
                         </div>
 
@@ -1457,23 +1447,12 @@ export const CarsCatalogView: React.FC = () => {
                       const id = zoomModalVehicle.id;
                       setZoomModalVehicle(null);
                       setSelectedVehicleId(id);
-                      setIsViewer360Open(true);
-                    }}
-                    className="flex-1 sm:flex-none bg-surface-container hover:bg-surface-container-high text-primary text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer min-h-[44px] flex items-center justify-center gap-1"
-                  >
-                    <span className="material-symbols-outlined text-base">360</span>
-                    <span>Visor 360°</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      const id = zoomModalVehicle.id;
-                      setZoomModalVehicle(null);
-                      setSelectedVehicleId(id);
                       setCurrentView('vehicle-pdp');
                     }}
-                    className="flex-1 sm:flex-none bg-primary hover:bg-primary-container text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-xs cursor-pointer min-h-[44px]"
+                    className="w-full sm:w-auto bg-primary hover:bg-primary-container text-white text-xs font-bold px-6 py-2.5 rounded-xl shadow-xs cursor-pointer min-h-[44px] flex items-center justify-center gap-1.5"
                   >
-                    Ver Ficha Completa
+                    <span>Ver Ficha Completa</span>
+                    <span className="material-symbols-outlined text-base">arrow_forward</span>
                   </button>
                 </div>
               </div>
