@@ -564,6 +564,86 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
+      {/* Mobile Search Bar & Quick Categories Chips (Mobile & Tablets < md) */}
+      <div className="block md:hidden bg-white border-t border-surface-container px-3.5 py-2.5">
+        <form
+          onSubmit={handleSearchSubmit}
+          className="flex items-center bg-surface-container-low rounded-xl border border-surface-container focus-within:border-[#212955] focus-within:ring-2 focus-within:ring-[#212955]/15 transition-all overflow-hidden min-h-[42px]"
+        >
+          <input
+            type="text"
+            value={searchQuery}
+            onFocus={() => setIsSearchDropdownOpen(true)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setIsSearchDropdownOpen(true);
+            }}
+            placeholder="Buscar repuestos, marcas (Toyota, KEKO, Mobil)..."
+            className="flex-1 pl-3.5 pr-2 py-2 text-xs bg-transparent focus:outline-none placeholder:text-[#9D9D9C] text-on-surface font-body"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery('');
+                setIsSearchDropdownOpen(false);
+              }}
+              className="p-1.5 text-[#9D9D9C] hover:text-on-surface cursor-pointer"
+              title="Limpiar búsqueda"
+            >
+              <AppleCloseIcon size={16} />
+            </button>
+          )}
+          <button
+            type="submit"
+            className="min-w-[42px] min-h-[42px] flex items-center justify-center p-2 text-[#212955] hover:text-[#F07F00] transition-colors cursor-pointer"
+            title="Buscar"
+            aria-label="Buscar"
+          >
+            <AppleSearchIcon size={22} />
+          </button>
+        </form>
+
+        {/* Quick category shortcut pills for mobile */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pt-2 pb-0.5 scrollbar-none text-[11px] font-bold">
+          <button
+            type="button"
+            onClick={() => navigateToPartsCatalog('todos')}
+            className="px-2.5 py-1 rounded-lg bg-surface-container text-[#212955] whitespace-nowrap shrink-0 hover:bg-[#F07F00] hover:text-white transition-colors cursor-pointer"
+          >
+            Repuestos OEM
+          </button>
+          <button
+            type="button"
+            onClick={() => navigateToPartsCatalog('accesorios4x4')}
+            className="px-2.5 py-1 rounded-lg bg-surface-container text-[#212955] whitespace-nowrap shrink-0 hover:bg-[#F07F00] hover:text-white transition-colors cursor-pointer"
+          >
+            Equipamiento 4x4
+          </button>
+          <button
+            type="button"
+            onClick={() => setCurrentView('cars')}
+            className="px-2.5 py-1 rounded-lg bg-surface-container text-[#212955] whitespace-nowrap shrink-0 hover:bg-[#F07F00] hover:text-white transition-colors cursor-pointer"
+          >
+            Vehículos 0km
+          </button>
+          <button
+            type="button"
+            onClick={() => setCurrentView('services')}
+            className="px-2.5 py-1 rounded-lg bg-surface-container text-[#212955] whitespace-nowrap shrink-0 hover:bg-[#F07F00] hover:text-white transition-colors cursor-pointer"
+          >
+            Taller Mecánico
+          </button>
+          <button
+            type="button"
+            onClick={() => setCurrentView('trade-in')}
+            className="px-2.5 py-1 rounded-lg bg-surface-container text-[#212955] whitespace-nowrap shrink-0 hover:bg-[#F07F00] hover:text-white transition-colors cursor-pointer"
+          >
+            Plan Retoma
+          </button>
+        </div>
+      </div>
+
       {/* Subnav Desktop with Interactive Hover Mega Dropdowns */}
       <div
         className="border-t border-surface-container bg-surface-container-lowest relative px-2 sm:px-4 lg:px-6 hidden md:block"
