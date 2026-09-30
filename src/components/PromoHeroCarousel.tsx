@@ -125,18 +125,18 @@ export const PromoHeroCarousel: React.FC = () => {
                 {/* Slide Interactive Content */}
                 <div
                   onClick={() => handleSlideClick(slide)}
-                  className="relative z-10 w-full h-full min-h-[460px] sm:min-h-[500px] md:min-h-[540px] lg:min-h-[580px] xl:min-h-[620px] max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between p-6 sm:p-10 lg:p-14 xl:p-16 cursor-pointer pb-16 sm:pb-20"
+                  className="relative z-10 w-full h-full min-h-[460px] sm:min-h-[500px] md:min-h-[540px] lg:min-h-[580px] xl:min-h-[620px] max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 items-center p-6 sm:p-10 lg:p-12 xl:p-14 cursor-pointer pb-16 sm:pb-20 gap-6 lg:gap-8"
                 >
-                  {/* LEFT ZONE: Campaign badge, Category Title, Call to Action */}
-                  <div className="w-full md:w-5/12 flex flex-col items-start justify-center space-y-4 lg:space-y-5 z-20">
+                  {/* ZONE 1 (LEFT): Campaign badge, Category Title, Call to Action */}
+                  <div className="col-span-12 md:col-span-4 lg:col-span-4 flex flex-col items-start justify-center space-y-3 sm:space-y-4 z-20">
                     {/* Badge de Campaña Oficial */}
-                    <div className="inline-flex items-center gap-2.5 bg-[#212955]/[0.98] backdrop-blur-md text-white px-3.5 py-1.5 rounded-xl shadow-lg border border-[#F07F00]/50 ring-1 ring-white/15 transition-transform hover:scale-105 duration-300">
-                      <div className="bg-[#F07F00] text-white font-black text-sm px-2 py-0.5 rounded-md leading-none tracking-tight shadow-xs font-headline">
+                    <div className="inline-flex items-center gap-2 bg-[#212955]/[0.98] backdrop-blur-md text-white px-3 py-1.5 rounded-xl shadow-lg border border-[#F07F00]/50 ring-1 ring-white/15 transition-transform hover:scale-105 duration-300">
+                      <div className="bg-[#F07F00] text-white font-black text-xs px-2 py-0.5 rounded-md leading-none tracking-tight shadow-xs font-headline">
                         NC
                       </div>
-                      <div className="text-xs font-bold leading-tight tracking-tight">
-                        <span className="block text-[10px] uppercase font-semibold text-[#9D9D9C]">Exclusivo</span>
-                        <span className="font-extrabold text-xs tracking-wider text-white font-headline uppercase">
+                      <div className="text-[11px] font-bold leading-tight tracking-tight">
+                        <span className="block text-[9px] uppercase font-semibold text-[#9D9D9C]">Exclusivo</span>
+                        <span className="font-extrabold text-[11px] tracking-wider text-white font-headline uppercase">
                           {slide.campaignBadge}
                         </span>
                       </div>
@@ -144,7 +144,7 @@ export const PromoHeroCarousel: React.FC = () => {
 
                     {/* Titular Principal */}
                     <div className="space-y-1">
-                      <h2 className="font-extrabold text-2xl sm:text-3xl lg:text-4xl uppercase text-white drop-shadow-md leading-[1.1] tracking-tight">
+                      <h2 className="font-['Bebas_Neue',sans-serif] font-normal text-3xl sm:text-4xl lg:text-5xl xl:text-6xl uppercase text-white drop-shadow-md leading-[0.95] tracking-wide">
                         {slide.categoryTitle}
                       </h2>
                       {slide.categorySubtitle && (
@@ -158,7 +158,7 @@ export const PromoHeroCarousel: React.FC = () => {
                     <div className="pt-1">
                       <button
                         type="button"
-                        className="bg-[#F07F00] hover:bg-[#d97300] active:scale-95 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm tracking-wide flex items-center gap-2.5 shadow-xl hover:shadow-[#F07F00]/30 hover:scale-105 transition-all duration-300 cursor-pointer border border-white/25"
+                        className="bg-[#F07F00] hover:bg-[#d97300] active:scale-95 text-white px-6 sm:px-7 py-2.5 rounded-xl font-bold text-xs sm:text-sm tracking-wide flex items-center gap-2 shadow-xl hover:shadow-[#F07F00]/30 hover:scale-105 transition-all duration-300 cursor-pointer border border-white/25"
                       >
                         <span>{slide.buttonText || '¡VER TODO!'}</span>
                         <span className="w-5 h-5 rounded-md bg-white/25 flex items-center justify-center text-xs font-bold">
@@ -168,50 +168,55 @@ export const PromoHeroCarousel: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* RIGHT ZONE: Hero PNG Product Cutout with Studio Backdrop Glow & Pricing Card */}
-                  <div className="w-full md:w-7/12 flex flex-col sm:flex-row items-center justify-end mt-6 md:mt-0 gap-6 lg:gap-8 z-20">
-                    {/* Transparent Cutout PNG Product with Radial Studio Backlight */}
-                    <div className="relative flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-700">
+                  {/* ZONE 2 (CENTER): Product Cutout / Image perfectly centered in its own column */}
+                  <div className="col-span-12 md:col-span-4 lg:col-span-4 flex items-center justify-center z-20 px-2">
+                    <div className="relative flex items-center justify-center group-hover:scale-105 transition-transform duration-700 max-w-full">
                       <div className="absolute inset-0 w-full h-full bg-gradient-to-tr from-[#F07F00]/30 to-[#212955]/10 rounded-xl blur-2xl transform scale-95" />
                       <img
                         src={slide.productPng}
                         alt={slide.productTitle}
-                        className="relative z-10 w-52 h-52 sm:w-64 sm:h-64 md:w-76 md:h-76 lg:w-92 lg:h-92 xl:w-[410px] xl:h-[410px] object-contain drop-shadow-[0_25px_35px_rgba(0,0,0,0.7)] filter transition-all duration-500"
+                        className="relative z-10 w-auto h-auto max-h-44 sm:max-h-52 md:max-h-60 lg:max-h-68 xl:max-h-76 max-w-full object-contain drop-shadow-[0_25px_35px_rgba(0,0,0,0.7)] filter transition-all duration-500 rounded-xl"
                       />
                     </div>
+                  </div>
 
-                    {/* Product Details & Refined Pricing Tag */}
-                    <div className="flex flex-col items-start sm:items-end text-left sm:text-right space-y-2 max-w-xs">
-                      <div>
-                        <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-[#F07F00] drop-shadow-sm block">
-                          {slide.productBrand}
+                  {/* ZONE 3 (RIGHT): Product Details & Price Box aligned to the right */}
+                  <div className="col-span-12 md:col-span-4 lg:col-span-4 flex flex-col items-center md:items-end text-center md:text-right space-y-3 z-20">
+                    <div className="text-center md:text-right w-full">
+                      <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-[#F07F00] drop-shadow-sm block">
+                        {slide.productBrand}
+                      </span>
+                      <h3 className="text-sm sm:text-base font-bold text-white drop-shadow-md leading-snug line-clamp-2 mt-0.5">
+                        {slide.productTitle}
+                      </h3>
+                    </div>
+
+                    {/* Price Box Replica Exacto de la Imagen */}
+                    <div className="bg-[#1E2644]/95 backdrop-blur-md px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-2xl border border-white/15 shadow-2xl flex items-center gap-3 sm:gap-4 max-w-full overflow-hidden">
+                      {/* Left: Solid Orange Badge with Big Price and PRECIO EXCLUSIVO */}
+                      <div className="bg-[#F07F00] px-3 py-2 sm:px-3.5 sm:py-2 rounded-xl flex flex-col items-center justify-center shadow-md min-w-[80px] sm:min-w-[95px] shrink-0">
+                        <span className="font-['Bebas_Neue',sans-serif] text-2xl sm:text-3xl lg:text-4xl leading-none text-white tracking-normal drop-shadow-sm whitespace-nowrap">
+                          S/ {slide.productPrice.toLocaleString(undefined, { minimumFractionDigits: slide.productPrice % 1 !== 0 ? 2 : 0 })}
                         </span>
-                        <h3 className="text-sm sm:text-base font-bold text-white drop-shadow-md leading-snug line-clamp-2">
-                          {slide.productTitle}
-                        </h3>
+                        <span className="font-['Bebas_Neue',sans-serif] text-[10px] sm:text-[11px] tracking-wider uppercase text-white leading-none mt-0.5 text-center drop-shadow-sm whitespace-nowrap">
+                          PRECIO EXCLUSIVO
+                        </span>
                       </div>
 
-                      {/* Clean Corporate Price Box */}
-                      <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 bg-[#212955]/[0.98] backdrop-blur-md p-2 rounded-xl border border-white/20 shadow-2xl">
-                        {/* Orange Price Tag */}
-                        <div className="bg-[#F07F00] text-white px-3.5 py-1.5 rounded-lg text-center shadow-lg flex flex-col justify-center min-w-[100px]">
-                          <span className="font-mono font-black text-lg sm:text-xl lg:text-2xl leading-none tracking-tight">
-                            S/ {slide.productPrice.toLocaleString(undefined, { minimumFractionDigits: slide.productPrice % 1 !== 0 ? 2 : 0 })}
+                      {/* Right: Stacked Prices in Clean Single-Line Rows completely contained */}
+                      <div className="flex flex-col justify-center text-left space-y-1 shrink-0 pr-1">
+                        <p className="text-xs sm:text-sm text-white font-bold leading-tight m-0 whitespace-nowrap flex items-baseline gap-1.5">
+                          <span className="text-white/90">P. Oferta:</span>
+                          <span className="text-[#F07F00] font-black text-sm sm:text-base">
+                            S/ {slide.offerPrice.toLocaleString(undefined, { minimumFractionDigits: slide.offerPrice % 1 !== 0 ? 2 : 0 })}
                           </span>
-                          <span className="text-[9px] font-bold uppercase tracking-wider opacity-95 leading-none mt-1">
-                            Precio Exclusivo
+                        </p>
+                        <p className="text-xs sm:text-sm text-[#9D9D9C] font-semibold leading-tight m-0 whitespace-nowrap flex items-baseline gap-1.5">
+                          <span className="text-[#9D9D9C]">P. Normal:</span>
+                          <span className="line-through text-[#9D9D9C]/80">
+                            S/ {slide.normalPrice.toLocaleString(undefined, { minimumFractionDigits: slide.normalPrice % 1 !== 0 ? 2 : 0 })}
                           </span>
-                        </div>
-
-                        {/* Comparative Offer / Normal prices */}
-                        <div className="text-[11px] sm:text-xs text-white font-medium leading-tight space-y-0.5 text-left pr-1.5">
-                          <div>
-                            P. Oferta: <strong className="text-[#F07F00] font-bold font-mono">S/ {slide.offerPrice.toLocaleString(undefined, { minimumFractionDigits: slide.offerPrice % 1 !== 0 ? 2 : 0 })}</strong>
-                          </div>
-                          <div className="text-[#9D9D9C]">
-                            P. Normal: <span className="line-through font-mono">S/ {slide.normalPrice.toLocaleString(undefined, { minimumFractionDigits: slide.normalPrice % 1 !== 0 ? 2 : 0 })}</span>
-                          </div>
-                        </div>
+                        </p>
                       </div>
                     </div>
                   </div>

@@ -210,23 +210,23 @@ export const HomeView: React.FC = () => {
                 </div>
 
                 {/* Bottom Content Area */}
-                <div className="relative z-10 space-y-2">
-                  <h3 className="font-extrabold text-xl sm:text-2xl lg:text-3xl text-white tracking-tight leading-tight uppercase drop-shadow-md group-hover:text-white transition-colors">
+                <div className="relative z-10 space-y-2 text-center flex flex-col items-center">
+                  <h3 className="font-extrabold text-xl sm:text-2xl lg:text-3xl text-white tracking-tight leading-tight uppercase drop-shadow-md group-hover:text-white transition-colors text-center">
                     {cat.name}
                   </h3>
-                  <p className="text-xs text-white/75 line-clamp-2 leading-relaxed font-medium">
+                  <p className="text-xs text-white/75 line-clamp-2 leading-relaxed font-medium text-center">
                     {cat.subtitle}
                   </p>
 
                   {/* Action Link like "LEARN MORE ↗" in reference image */}
-                  <div className="pt-3 border-t border-white/20 flex items-center justify-between">
-                    <span className="font-bold tracking-wider text-xs sm:text-sm text-white group-hover:text-[#F07F00] flex items-center gap-1.5 transition-colors">
+                  <div className="pt-3 border-t border-white/20 w-full flex items-center justify-between">
+                    <span className="font-bold tracking-wider text-xs sm:text-sm text-white group-hover:text-[#F07F00] flex items-center justify-center gap-1.5 transition-colors text-center flex-1">
                       <span>VER REPUESTOS</span>
                       <span className="text-sm sm:text-base group-hover:translate-x-1 group-hover:-translate-y-0.5 transition-transform duration-300">
                         ↗
                       </span>
                     </span>
-                    <span className="text-[11px] font-bold text-white/60 group-hover:text-white transition-colors">
+                    <span className="text-[11px] font-bold text-white/60 group-hover:text-white transition-colors shrink-0 text-center">
                       {cat.count}
                     </span>
                   </div>
@@ -608,11 +608,11 @@ export const HomeView: React.FC = () => {
                     </button>
 
                     {part.stockText && (
-                      <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between text-[10px] bg-white/90 backdrop-blur-xs px-2 py-0.5 rounded-xs text-emerald-800 font-bold border border-emerald-200">
-                        <span className="flex items-center gap-1">
+                      <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-[10px] bg-white/95 backdrop-blur-xs px-2.5 py-1 rounded-xs text-emerald-800 font-bold border border-emerald-200 shadow-xs text-center">
+                        <span className="flex items-center justify-center gap-1 text-center">
                           {part.stockText}
                         </span>
-                        <span className="font-mono text-outline">SKU: {part.sku}</span>
+                        <span className="font-mono text-outline text-[9px] text-center">SKU: {part.sku}</span>
                       </div>
                     )}
                   </div>
@@ -639,8 +639,8 @@ export const HomeView: React.FC = () => {
 
                     {/* Price and Add to Cart Action */}
                     <div className="pt-2 border-t border-surface-container space-y-2.5">
-                      <div className="flex items-end justify-between gap-2 min-h-[46px]">
-                        <div className="flex flex-col justify-end shrink-0 whitespace-nowrap">
+                      <div className="flex items-center justify-between gap-2 min-h-[46px]">
+                        <div className="flex flex-col justify-center shrink-0 whitespace-nowrap">
                           {part.oldPriceSoles && (
                             <span className="text-[11px] text-outline line-through block leading-none font-mono mb-1 whitespace-nowrap">
                               S/ {part.oldPriceSoles.toLocaleString()}
@@ -650,7 +650,7 @@ export const HomeView: React.FC = () => {
                             S/ {part.priceSoles.toLocaleString()}
                           </span>
                         </div>
-                        <span className="text-[10px] text-secondary font-bold bg-secondary-container/10 px-2 py-0.5 rounded-xs shrink-0 whitespace-nowrap">
+                        <span className="text-[10px] text-secondary font-bold bg-secondary-container/10 px-2 py-1 rounded-xs shrink-0 whitespace-nowrap text-center flex items-center justify-center">
                           Instalación +S/ 45
                         </span>
                       </div>
