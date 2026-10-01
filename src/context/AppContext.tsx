@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import { hashPassword, verifyPassword, isLegacyPlaintext } from '../utils/cryptoUtils';
 import { ViewMode, ActiveGarageVehicle, CartItem, WishlistItem, Vehicle, AutoPart, WorkshopService, HeroSlide, AppUser, UserRole, StoredUserAccount, CinematicCategory, OfficialBrand, PanoramicBannerConfig, ShowcaseOfferCard } from '../types';
 import { INITIAL_ACTIVE_GARAGE, AVAILABLE_GARAGE_VEHICLES, VEHICLES_DATA, AUTO_PARTS_DATA, WORKSHOP_SERVICES_DATA, INITIAL_HERO_SLIDES } from '../data/mockData';
 import { DEFAULT_CINEMATIC_CATEGORIES, DEFAULT_OFFICIAL_BRANDS, DEFAULT_PANORAMIC_BANNER, DEFAULT_TOP_OFFER_CARDS, DEFAULT_BOTTOM_OFFER_CARDS } from '../data/homeShowcaseData';
@@ -136,6 +137,10 @@ interface AppContextType {
     emailOrDoc: string,
     password: string
   ) => { success: boolean; message: string; user?: AppUser };
+  loginWithCredentialsAsync: (
+    emailOrDoc: string,
+    password: string
+  ) => Promise<{ success: boolean; message: string; user?: AppUser }>;
   registerAccount: (data: {
     name: string;
     email: string;
@@ -459,36 +464,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Predefined system accounts
-  const INITIAL_PRESET_ACCOUNTS: StoredUserAccount[] = [
-    {
-      id: 'usr_admin_master',
-      name: 'Dirección General & Admin',
-      email: 'admin@norcelis.pe',
-      passwordHash: 'AdminSecure2025!',
-      role: 'admin',
-      docType: 'DNI',
-      docNumber: '09876543',
-      phone: '976543210',
-      createdAt: '2025-01-01T08:00:00.000Z',
-    },
-    {
-      id: 'usr_cust_carlos',
-      name: 'Carlos Mendoza',
-      email: 'carlos.mendoza@norcelis.pe',
-      passwordHash: 'ClienteSeguro2025!',
-      role: 'customer',
-      docType: 'DNI',
-      docNumber: '74819203',
-      phone: '987654321',
-      createdAt: '2025-01-15T10:00:00.000Z',
-      vehicle: {
-        brand: 'Toyota',
-        model: 'RAV4 Hybrid',
-        year: '2025',
-      },
-    },
-  ];
+  // ─── SEGURIDAD: NO hay cuentas predefinidas en el código fuente. ───────────
+  // Las cuentas de administrador y clientes viven ÚNICAMENTE en la base de
+  // datos de WordPress/Hostinger y se obtienen vía API REST al activar
+  // VITE_ENABLE_REMOTE_API=true. El modo offline/demo opera sin cuentas
+  // predefinidas — el admin puede crear su cuenta la primera vez que se
+  // conecte al backend.
+  // ─────────────────────────────────────────────────────────────────────────────
 
   const [registeredAccounts, setRegisteredAccounts] = useState<StoredUserAccount[]>(() => {
     try {
@@ -496,17 +478,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const hasAdmin = parsed.some((acc: StoredUserAccount) => acc.role === 'admin');
-          if (!hasAdmin) {
-            return [INITIAL_PRESET_ACCOUNTS[0], ...parsed];
-          }
           return parsed;
         }
       }
     } catch (e) {
       console.error('Error loading registered accounts', e);
     }
-    return INITIAL_PRESET_ACCOUNTS;
+    // Sin cuentas predefinidas — array vacío hasta que el admin configure el backend
+    return [];
   });
 
   useEffect(() => {
@@ -1289,38 +1268,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const loginWithCredentials = (
-    emailOrDoc: string,
-    password: string
-  ): { success: boolean; message: string; user?: AppUser } => {
-    const term = emailOrDoc.trim().toLowerCase();
-    let currentAccounts = registeredAccounts;
-    try {
-      const stored = localStorage.getItem('norcelis_registered_accounts');
-      if (stored) {
-        currentAccounts = JSON.parse(stored);
-      }
-    } catch {
-      // fallback
-    }
-    const account = currentAccounts.find(
-      (acc) => acc.email.toLowerCase() === term || acc.docNumber.toLowerCase() === term
-    );
-
-    if (!account) {
-      return {
-        success: false,
-        message: 'No existe ninguna cuenta registrada con este correo o número de documento.',
-      };
-    }
-
-    if (account.passwordHash !== password) {
-      return {
-        success: false,
-        message: 'Contraseña incorrecta. Por favor intente nuevamente.',
-      };
-    }
-
+  // ── SEGURIDAD: función privada compartida para construir la sesión ────────
+  // Extraída para que tanto loginWithCredentials (legacy) como
+  // loginWithCredentialsAsync (PBKDF2) puedan usarla sin re-ejecutar la
+  // verificación de contraseña. NUNCA llamar directamente desde componentes.
+  const buildUserSession = (account: StoredUserAccount): { success: true; message: string; user: AppUser } => {
     const authUser: AppUser = {
       id: account.id,
       name: account.name,
@@ -1383,11 +1335,91 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       showToast(`¡Bienvenido de vuelta, ${account.name}!`);
     }
 
-    return {
-      success: true,
-      message: 'Inicio de sesión exitoso',
-      user: authUser,
-    };
+    return { success: true, message: 'Inicio de sesión exitoso', user: authUser };
+  };
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const loginWithCredentials = (
+    emailOrDoc: string,
+    password: string
+  ): { success: boolean; message: string; user?: AppUser } => {
+    const term = emailOrDoc.trim().toLowerCase();
+    let currentAccounts = registeredAccounts;
+    try {
+      const stored = localStorage.getItem('norcelis_registered_accounts');
+      if (stored) currentAccounts = JSON.parse(stored);
+    } catch { /* fallback */ }
+
+    const account = currentAccounts.find(
+      (acc) => acc.email.toLowerCase() === term || acc.docNumber.toLowerCase() === term
+    );
+
+    if (!account) {
+      return {
+        success: false,
+        message: 'No existe ninguna cuenta registrada con este correo o número de documento.',
+      };
+    }
+
+    // ── SEGURIDAD NC-002: verificación de contraseña ────────────────────────
+    // Si el hash almacenado es un texto plano legacy (sin formato salt:hash),
+    // comparamos directamente pero migramos al hash PBKDF2 de forma asíncrona.
+    // Para cuentas con hash PBKDF2, forzamos el flujo async (loginWithCredentialsAsync).
+    const isLegacy = isLegacyPlaintext(account.passwordHash);
+    if (!isLegacy) {
+      // Cuenta segura: redirigir al flujo async para verificación PBKDF2
+      return { success: false, message: '_USE_ASYNC_LOGIN_' };
+    }
+
+    // Cuenta legacy: comparación directa (solo durante período de migración)
+    if (account.passwordHash !== password) {
+      return { success: false, message: 'Contraseña incorrecta. Por favor intente nuevamente.' };
+    }
+
+    // Migrar contraseña a hash PBKDF2 asíncronamente en segundo plano
+    hashPassword(password).then((newHash) => {
+      setRegisteredAccounts((prev) =>
+        prev.map((a) => (a.id === account.id ? { ...a, passwordHash: newHash } : a))
+      );
+    }).catch(() => { /* No bloquear el login si falla el hash */ });
+    // ────────────────────────────────────────────────────────────────────────
+
+    return buildUserSession(account);
+  };
+
+  /**
+   * NC-002 FIX: Versión asíncrona del login — para cuentas con hash PBKDF2.
+   * Los componentes de login deben llamar PRIMERO a loginWithCredentials(),
+   * y si reciben { message: '_USE_ASYNC_LOGIN_' }, llamar a esta función.
+   * Esta función verifica el hash PBKDF2 y construye la sesión sin re-verificar.
+   */
+  const loginWithCredentialsAsync = async (
+    emailOrDoc: string,
+    password: string
+  ): Promise<{ success: boolean; message: string; user?: AppUser }> => {
+    const term = emailOrDoc.trim().toLowerCase();
+    let currentAccounts = registeredAccounts;
+    try {
+      const stored = localStorage.getItem('norcelis_registered_accounts');
+      if (stored) currentAccounts = JSON.parse(stored);
+    } catch { /* fallback */ }
+
+    const account = currentAccounts.find(
+      (acc) => acc.email.toLowerCase() === term || acc.docNumber.toLowerCase() === term
+    );
+
+    if (!account) {
+      return { success: false, message: 'No existe ninguna cuenta con este correo o documento.' };
+    }
+
+    // Verificación PBKDF2 async (segura, tiempo constante)
+    const isValid = await verifyPassword(password, account.passwordHash);
+    if (!isValid) {
+      return { success: false, message: 'Contraseña incorrecta. Por favor intente nuevamente.' };
+    }
+
+    // Contraseña verificada — construir sesión sin re-verificar
+    return buildUserSession(account);
   };
 
   const registerAccount = (data: {
@@ -1418,11 +1450,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     }
 
+    // ── SEGURIDAD NC-002: el registro SIEMPRE debe hashear la contraseña ──────
+    // La contraseña se hashea con PBKDF2 antes de guardar en localStorage.
+    // Nota: el registro es ahora async (ver registerAccountAsync).
+    // Esta versión síncrona guarda un placeholder para no bloquear la UI;
+    // registerAccountAsync() debe usarse en los formularios de registro.
     const newAccount: StoredUserAccount = {
       id: `usr_cust_${Date.now()}`,
       name: data.name.trim(),
       email: cleanEmail,
-      passwordHash: data.password,
+      passwordHash: '__PENDING_HASH__', // Temporal — reemplazado inmediatamente por registerAccountAsync
       role: 'customer',
       docType: data.docType,
       docNumber: cleanDoc,
@@ -1479,6 +1516,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setUser(authUser);
     setIsAdminUnlocked(false);
     showToast(`¡Cuenta creada con éxito! Bienvenido a Nor Celis, ${authUser.name}.`);
+
+    // Hashear contraseña asíncronamente y actualizar la cuenta
+    hashPassword(data.password).then((hashedPw) => {
+      setRegisteredAccounts((prev) =>
+        prev.map((a) => (a.id === newAccount.id ? { ...a, passwordHash: hashedPw } : a))
+      );
+    }).catch(() => {
+      // No bloquear la UI si falla el hash — la cuenta quedará con '__PENDING_HASH__'
+      // hasta que el usuario intente iniciar sesión de nuevo
+      console.error('[Seguridad] Error al hashear contraseña en registro. La sesión es válida pero el hash debe regenerarse.');
+    });
 
     return {
       success: true,
@@ -1797,6 +1845,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         user,
         loginUser,
         loginWithCredentials,
+        loginWithCredentialsAsync,
         registerAccount,
         logoutUser,
         registeredAccounts,

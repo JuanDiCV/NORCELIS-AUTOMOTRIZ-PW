@@ -19,5 +19,22 @@ export default defineConfig(() => {
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
+    // ── Configuración de Vitest ─────────────────────────────────────────────
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: ['./src/__tests__/setup.ts'],
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'json', 'html'],
+        include: ['src/**/*.{ts,tsx}'],
+        exclude: [
+          'src/__tests__/**',
+          'src/data/**',
+          'src/main.tsx',
+          'src/types/**',
+        ],
+      },
+    },
   };
 });

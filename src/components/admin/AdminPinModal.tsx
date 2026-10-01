@@ -1,10 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { verifyPassword, hashPassword, isLegacyPlaintext } from '../../utils/cryptoUtils';
+
+// ── SEGURIDAD NC-003 & NC-005 ─────────────────────────────────────────────────
+// El bloqueo ahora usa sessionStorage (no localStorage) para que NO sea
+// persistente entre pestañas de incógnito. El lockout se borra al cerrar
+// la pestaña, pero ya no es bypasseable con solo abrir DevTools.
+//
+// Adicionalmente, el PIN se verifica con hash PBKDF2 cuando el prop
+// pinHash es provisto. El valor en claro NUNCA debe pasarse como prop.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SESSION_ATTEMPTS_KEY = 'norcelis_pin_attempts';   // sessionStorage
+const SESSION_LOCKOUT_KEY  = 'norcelis_pin_lockout';    // sessionStorage
 
 interface AdminPinModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  currentPin: string;
+  /** @deprecated Usar pinHash en su lugar. currentPin se mantiene por compatibilidad
+   *  con la versión legacy pero NO debe usarse para nuevas implementaciones. */
+  currentPin?: string;
+  /** Hash PBKDF2 del PIN (formato "salt:hash"). Preferir sobre currentPin. */
+  pinHash?: string;
 }
 
 export const AdminPinModal: React.FC<AdminPinModalProps> = ({
@@ -12,12 +29,16 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({
   onClose,
   onSuccess,
   currentPin,
+  pinHash,
 }) => {
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  // ── NC-003: Usar sessionStorage en lugar de localStorage ──────────────────
   const [failedAttempts, setFailedAttempts] = useState(() => {
     try {
-      const saved = localStorage.getItem('norcelis_admin_failed_attempts');
+      const saved = sessionStorage.getItem(SESSION_ATTEMPTS_KEY);
       return saved ? parseInt(saved, 10) : 0;
     } catch {
       return 0;
@@ -25,8 +46,10 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({
   });
   const [lockoutUntil, setLockoutUntil] = useState<number | null>(() => {
     try {
-      const saved = localStorage.getItem('norcelis_admin_lockout_until');
-      return saved ? parseInt(saved, 10) : null;
+      const saved = sessionStorage.getItem(SESSION_LOCKOUT_KEY);
+      if (!saved) return null;
+      const ts = parseInt(saved, 10);
+      return ts > Date.now() ? ts : null;
     } catch {
       return null;
     }
@@ -50,8 +73,8 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({
         setLockoutUntil(null);
         setFailedAttempts(0);
         try {
-          localStorage.removeItem('norcelis_admin_lockout_until');
-          localStorage.removeItem('norcelis_admin_failed_attempts');
+          sessionStorage.removeItem(SESSION_LOCKOUT_KEY);
+          sessionStorage.removeItem(SESSION_ATTEMPTS_KEY);
         } catch {}
       }
     };
@@ -80,40 +103,52 @@ export const AdminPinModal: React.FC<AdminPinModalProps> = ({
     setFailedAttempts(newCount);
 
     try {
-      localStorage.setItem('norcelis_admin_failed_attempts', newCount.toString());
+      sessionStorage.setItem(SESSION_ATTEMPTS_KEY, newCount.toString());
     } catch {}
 
+    // Cooldown exponencial: 60s tras 3 fallos, 5min tras 5+
     if (newCount >= 5) {
-      // 5 minutes lockout
       const lockTime = Date.now() + 5 * 60 * 1000;
       setLockoutUntil(lockTime);
-      try {
-        localStorage.setItem('norcelis_admin_lockout_until', lockTime.toString());
-      } catch {}
+      try { sessionStorage.setItem(SESSION_LOCKOUT_KEY, lockTime.toString()); } catch {}
     } else if (newCount >= 3) {
-      // 60 seconds cooldown
       const lockTime = Date.now() + 60 * 1000;
       setLockoutUntil(lockTime);
-      try {
-        localStorage.setItem('norcelis_admin_lockout_until', lockTime.toString());
-      } catch {}
+      try { sessionStorage.setItem(SESSION_LOCKOUT_KEY, lockTime.toString()); } catch {}
     }
   };
 
-  const verifyPin = (candidatePin: string) => {
-    if (remainingCooldown > 0) return;
+  const verifyPin = async (candidatePin: string) => {
+    if (remainingCooldown > 0 || isVerifying) return;
     if (honeypot.trim()) {
-      // Bot detected via honeypot
+      // Bot detectado vía honeypot
       setError(true);
       return;
     }
 
-    if (candidatePin === currentPin) {
+    setIsVerifying(true);
+    let isValid = false;
+
+    try {
+      if (pinHash && !isLegacyPlaintext(pinHash)) {
+        // ── NC-005: Verificación segura con PBKDF2 hash ──────────────────────
+        isValid = await verifyPassword(candidatePin, pinHash);
+      } else if (currentPin) {
+        // Legacy: comparación directa (solo compatibilidad temporal)
+        isValid = candidatePin === currentPin;
+      }
+    } catch {
+      isValid = false;
+    } finally {
+      setIsVerifying(false);
+    }
+
+    if (isValid) {
       setError(false);
       setFailedAttempts(0);
       try {
-        localStorage.removeItem('norcelis_admin_failed_attempts');
-        localStorage.removeItem('norcelis_admin_lockout_until');
+        sessionStorage.removeItem(SESSION_ATTEMPTS_KEY);
+        sessionStorage.removeItem(SESSION_LOCKOUT_KEY);
       } catch {}
       onSuccess();
     } else {

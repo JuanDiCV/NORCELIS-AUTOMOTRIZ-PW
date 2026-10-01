@@ -13,8 +13,10 @@ export interface ChatMessage {
   }[];
 }
 
+// NC-004 SEGURIDAD: "Cuentas bancarias" eliminado de sugerencias públicas.
+// Los datos de pago se obtienen del área privada/cliente autenticado, no del chatbot público.
 const INITIAL_SUGGESTIONS = [
-  'Cuentas bancarias oficiales de la empresa',
+  'Opciones de pago y financiamiento',
   'Tarifas y cobertura de Shalom Express',
   'Métodos de pago Culqi y POS',
   '¿Cómo funciona el Plan Retoma?',
@@ -211,15 +213,19 @@ Estoy listo para orientarte en toda nuestra plataforma web:
   const getSmartOfflineFallback = (query: string): string => {
     const q = query.toLowerCase();
 
-    if (q.includes('cuenta') || q.includes('banco') || q.includes('bcp') || q.includes('bbva') || q.includes('detraccion') || q.includes('ruc')) {
-      return `### Cuentas Bancarias Oficiales - GRUPO MEVAC S.A.C. (RUC 20610829318)
-• **Soles BCP:** 245-9966172-0-49 (CCI: 002-245-00996617204992)
-• **Soles BBVA:** 0011-0248-0100034831 (CCI: 011-248-00010003483125)
-• **Soles Scotiabank:** 000-4949476
-• **Dólares BCP:** 245-9964344-1-94 (CCI: 002-245-00996434419494)
-• **Cuenta Detracciones Banco de la Nación:** 00-772-001053
+    // NC-004 SEGURIDAD: Datos bancarios eliminados del código fuente (CWE-312).
+    // Los números de cuenta son información sensible que NO debe estar en el bundle JS público.
+    // Se obtienen del backend autenticado o se consultan directamente a la empresa.
+    if (q.includes('cuenta') || q.includes('banco') || q.includes('bcp') || q.includes('bbva') || q.includes('detraccion') || q.includes('pago') || q.includes('transferencia')) {
+      return `### Información de Pagos - Nor Celis Automotriz
 
-Puedes adjuntar tu comprobante de pago vía WhatsApp oficial al **965171717** para validación inmediata.`;
+Para proteger la seguridad de tus transacciones, los datos de cuentas bancarias se brindan únicamente por canales oficiales verificados:
+
+• 📱 **WhatsApp Oficial:** [965 171 717](https://wa.me/51965171717) — Te enviamos los datos directamente.
+• 🌐 **Área de cliente:** Ingresa a tu cuenta en esta web para ver los métodos de pago habilitados.
+• 🏢 **Presencial:** Av. Vía de Evitamiento Sur 6003, Cajamarca.
+
+⚠️ **Nunca realices transferencias a cuentas que no provengan de estos canales oficiales.** Ante cualquier duda, verifica con nuestro equipo antes de transferir.`;
     }
 
     if (q.includes('shalom') || q.includes('envio') || q.includes('despacho') || q.includes('provincia')) {

@@ -1,7 +1,8 @@
 import express from 'express';
-import type { Request, Response } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
+import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -14,6 +15,72 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+
+// ── NC-008 SEGURIDAD: Headers de seguridad HTTP ──────────────────────────────
+// Protección contra XSS, clickjacking, MIME sniffing y fugas de referrer.
+app.use((_req: Request, res: Response, next: NextFunction) => {
+  // Previene inyección de contenido en iframes (clickjacking)
+  res.setHeader('X-Frame-Options', 'DENY');
+  // Previene MIME-type sniffing (CWE-430)
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  // Controla referrer information leakage
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  // Restringe acceso a APIs sensibles del dispositivo
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+  // Content-Security-Policy: permite React/Vite en dev; ajustar en producción
+  const csp = [
+    "default-src 'self'",
+    // Scripts: self + inline para Vite HMR en dev; en prod eliminar 'unsafe-inline'
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com",
+    // Estilos: self + inline (Tailwind inyecta estilos en runtime)
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    // Fuentes de Google Fonts
+    "font-src 'self' https://fonts.gstatic.com",
+    // Imágenes: self + data URIs (para thumbnails y avatares en base64)
+    "img-src 'self' data: blob: https:",
+    // Conexiones API: self + Gemini AI
+    "connect-src 'self' https://generativelanguage.googleapis.com",
+    // No iframes externos
+    "frame-src 'none'",
+    // No objetos embebidos
+    "object-src 'none'",
+    // Base URI restringida a self
+    "base-uri 'self'",
+    // Formularios sólo a self
+    "form-action 'self'",
+    // Bloquea contenido mixto HTTP dentro de HTTPS
+    'upgrade-insecure-requests',
+  ].join('; ');
+  res.setHeader('Content-Security-Policy', csp);
+  next();
+});
+
+// ── NC-009 SEGURIDAD: Rate limiting en endpoint del chatbot ──────────────────
+// 20 peticiones por ventana de 5 minutos por IP para prevenir abuso de la API.
+const advisorChatLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutos
+  max: 20,                  // máximo 20 solicitudes por IP en la ventana
+  standardHeaders: 'draft-7', // incluye RateLimit headers (RFC 6585)
+  legacyHeaders: false,
+  message: {
+    error: 'Demasiadas solicitudes. Por favor espera unos minutos antes de volver a chatear con Don Celis.',
+    retryAfter: 300,
+  },
+  // Personaliza la clave por IP (por defecto usa req.ip)
+  keyGenerator: (req: Request) => {
+    // Respeta X-Forwarded-For si viene de un proxy confiable (Hostinger/Nginx)
+    const forwarded = req.headers['x-forwarded-for'];
+    const ip = Array.isArray(forwarded) ? forwarded[0] : (forwarded?.split(',')[0] ?? req.ip ?? 'unknown');
+    return ip.trim();
+  },
+  handler: (_req: Request, res: Response) => {
+    res.status(429).json({
+      error: 'Demasiadas solicitudes. Por favor espera unos minutos antes de volver a chatear con Don Celis.',
+      retryAfter: 300,
+    });
+  },
+  skip: (_req: Request) => process.env.NODE_ENV === 'test', // Desactiva en tests
+});
 
 app.use(express.json());
 
@@ -51,16 +118,15 @@ MÉTODOS DE PAGO Y PASARELA CULQI:
 - TRANSFERENCIA BANCARIA DIRECTA: El cliente puede transferir a nuestras cuentas empresariales oficiales y subir o enviar su voucher por WhatsApp.
 - DETRACCIONES SPOT SUNAT: Contamos con cuenta en el Banco de la Nación para clientes corporativos con facturas afectas a detracción.
 
-CUENTAS BANCARIAS EMPRESARIALES OFICIALES DE AUTOMOTRIZ NOR CELIS:
-• Cuentas en Soles (PEN):
-  - BCP (Banco de Crédito del Perú): Cta Cte 245-9966172-0-49 | CCI: 002-245-00996617204992
-  - BBVA Perú: Cta Cte 0011-0248-0100034831 | CCI: 011-248-000-100034831-26
-  - Scotiabank Perú: Cta Cte 000-4949476 | CCI: 00963200000494947000
-• Cuentas en Dólares (USD):
-  - BCP: Cta Cte 245-9964344-1-94 | CCI: 002-245-00996434419494
-  - BBVA: Cta Cte 0011-0248-0100034874 | CCI: 011-248-000100034874-26
-• Cuenta de Detracciones SUNAT (SPOT):
-  - Banco de la Nación: Cta Cte 00-772-001053
+INFORMACIÓN DE PAGOS Y TRANSFERENCIAS BANCARIAS:
+// NC-004b SEGURIDAD: Los números de cuenta bancaria han sido eliminados del system prompt (CWE-312).
+// El modelo AI NO debe revelar datos bancarios. Redirigir siempre a canales oficiales verificados:
+// - WhatsApp oficial: +51 965 171 717
+// - Área de cliente autenticada en la web
+// - Atención presencial en sede Cajamarca o Lima Norte
+- TRANSFERENCIA BANCARIA DIRECTA: El cliente puede transferir a las cuentas empresariales oficiales.
+  Los datos bancarios verificados se comparten ÚNICAMENTE por WhatsApp oficial o al iniciar sesión en la plataforma.
+- DETRACCIONES SPOT SUNAT: Contamos con cuenta en el Banco de la Nación para clientes corporativos con facturas afectas a detracción. Datos disponibles por canales verificados.
 
 ENVÍOS Y DESPACHO CON SHALOM EXPRESS (COBERTURA A NIVEL NACIONAL):
 Trabajamos en alianza oficial con Shalom Express para despachos seguros a domicilio o recojo en agencias autorizadas Shalom:
@@ -124,7 +190,8 @@ DIRECTRICES DE PERSONALIDAD Y FORMATO DE RESPUESTA:
 5. Si el cliente tiene un auto registrado en su Garaje Virtual o consulta por repuestos, valida compatibilidad con marcas oficiales (Mickey Thompson, Mobil, Keko, LLumar, Trakko, 3M, etc.).`;
 
 // Multi-turn chat route for the Automotive Advisor with resilient cascading fallbacks
-app.post('/api/advisor/chat', async (req: Request, res: Response) => {
+// NC-009: Rate limiter aplicado — 20 req/5min por IP
+app.post('/api/advisor/chat', advisorChatLimiter, async (req: Request, res: Response) => {
   try {
     const { messages, model = 'gemini-3.8-flash', context } = req.body;
 
@@ -245,27 +312,26 @@ function generateAdvisorKnowledgeReply(userText: string, context?: any): string 
 ¿En qué vehículo, repuesto o cotización te puedo ayudar hoy?`;
   }
 
-  // 1. Cuentas Bancarias Oficiales & Detracciones SPOT SUNAT
+  // 1. Pagos y Transferencias Bancarias
+  // NC-004b SEGURIDAD: Números de cuenta eliminados del servidor (CWE-312).
+  // Los datos bancarios se entregan únicamente por canales oficiales verificados.
   if (
     query.includes('cuenta') || query.includes('banco') || query.includes('cci') || query.includes('transferencia') ||
     query.includes('detraccion') || query.includes('detracción') || query.includes('spot') || query.includes('deposito') ||
     query.includes('depósito') || query.includes('bcp') || query.includes('bbva') || query.includes('scotiabank') || query.includes('nacion') || query.includes('nación')
   ) {
-    return `¡Con gusto! Aquí tienes las **Cuentas Bancarias Empresariales Oficiales** de Automotriz Nor Celis:
+    return `### Información de Pagos — Automotriz Nor Celis
 
-**Cuentas Corrientes en Soles (PEN):**
-• **BCP:** Cta. Cte. \`245-9966172-0-49\` | CCI: \`002-245-00996617204992\`
-• **BBVA:** Cta. Cte. \`0011-0248-0100034831\` | CCI: \`011-248-000-100034831-26\`
-• **Scotiabank:** Cta. Cte. \`000-4949476\` | CCI: \`00963200000494947000\`
+Para proteger la seguridad de tus transacciones, los datos de cuentas bancarias se brindan únicamente por canales oficiales verificados:
 
-**Cuentas Corrientes en Dólares (USD):**
-• **BCP:** Cta. Cte. \`245-9964344-1-94\` | CCI: \`002-245-00996434419494\`
-• **BBVA:** Cta. Cte. \`0011-0248-0100034874\` | CCI: \`011-248-000100034874-26\`
+• 📱 **WhatsApp Oficial:** [965 171 717](https://wa.me/51965171717)
+• 🌐 **Área de cliente:** Ingresa a tu cuenta en esta web para ver los datos bancarios verificados.
+• 🏢 **Presencial:** Av. Vía de Evitamiento Sur 6003, Cajamarca.
+• 💳 **Pasarela Culqi:** Paga en línea con tarjeta (Visa, Mastercard, Amex) o Yape de forma segura.
 
-**Cuenta de Detracciones SPOT SUNAT:**
-• **Banco de la Nación:** Cta. \`00-772-001053\` (para operaciones tributarias corporativas).
+⚠️ **Nunca realices transferencias a cuentas que no provengan de estos canales oficiales.**
 
-*Nota:* Al confirmar tu compra en el Carrito o Proforma PDF, puedes copiar las cuentas con 1 clic y enviar tu constancia de abono. ¿Deseas ir al carrito para finalizar tu pedido?`;
+¿Deseas que te orientemos con el pago por Culqi o te conectamos con un asesor por WhatsApp?`;
   }
 
   // 2. Shalom Express - Despachos a Domicilio y Agencias
@@ -304,7 +370,7 @@ Cada envío genera su **Número de Guía Shalom** (ej. \`SHA-CAJ-XXXXXX\`) para 
 • **Terminal POS Inalámbrico Culqi:**
   - Disponible para pagos presenciales en nuestro Showroom de Cajamarca y entregas coordinadas contraentrega.
   - Acepta pagos sin contacto (Contactless), chip y billeteras digitales (Apple Pay / Google Wallet).
-• **Transferencia Bancaria Directa:** BCP, BBVA, Scotiabank y Detracciones Banco de la Nación.
+• **Transferencia Bancaria:** Los datos de cuentas oficiales los recibirás por WhatsApp verificado (+51 965 171 717) o en tu área de cliente.
 
 ¿Deseas completar una compra con Culqi o revisar las opciones en el Carrito?`;
   }
@@ -451,7 +517,7 @@ Puedes reservar tu cita directamente en la sección **Taller & Citas** o indicar
 Te puedo orientar al instante en toda nuestra web:
 • **Vehículos 0 KM 2025 & Seminuevos:** Toyota RAV4 Hybrid (Bono S/ 5,630), Nissan Frontier Pro-4X (Bono S/ 7,500), BMW 520i y Corolla.
 • **Despachos Shalom Express:** A domicilio o agencia a nivel nacional (Cajamarca gratis, Lima S/ 22, Provincias desde S/ 15).
-• **Métodos de Pago:** Pasarela Culqi (tarjetas y Yape), POS inalámbrico y Cuentas Bancarias Oficiales (BCP, BBVA, Scotiabank).
+• **Métodos de Pago:** Pasarela Culqi (tarjetas y Yape), POS inalámbrico y transferencia bancaria (datos por WhatsApp oficial o al ingresar a tu cuenta).
 • **Repuestos y Accesorios Oficiales:** Llantas Mickey Thompson M/T, láminas de seguridad LLumar, lubricantes Mobil 1, aros Black Rhino, frenos Trakko y accesorios Keko.
 • **Simulación de Cuotas & Plan Retoma:** Convenios con BCP, BBVA y Santander desde 20% inicial y bono de hasta S/ 7,500.
 • **Taller Mecánico & Citas:** Mantenimiento por kilometraje, scanner computarizado y alineación 3D.

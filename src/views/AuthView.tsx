@@ -459,34 +459,9 @@ export const AuthView: React.FC = () => {
     }, 450);
   };
 
-  // --- QUICK DEMO ACCREDITATION HANDLER ---
-  const applyDemoAccount = (type: 'admin' | 'customer') => {
-    if (type === 'admin') {
-      setLoginIdentifier('admin@norcelis.pe');
-      setLoginPassword('AdminSecure2025!');
-      setLoginError(null);
-      showToast('Credenciales de Administrador cargadas. Presiona "Ingresar" para validar.');
-    } else {
-      setLoginIdentifier('carlos.mendoza@norcelis.pe');
-      setLoginPassword('ClienteSeguro2025!');
-      setLoginError(null);
-      showToast('Credenciales de Cliente cargadas. Presiona "Ingresar" para validar.');
-    }
-  };
-
-  const instantLoginDemo = (type: 'admin' | 'customer') => {
-    if (type === 'admin') {
-      const res = loginWithCredentials('admin@norcelis.pe', 'AdminSecure2025!');
-      if (res.success) {
-        setCurrentView('admin');
-      }
-    } else {
-      const res = loginWithCredentials('carlos.mendoza@norcelis.pe', 'ClienteSeguro2025!');
-      if (res.success) {
-        setCurrentView('home');
-      }
-    }
-  };
+  // NC-001 SEGURIDAD: Las funciones de demo con credenciales hardcodeadas fueron eliminadas.
+  // No existen cuentas predefinidas — el administrador debe registrarse a través del
+  // backend de WordPress/Hostinger. Contactar al equipo técnico para setup inicial.
 
   return (
     <div className="max-w-6xl mx-auto px-gutter py-10">
@@ -793,74 +768,12 @@ export const AuthView: React.FC = () => {
                       El público general no visualiza el botón de administración en el footer. Al iniciar sesión como Administrador, el acceso al panel se desbloquea de inmediato:
                     </p>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                      {/* Admin Demo Card */}
-                      <div className="p-3 bg-white rounded-xl border border-amber-300 shadow-2xs space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-xs text-[#212955] flex items-center gap-1">
-                            <span className="material-symbols-outlined text-sm text-[#F07F00]">admin_panel_settings</span>
-                            Cuenta Admin
-                          </span>
-                          <span className="text-[9px] font-extrabold bg-[#F07F00] text-white px-1.5 py-0.2 rounded uppercase">
-                            Admin
-                          </span>
-                        </div>
-                        <div className="text-[11px] font-mono text-outline space-y-0.5">
-                          <div><strong className="text-on-surface">Email:</strong> admin@norcelis.pe</div>
-                          <div><strong className="text-on-surface">Clave:</strong> AdminSecure2025!</div>
-                        </div>
-                        <div className="flex gap-1.5 pt-1">
-                          <button
-                            type="button"
-                            onClick={() => applyDemoAccount('admin')}
-                            className="flex-1 py-1.5 text-[10px] font-bold rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors cursor-pointer"
-                          >
-                            Cargar Datos
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => instantLoginDemo('admin')}
-                            className="flex-1 py-1.5 text-[10px] font-bold rounded-lg bg-[#F07F00] hover:bg-[#d97300] text-white transition-colors cursor-pointer flex items-center justify-center gap-1"
-                          >
-                            <span>Entrar Admin</span>
-                            <span className="material-symbols-outlined text-xs">arrow_forward</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Customer Demo Card */}
-                      <div className="p-3 bg-white rounded-xl border border-surface-container shadow-2xs space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-xs text-[#212955] flex items-center gap-1">
-                            <span className="material-symbols-outlined text-sm text-blue-600">person</span>
-                            Cuenta Cliente
-                          </span>
-                          <span className="text-[9px] font-extrabold bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded uppercase">
-                            Cliente
-                          </span>
-                        </div>
-                        <div className="text-[11px] font-mono text-outline space-y-0.5">
-                          <div><strong className="text-on-surface">Email:</strong> carlos.mendoza@norcelis.pe</div>
-                          <div><strong className="text-on-surface">Clave:</strong> ClienteSeguro2025!</div>
-                        </div>
-                        <div className="flex gap-1.5 pt-1">
-                          <button
-                            type="button"
-                            onClick={() => applyDemoAccount('customer')}
-                            className="flex-1 py-1.5 text-[10px] font-bold rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors cursor-pointer"
-                          >
-                            Cargar Datos
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => instantLoginDemo('customer')}
-                            className="flex-1 py-1.5 text-[10px] font-bold rounded-lg bg-primary hover:bg-[#181e40] text-white transition-colors cursor-pointer flex items-center justify-center gap-1"
-                          >
-                            <span>Entrar Cliente</span>
-                            <span className="material-symbols-outlined text-xs">arrow_forward</span>
-                          </button>
-                        </div>
-                      </div>
+                    {/* NC-001 SEGURIDAD: Acceso demo con credenciales eliminado.
+                        Para acceder al panel de administración, registrar una cuenta
+                        a través del backend de WordPress o contactar al equipo técnico. */}
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-800 flex items-start gap-2">
+                      <span className="material-symbols-outlined text-sm text-amber-600 mt-0.5 flex-shrink-0">info</span>
+                      <span>El acceso de administrador se configura desde el backend. Registra tu cuenta o contacta al equipo técnico en <strong>965171717</strong>.</span>
                     </div>
                   </div>
                 </div>
