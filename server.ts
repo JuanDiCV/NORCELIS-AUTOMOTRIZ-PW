@@ -2,7 +2,7 @@ import express from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -66,12 +66,13 @@ const advisorChatLimiter = rateLimit({
     error: 'Demasiadas solicitudes. Por favor espera unos minutos antes de volver a chatear con Don Celis.',
     retryAfter: 300,
   },
-  // Personaliza la clave por IP (por defecto usa req.ip)
+  // Personaliza la clave por IP (respeta X-Forwarded-For para Hostinger/Nginx)
   keyGenerator: (req: Request) => {
-    // Respeta X-Forwarded-For si viene de un proxy confiable (Hostinger/Nginx)
     const forwarded = req.headers['x-forwarded-for'];
-    const ip = Array.isArray(forwarded) ? forwarded[0] : (forwarded?.split(',')[0] ?? req.ip ?? 'unknown');
-    return ip.trim();
+    const rawIp = Array.isArray(forwarded)
+      ? forwarded[0]
+      : (forwarded?.split(',')[0] ?? req.ip ?? 'unknown');
+    return ipKeyGenerator({ ...req, ip: rawIp.trim() } as Request);
   },
   handler: (_req: Request, res: Response) => {
     res.status(429).json({
