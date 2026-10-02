@@ -1,99 +1,109 @@
-# Cross-Selling "Comprados Juntos Frecuentemente" (Estilo Falabella)
+# Plan de Rediseño Integral del Pie de Página (Footer)
 
-Módulo interactivo de venta cruzada (*frequently bought together*) inspirado fielmente en el diseño y arquitectura de Falabella para la página de detalle de repuestos (`PartPdpView`), vinculando productos complementarios por categoría y compatibilidad vehicular con un 5% de descuento promocional por compra en combo.
-
----
-
-## User Review & Critical Decisions
-
-> [!IMPORTANT]
-> Se han incorporado las preferencias confirmadas en la etapa de clarificación interactiva:
-> - **Criterio de recomendación**: Los productos complementarios se seleccionan dinámicamente según la categoría de la pieza y la compatibilidad vehicular del auto/modelo (frenos con líquido/pastillas, suspensión con kits de levante/bujes, aceites con filtros y aditivos).
-> - **Incentivo de compra (Combo)**: Se aplica un 5% de descuento adicional al paquete cuando se adquieren 2 o más productos juntos.
-> - **Ubicación en la vista**: Se posiciona directamente debajo de las especificaciones técnicas y la tabla de compatibilidad OEM de la ficha de producto.
+Rediseño arquitectónico y visual del pie de página de **Nor Celis Automotriz**, tomando como referencia las mejores prácticas de **Falabella Perú** (bloques segmentados, sellos de confianza y libro de reclamaciones oficial), **Safari.com.pe** (logística nacional Shalom/Marvisur, pasarelas peruanas y presencia automotriz) y **HG Performance Autoparts** (estética técnica de alto desempeño y catálogo automotriz estructurado).
 
 ---
 
-## 1. Overview & Core Concept
+## 1. Visión General y Estructura en Bloques
 
-- **Qué hace**: Al ingresar a la vista de detalle de cualquier repuesto, se presenta una cadena horizontal de artículos frecuentemente adquiridos juntos, conectados con signos `+`. El primer elemento es el producto actual (etiquetado como *"Este producto"*), seguido de 2 a 3 complementos específicos y compatibles.
-- **Público objetivo**: Propietarios de vehículos, talleres mecánicos y entusiastas del 4x4 que buscan la solución completa para su mantenimiento o equipamiento sin tener que buscar cada componente por separado.
-- **Valor agregado**: Incrementa el ticket promedio (AOV), simplifica la decisión de compra garantizando compatibilidad y recompensa al cliente con un 5% de descuento automático en el combo.
-
----
-
-## 2. User Experience & Visual Design
-
-### 2.1 Flujo del Usuario
-1. El usuario navega en la ficha de producto (`PartPdpView`) y desciende hasta el bloque situado bajo las especificaciones técnicas.
-2. Encuentra la sección con el ícono de carrito y el titular `Comprados juntos frecuentemente`.
-3. Observa los artículos enlazados con signos `+`, cada uno con su imagen en alta resolución, marca en negrita, nombre comercial, precios (oferta y regular) y un checkbox activo por defecto.
-4. Puede desmarcar o marcar cualquier producto del combo: los montos se recalculan instantáneamente en tiempo real.
-5. El panel lateral/inferior de resumen muestra:
-   - Número de piezas seleccionadas (ej. *Precio total por 3 productos*).
-   - Precio regular tachado y precio final con el 5% de descuento por combo.
-   - Badge distintivo de ahorro (ej. *Ahorras S/ 48.50 comprando en combo*).
-   - Botón de acción principal: `Agregar seleccionados al carro`.
-6. Al presionar el botón, todos los artículos seleccionados se añaden al carrito de compras en una sola transacción fluida con notificación toast de confirmación.
-
-### 2.2 Identidad Visual y Estilo Falabella
-- **Contenedor Principal (`btr-m-container`)**: Fondo blanco limpio (`bg-white`), borde sutil (`border border-slate-200/90`), esquinas redondeadas institucionales (`rounded-2xl`) y sombra suave (`shadow-sm`).
-- **Encabezado (`btr-h-container`)**: Ícono de carrito corporativo en azul marino institucional (`#212955`) o naranja (`#F07F00`), titular tipográfico `Comprados juntos frecuentemente` en peso bold/black.
-- **Fichas de Producto (`btr-pods`)**:
-  - Badge `"Este producto"` en gris oscuro o azul para el artículo en visualización.
-  - Checkbox interactivo estilo Falabella con tilde verde/azul para activar o desactivar cada ítem.
-  - Imagen en contenedor cuadrado con fondo neutro y efecto hover zoom sutil.
-  - Tipografía clara: Marca en mayúsculas pequeñas, nombre de repuesto limitado a 2 líneas y precio de oferta destacado en rojo/naranja Falabella (`text-[#F07F00]` / `text-rose-600`) y precio normal tachado.
-  - Conector `+`: Círculo gris/azul con símbolo de adición centrado entre cada tarjeta.
-- **Bloque de Compra en Combo (`btr-f-container`)**:
-  - Caja de totalización destacada con cálculo dinámico.
-  - Botón prominente `btn-primary` en azul marino corporativo (`bg-[#212955] hover:bg-[#181e40]`) o naranja oficial (`#F07F00`), de mínimo 48px de altura y feedback de click.
-
----
-
-## 3. Key Product Decisions & Trade-Offs
-
-- **Generador Inteligente de Complementos vs Lista Estática**:
-  - *Decisión*: Implementar una función algorítmica `getCrossSellingComplements(currentPart, catalog)` que prioriza repuestos del mismo sistema vehicular (ej. Frenos -> Líquido de frenos Brembo DOT4 + Discos ranurados; Suspensión -> Kit de bujes + Amortiguadores complementarios; Aceites -> Filtro de aceite OEM + Filtro de aire), garantizando que todo producto del catálogo cuente siempre con complementos reales y funcionales sin excepciones.
-  - *Razón*: Escalable, automático para los repuestos existentes y futuros, y altamente coherente para el comprador automotriz.
-- **Cálculo de Descuento en Carrito**:
-  - *Decisión*: El 5% de descuento por combo se aplica proporcionalmente a los artículos seleccionados al agregarse al carrito o como precio de combo especial, con desglose transparente de cuánto ahorró el cliente.
-
----
-
-## 4. Technical Architecture & Data Strategy
+Siguiendo las preferencias del usuario, el nuevo pie de página reemplazará la tonalidad naranja uniforme por una **composición segmentada y moderna en gris grafito profundo (`#16191f` / `#1e2229`) y azul marino automotriz (`#1b2247` / `#212955`)**, con acentos en blanco y naranja corporativo (`#F07F00`).
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                       PartPdpView                           │
-│  (Ficha Técnica / Compatibilidad / Galería / Acción Compra) │
-└──────────────────────────────┬──────────────────────────────┘
-                               │
-                               ▼
-┌─────────────────────────────────────────────────────────────┐
-│                 FrequentlyBoughtTogether                    │
-│      Componente Cross-Selling (Estilo Falabella btr-*)      │
-├─────────────────────────────────────────────────────────────┤
-│ • getCrossSellingComplements(currentPart, autoParts)        │
-│ • State: selectedBundleSkus (Set<string>)                   │
-│ • Checkbox toggle handler con recalculo reactivo            │
-├─────────────────────────────────────────────────────────────┤
-│  [Este producto]   [+]   [Complemento 1]   [+]   [Comp. 2]  │
-│      [✓]                     [✓]                    [✓]     │
-├─────────────────────────────────────────────────────────────┤
-│ Resumen Combo: Subtotal S/ XXX | -5% OFF | Total S/ YYY     │
-│ [ Botón: Agregar seleccionados al carro (3 productos) ]    │
-└──────────────────────────────┬──────────────────────────────┘
-                               │
-                               ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    AppContext / CartStore                   │
-│           addToCart (iterativo / batch de ítems)            │
-│               Notificación Toast de Confirmación            │
-└─────────────────────────────────────────────────────────────┘
++-----------------------------------------------------------------------------------+
+| BLOQUE 1: CINTILLO DE CONFIANZA & VALOR AUTOMOTRIZ (Gris Grafito Claro #222731)     |
+| [Shalom Envíos Perú]  |  [Pagos 100% Seguros]  |  [Garantía OEM]  |  [Asesoría 24/7] |
++-----------------------------------------------------------------------------------+
+| BLOQUE 2: 4 COLUMNAS DE NAVEGACIÓN Y ATENCIÓN (Gris Grafito Oscuro #181c24)       |
+|  Col 1: Catálogo & Repuestos    |  Col 2: Vehículos & Taller                     |
+|  Col 3: Atención al Cliente     |  Col 4: Legales & Información Corporativa      |
++-----------------------------------------------------------------------------------+
+| BLOQUE 3: CONFIANZA NACIONAL & TRANSACCIONAL (Azul Marino Corporativo #1b2247)    |
+|  [Medios de Pago: Yape, Plin, Visa, Mastercard, BCP, BBVA]                        |
+|  [Logística: Shalom Express, Marvisur, Olva Courier]                              |
+|  [Badge Oficial Libro de Reclamaciones Virtual - Ley N° 29571 / INDECOPI]          |
++-----------------------------------------------------------------------------------+
+| BLOQUE 4: CRÉDITOS CORPORATIVOS & LEGALES (Gris Grafito Profundo #101216)          |
+|  RUC: 20541982311 | Nor Celis Automotriz S.A.C. | SSL 256-Bit | Acceso Admin     |
++-----------------------------------------------------------------------------------+
 ```
 
-### Componentes y Archivos Clave:
-1. `src/components/FrequentlyBoughtTogether.tsx`: Nuevo componente modular reutilizable que implementa la UI exacta mostrada en las capturas de pantalla de Falabella (incluyendo estructura de clases, tarjetas pod, conectores `+`, checkboxes y barra de totalización).
-2. `src/utils/crossSellingHelper.ts`: Función de búsqueda heurística que extrae de `autoParts` los mejores 2 a 3 repuestos complementarios basados en compatibilidad vehicular y subsistemas automotrices relacionados.
-3. `src/views/PartPdpView.tsx`: Inserción del componente debajo de la sección de especificaciones técnicas y compatibilidad multimarca.
+---
+
+## 2. Detalle de los Bloques Funcionales
+
+### Bloque 1: Cintillo de Propuesta de Valor y Confianza (Estilo Falabella & HG Performance)
+- **Fondo:** `#20252e` con bordes sutiles y micro-interacciones.
+- **Cuatro pilares de servicio:**
+  1. **Envíos a Nivel Nacional:** Alianza estratégica con **Shalom Express**, Marvisur y Olva Courier con código de rastreo en línea.
+  2. **Pagos 100% Seguros:** Transacciones encriptadas con verificación antifraude (Culqi, Yape, Plin, Pasarelas bancarias).
+  3. **Garantía Oficial OEM:** Repuestos originales certificados por fabricantes y garantía de taller en cada servicio.
+  4. **Asesoría Técnica Especializada:** Canal directo de ingenieros vía WhatsApp para validar chasis/VIN y compatibilidad.
+
+### Bloque 2: Las 4 Columnas Tradicionales de Navegación
+- **Fondo:** `#171a21` con tipografía limpia en blanco hueso y gris perla (`text-slate-300`), títulos en mayúsculas seminegrita con acento sutil:
+  1. **Columna 1: Catálogo & Repuestos**
+     - Kits de Freno & Pastillas Cerámicas
+     - Baterías Bosch AGM Libres de Mantenimiento
+     - Amortiguadores KYB & Suspensión
+     - Kits de Afinamiento & Filtros OEM
+     - Alquiler de Maquinaria Pesada *(Nuevo acceso directo a vista `machinery`)*
+     - Búsqueda Rápida por Chasis / VIN
+  2. **Columna 2: Vehículos & Servicios de Taller**
+     - Vehículos 2025 Nuevos (0 km)
+     - Seminuevos Certificados (Inspección 150 Puntos)
+     - Tratamiento Cerámico & Detailing
+     - Enllantado & Alineamiento Láser 3D
+     - Plan Retoma & Tasación Online (+S/ 7,500)
+     - Simulador de Crédito Multibanco
+  3. **Columna 3: Atención al Cliente & Sedes**
+     - Sede Cajamarca: Av. Vía de Evitamiento Sur N° 6003
+     - Horario: Lun-Sáb 7:30 AM - 7:00 PM | Dom 9:00 AM - 2:00 PM
+     - Central Telefónica: (076) 364-520
+     - WhatsApp Oficial: +51 987 654 321
+     - Rastrear Mi Pedido (Acceso a seguimiento en vivo)
+     - Preguntas Frecuentes & Guía de Compra
+  4. **Columna 4: Legales & Información Institucional**
+     - Términos y Condiciones Generales
+     - Políticas de Privacidad (Ley N° 29733)
+     - Políticas de Devolución & Garantías
+     - Emisión de Boletas y Facturas Electrónicas
+     - Sobre Nor Celis Automotriz (Historia y trayectoria)
+     - Redes Sociales Oficiales (Facebook, Instagram, TikTok con enlaces directos)
+
+### Bloque 3: Módulo Destacado de Transaccionalidad & Libro de Reclamaciones (Estilo Safari.com.pe & Falabella)
+- **Fondo:** `#1b2247` (Azul corporativo oscuro) con separadores segmentados:
+  - **Medios de Pago Destacados:**
+    - Insignias visuales nítidas para **Yape**, **Plin**, **Visa**, **Mastercard**, **American Express**, **Diners Club**, **Transferencias BCP, BBVA e Interbank**, y **Culqi**.
+    - Texto descriptivo: *"Aceptamos todas las tarjetas de crédito, débito y billeteras digitales nacionales"*.
+  - **Logística & Despacho Nacional:**
+    - Insignia destacada de **Shalom Express** con su característico estilo visual, acompañada de **Marvisur** y **Olva Courier**.
+    - Botón de acción rápida: *"Rastrear Guía Shalom"*.
+  - **Sello Oficial Libro de Reclamaciones (Conforme a D.S. 011-2011-PCM / Indecopi):**
+    - Recuadro visual reconocible con icono de libro oficial, leyenda legal y botón interactivo que abre la vista de reclamos (`claims`).
+    - Hoja de reclamación virtual conforme a la normativa peruana.
+
+### Bloque 4: Barra Institucional y Copyright
+- **Fondo:** `#0f1115` (Gris grafito ultra-profundo).
+- **Contenido:**
+  - Razón Social: **Nor Celis Automotriz S.A.C.**
+  - **RUC: 20541982311**
+  - Dirección legal: Av. Vía de Evitamiento Sur 6003, Cajamarca, Perú.
+  - Indicador de seguridad: Cifrado SSL 256-Bit y Pasarela Segura.
+  - Acceso discreto para Administradores autenticados (`Panel Admin`).
+
+---
+
+## 3. Plan de Modificaciones de Archivos
+
+1. **`src/components/Footer.tsx`**:
+   - Reemplazar la estructura actual por el nuevo diseño modular en 4 bloques segmentados.
+   - Integrar los enlaces a las vistas existentes (`setCurrentView`, `navigateToTracking`, `navigateToTerms`, `setIsGarageModalOpen`, `setSelectedPartSku`).
+   - Añadir enlace al nuevo apartado de *Alquiler de Maquinaria Pesada* (`setCurrentView('machinery')`).
+   - Implementar insignias de pago (Visa, Mastercard, Yape, Plin, BCP, BBVA, etc.) con diseño limpio y accesible.
+   - Implementar el recuadro estilizado del **Libro de Reclamaciones** inspirado en el modelo de Falabella y Safari Perú.
+   - Conservar la integración del logotipo `NorCelisLogo`, redes sociales y acceso al panel de administración para roles autorizados.
+
+2. **Verificación y Calidad**:
+   - Ejecutar `lint_applet` para garantizar que no existan errores de sintaxis, variables huérfanas ni tipados incorrectos.
+   - Ejecutar `compile_applet` para certificar una compilación limpia sin advertencias destructivas.
+   - Probar la responsividad en resoluciones móviles, tablets y escritorio.
