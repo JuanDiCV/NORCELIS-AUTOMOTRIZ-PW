@@ -14,6 +14,7 @@ import { VehiclePdpView } from './views/VehiclePdpView';
 import { PartsCatalogView } from './views/PartsCatalogView';
 import { PartPdpView } from './views/PartPdpView';
 import { ServicesView } from './views/ServicesView';
+import { MachineryRentalView } from './views/MachineryRentalView';
 import { WishlistView } from './views/WishlistView';
 import { CartView } from './views/CartView';
 import { AuthView } from './views/AuthView';
@@ -78,6 +79,7 @@ const MainContent: React.FC = () => {
         {currentView === 'parts' && <PartsCatalogView />}
         {currentView === 'part-pdp' && <PartPdpView />}
         {currentView === 'services' && <ServicesView />}
+        {currentView === 'machinery' && <MachineryRentalView />}
         {currentView === 'wishlist' && <WishlistView />}
         {currentView === 'cart' && <CartView />}
         {currentView === 'login' && <AuthView />}

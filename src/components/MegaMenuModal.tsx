@@ -293,6 +293,51 @@ export const MegaMenuModal: React.FC<MegaMenuModalProps> = ({ isOpen, onClose })
       ],
     },
     {
+      id: 'alquiler-maquinaria',
+      name: 'Alquiler de Maquinaria',
+      iconName: 'precision_manufacturing',
+      bannerTitle: 'Alquiler de Maquinaria Pesada & Equipos',
+      bannerSubtitle: 'Excavadoras, Retroexcavadoras, Cargadores y Volquetes con Certificación Minera en Cajamarca',
+      quickBrands: [
+        { name: 'Caterpillar', brand: 'Caterpillar' },
+        { name: 'Komatsu', brand: 'Komatsu' },
+        { name: 'Volvo', brand: 'Volvo' },
+        { name: 'Bobcat', brand: 'Bobcat' },
+      ],
+      grid: [
+        {
+          title: 'Excavación y Movimiento',
+          seeAllQuery: { view: 'machinery' },
+          items: [
+            { name: 'Excavadoras sobre Orugas CAT / Komatsu', view: 'machinery' },
+            { name: 'Retroexcavadoras 4x4 CAT 420F / JCB', view: 'machinery' },
+            { name: 'Motoniveladoras CAT 140K', view: 'machinery' },
+            { name: 'Ver Toda la Maquinaria Pesada', view: 'machinery' },
+          ],
+        },
+        {
+          title: 'Carga, Volquetes y Compactación',
+          seeAllQuery: { view: 'machinery' },
+          items: [
+            { name: 'Cargadores Frontales CAT 950H 3.3m³', view: 'machinery' },
+            { name: 'Camiones Volquete Volvo FMX 15m³', view: 'machinery' },
+            { name: 'Rodillos Dynapac CA250D Liso/Pata', view: 'machinery' },
+            { name: 'Minicargadores Bobcat S650 High-Flow', view: 'machinery' },
+          ],
+        },
+        {
+          title: 'Servicios para Obra y Minería',
+          seeAllQuery: { view: 'machinery' },
+          items: [
+            { name: 'Operadores Certificados SCTR', view: 'machinery' },
+            { name: 'Traslado en Cama Baja / Lowboy', view: 'machinery' },
+            { name: 'Póliza TREC Minera Yanacocha / Michiquillay', view: 'machinery' },
+            { name: 'Cotizar Alquiler por Día o Mes', view: 'machinery' },
+          ],
+        },
+      ],
+    },
+    {
       id: 'repuestos-autopartes',
       name: 'Repuestos y Autopartes',
       iconName: 'build_circle',

@@ -27,7 +27,7 @@ import {
   OfficialQuoteIcon,
 } from './AutoIcons';
 
-type NavDropdownType = 'none' | 'vehiculos' | 'repuestos' | 'finanzas' | 'taller';
+type NavDropdownType = 'none' | 'vehiculos' | 'repuestos' | 'finanzas' | 'taller' | 'maquinaria';
 
 export const Header: React.FC = () => {
   const {
@@ -169,7 +169,18 @@ export const Header: React.FC = () => {
       q === 'taller mecánico' ||
       q === 'servicios de taller';
 
-    if (isServiceSpecific) {
+    const isMachinerySpecific =
+      q.includes('maquinaria') ||
+      q.includes('excavadora') ||
+      q.includes('retroexcavadora') ||
+      q.includes('volquete') ||
+      q.includes('cargador') ||
+      q.includes('alquiler');
+
+    if (isMachinerySpecific) {
+      setCurrentView('machinery');
+      showToast(`Mostrando alquiler de maquinaria para "${query}"`);
+    } else if (isServiceSpecific) {
       setCurrentView('services');
       showToast(`Mostrando servicios de taller para "${query}"`);
     } else if (isVehicleSpecific) {
@@ -636,6 +647,13 @@ export const Header: React.FC = () => {
           </button>
           <button
             type="button"
+            onClick={() => setCurrentView('machinery')}
+            className="px-2.5 py-1 rounded-lg bg-surface-container text-[#212955] whitespace-nowrap shrink-0 hover:bg-[#F07F00] hover:text-white transition-colors cursor-pointer"
+          >
+            Maquinaria Pesada
+          </button>
+          <button
+            type="button"
             onClick={() => setCurrentView('trade-in')}
             className="px-2.5 py-1 rounded-lg bg-surface-container text-[#212955] whitespace-nowrap shrink-0 hover:bg-[#F07F00] hover:text-white transition-colors cursor-pointer"
           >
@@ -646,10 +664,14 @@ export const Header: React.FC = () => {
 
       {/* Subnav Desktop with Interactive Hover Mega Dropdowns */}
       <div
-        className="border-t border-surface-container bg-surface-container-lowest relative px-4 sm:px-6 lg:px-8 hidden md:block"
+        className="border-t border-surface-container bg-surface-container-lowest relative px-2 sm:px-4 lg:px-6 hidden md:block"
         onMouseLeave={handleMouseLeave}
       >
-        <nav aria-label="Categorías principales" className="max-w-7xl mx-auto flex items-center justify-between xl:justify-center gap-1.5 sm:gap-2.5 lg:gap-4 xl:gap-6 py-2.5 whitespace-nowrap overflow-x-auto scrollbar-none">
+        <nav
+          aria-label="Categorías principales"
+          style={{ justifyContent: 'safe center' }}
+          className="max-w-7xl mx-auto flex items-center justify-start lg:justify-center gap-1 sm:gap-1.5 lg:gap-2 xl:gap-3 py-2 px-2 sm:px-3 whitespace-nowrap overflow-x-auto scrollbar-none"
+        >
           {/* Autopartes y Accesorios Nav Item */}
           <div
             className="relative shrink-0"
@@ -657,17 +679,17 @@ export const Header: React.FC = () => {
           >
             <button
               onClick={() => navigateToPartsCatalog('todos')}
-              className={`px-2.5 sm:px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
+              className={`px-2 lg:px-2.5 xl:px-3 py-1.5 min-h-[40px] rounded-xl transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
                 currentView === 'parts' || currentView === 'part-pdp' || activeDropdown === 'repuestos'
                   ? 'bg-primary/10 text-primary font-bold'
                   : 'text-[#212955] hover:text-primary hover:bg-surface-container-low'
               }`}
             >
-              <AutoPartsIcon size={20} className="text-[#F07F00] shrink-0" />
-              <span className="font-bold text-[13px] sm:text-[13.5px] lg:text-sm xl:text-[15px] tracking-tight whitespace-nowrap text-[#212955]">
+              <AutoPartsIcon size={18} className="text-[#F07F00] shrink-0" />
+              <span className="font-bold text-[11.5px] lg:text-[12px] xl:text-[12.5px] uppercase tracking-normal whitespace-nowrap text-[#212955]">
                 Autopartes y Accesorios
               </span>
-              <AppleChevronDownIcon size={15} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
+              <AppleChevronDownIcon size={14} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
             </button>
           </div>
 
@@ -678,17 +700,17 @@ export const Header: React.FC = () => {
           >
             <button
               onClick={() => setCurrentView('services')}
-              className={`px-2.5 sm:px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
+              className={`px-2 lg:px-2.5 xl:px-3 py-1.5 min-h-[40px] rounded-xl transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
                 currentView === 'services' || activeDropdown === 'taller'
                   ? 'bg-primary/10 text-primary font-bold'
                   : 'text-[#212955] hover:text-primary hover:bg-surface-container-low'
               }`}
             >
-              <WorkshopServiceIcon size={20} className="text-[#212955] shrink-0" />
-              <span className="font-bold text-[13px] sm:text-[13.5px] lg:text-sm xl:text-[15px] tracking-tight whitespace-nowrap text-[#212955]">
+              <WorkshopServiceIcon size={18} className="text-[#212955] shrink-0" />
+              <span className="font-bold text-[11.5px] lg:text-[12px] xl:text-[12.5px] uppercase tracking-normal whitespace-nowrap text-[#212955]">
                 Servicios de Taller
               </span>
-              <AppleChevronDownIcon size={15} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
+              <AppleChevronDownIcon size={14} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
             </button>
           </div>
 
@@ -699,17 +721,39 @@ export const Header: React.FC = () => {
           >
             <button
               onClick={() => setCurrentView('cars')}
-              className={`px-2.5 sm:px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
+              className={`px-2 lg:px-2.5 xl:px-3 py-1.5 min-h-[40px] rounded-xl transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
                 currentView === 'cars' || currentView === 'vehicle-pdp' || activeDropdown === 'vehiculos'
                   ? 'bg-primary/10 text-primary font-bold'
                   : 'text-[#212955] hover:text-primary hover:bg-surface-container-low'
               }`}
             >
-              <VehicleIcon size={20} className="text-[#212955] shrink-0" />
-              <span className="font-bold text-[13px] sm:text-[13.5px] lg:text-sm xl:text-[15px] tracking-tight whitespace-nowrap text-[#212955]">
-                Vehículos 2025
+              <VehicleIcon size={18} className="text-[#212955] shrink-0" />
+              <span className="font-bold text-[11.5px] lg:text-[12px] xl:text-[12.5px] uppercase tracking-normal whitespace-nowrap text-[#212955]">
+                Vehículos
               </span>
-              <AppleChevronDownIcon size={15} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
+              <AppleChevronDownIcon size={14} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
+            </button>
+          </div>
+
+          {/* Alquiler de Maquinarias Pesadas Nav Item */}
+          <div
+            className="relative shrink-0"
+            onMouseEnter={() => handleMouseEnter('maquinaria')}
+          >
+            <button
+              onClick={() => setCurrentView('machinery')}
+              className={`px-2 lg:px-2.5 xl:px-3 py-1.5 min-h-[40px] rounded-xl transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
+                currentView === 'machinery' || activeDropdown === 'maquinaria'
+                  ? 'bg-primary/10 text-primary font-bold'
+                  : 'text-[#212955] hover:text-primary hover:bg-surface-container-low'
+              }`}
+              title="Alquiler de maquinaria pesada certificada para minería y construcción en Cajamarca"
+            >
+              <span className="material-symbols-outlined text-[18px] text-[#F07F00] shrink-0">precision_manufacturing</span>
+              <span className="font-bold text-[11.5px] lg:text-[12px] xl:text-[12.5px] uppercase tracking-normal whitespace-nowrap text-[#212955]">
+                Alquiler de Maquinaria
+              </span>
+              <AppleChevronDownIcon size={14} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
             </button>
           </div>
 
@@ -720,31 +764,31 @@ export const Header: React.FC = () => {
           >
             <button
               onClick={() => setCurrentView('trade-in')}
-              className={`px-2.5 sm:px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
+              className={`px-2 lg:px-2.5 xl:px-3 py-1.5 min-h-[40px] rounded-xl transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
                 currentView === 'trade-in' || currentView === 'financing' || activeDropdown === 'finanzas'
                   ? 'bg-primary/10 text-primary font-bold'
                   : 'text-[#212955] hover:text-primary hover:bg-surface-container-low'
               }`}
             >
-              <PlanRetomaIcon size={20} className="text-[#F07F00] shrink-0" />
-              <span className="text-[#212955] font-bold text-[13px] sm:text-[13.5px] lg:text-sm xl:text-[15px] tracking-tight whitespace-nowrap">
+              <PlanRetomaIcon size={18} className="text-[#F07F00] shrink-0" />
+              <span className="text-[#212955] font-bold text-[11.5px] lg:text-[12px] xl:text-[12.5px] uppercase tracking-normal whitespace-nowrap">
                 Plan Retoma &amp; Cuotas
               </span>
-              <AppleChevronDownIcon size={15} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
+              <AppleChevronDownIcon size={14} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
             </button>
           </div>
 
           {/* Sede Cajamarca */}
           <button
             onClick={() => setCurrentView('locations')}
-            className={`px-2.5 sm:px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
+            className={`px-2 lg:px-2.5 xl:px-3 py-1.5 min-h-[40px] rounded-xl transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
               currentView === 'locations'
                 ? 'bg-primary text-white font-bold'
                 : 'text-[#212955] hover:text-primary hover:bg-surface-container-low'
             }`}
           >
-            <DealershipPinIcon size={20} className="text-[#F07F00] shrink-0" />
-            <span className="font-bold text-[13px] sm:text-[13.5px] lg:text-sm xl:text-[15px] tracking-tight whitespace-nowrap text-[#212955]">
+            <DealershipPinIcon size={18} className="text-[#F07F00] shrink-0" />
+            <span className="font-bold text-[11.5px] lg:text-[12px] xl:text-[12.5px] uppercase tracking-normal whitespace-nowrap text-[#212955]">
               Sede Cajamarca
             </span>
           </button>
@@ -752,15 +796,15 @@ export const Header: React.FC = () => {
           {/* Rastrear Pedido Desktop Link */}
           <button
             onClick={() => navigateToTracking()}
-            className={`px-2.5 sm:px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
+            className={`px-2 lg:px-2.5 xl:px-3 py-1.5 min-h-[40px] rounded-xl transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer ${
               currentView === 'order-tracking'
                 ? 'bg-[#F07F00] text-white font-bold shadow-xs'
                 : 'text-[#212955] hover:text-[#F07F00] hover:bg-[#F07F00]/10 font-bold'
             }`}
             title="Seguimiento de envíos Shalom en tiempo real"
           >
-            <span className="material-symbols-outlined text-[20px] text-[#F07F00] shrink-0">local_shipping</span>
-            <span className="font-bold text-[13px] sm:text-[13.5px] lg:text-sm xl:text-[15px] tracking-tight whitespace-nowrap">
+            <span className="material-symbols-outlined text-[18px] text-[#F07F00] shrink-0">local_shipping</span>
+            <span className="font-bold text-[11.5px] lg:text-[12px] xl:text-[12.5px] uppercase tracking-normal whitespace-nowrap">
               Rastrear Pedido
             </span>
           </button>
@@ -901,6 +945,122 @@ export const Header: React.FC = () => {
                 >
                   <span>Tasar mi auto ahora</span>
                   <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeDropdown === 'maquinaria' && (
+          <div
+            className="absolute top-full left-0 w-full bg-white shadow-2xl border-b border-surface-container z-40 py-6 animate-in fade-in slide-in-from-top-2 duration-150"
+            onMouseEnter={() => handleMouseEnter('maquinaria')}
+            onMouseLeave={handleMouseLeave}
+          >
+            <div className="max-w-7xl mx-auto px-gutter grid grid-cols-4 gap-6">
+              <div className="space-y-3">
+                <div className="text-xs font-bold text-primary border-b border-surface-container pb-1 uppercase tracking-wider flex items-center gap-1">
+                  <span className="material-symbols-outlined text-sm text-[#F07F00]">construction</span>
+                  Excavación y Movimiento
+                </div>
+                <ul className="space-y-2 text-xs">
+                  <li>
+                    <button
+                      onClick={() => { setCurrentView('machinery'); setActiveDropdown('none'); }}
+                      className="text-left font-medium text-on-surface hover:text-primary hover:underline cursor-pointer"
+                    >
+                      Excavadoras sobre Orugas (CAT / Komatsu)
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => { setCurrentView('machinery'); setActiveDropdown('none'); }}
+                      className="text-left font-medium text-on-surface hover:text-primary hover:underline cursor-pointer"
+                    >
+                      Retroexcavadoras 4x4 (CAT 420F / JCB)
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => { setCurrentView('machinery'); setActiveDropdown('none'); }}
+                      className="text-left font-medium text-on-surface hover:text-primary hover:underline cursor-pointer"
+                    >
+                      Motoniveladoras CAT 140K VHP
+                    </button>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="space-y-3">
+                <div className="text-xs font-bold text-primary border-b border-surface-container pb-1 uppercase tracking-wider flex items-center gap-1">
+                  <span className="material-symbols-outlined text-sm text-[#F07F00]">local_shipping</span>
+                  Carga, Volquetes y Rodillos
+                </div>
+                <ul className="space-y-2 text-xs">
+                  <li>
+                    <button
+                      onClick={() => { setCurrentView('machinery'); setActiveDropdown('none'); }}
+                      className="text-left font-medium text-on-surface hover:text-primary hover:underline cursor-pointer"
+                    >
+                      Cargadores Frontales CAT 950H 3.3m³
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => { setCurrentView('machinery'); setActiveDropdown('none'); }}
+                      className="text-left font-medium text-on-surface hover:text-primary hover:underline cursor-pointer"
+                    >
+                      Camiones Volquete Volvo FMX 15m³
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => { setCurrentView('machinery'); setActiveDropdown('none'); }}
+                      className="text-left font-medium text-on-surface hover:text-primary hover:underline cursor-pointer"
+                    >
+                      Rodillos Dynapac CA250D Liso/Pata
+                    </button>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="space-y-3">
+                <div className="text-xs font-bold text-primary border-b border-surface-container pb-1 uppercase tracking-wider flex items-center gap-1">
+                  <span className="material-symbols-outlined text-sm text-emerald-600">verified_user</span>
+                  Estándares para Minería
+                </div>
+                <ul className="space-y-2 text-xs text-slate-600">
+                  <li className="flex items-center gap-1.5">
+                    <span className="text-emerald-500 font-bold">✓</span>
+                    <span>Operadores homologados SCTR</span>
+                  </li>
+                  <li className="flex items-center gap-1.5">
+                    <span className="text-emerald-500 font-bold">✓</span>
+                    <span>Póliza de seguro TREC minera</span>
+                  </li>
+                  <li className="flex items-center gap-1.5">
+                    <span className="text-emerald-500 font-bold">✓</span>
+                    <span>Traslado inmediato en cama baja</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-[#212955] p-4 rounded-2xl text-white space-y-2 flex flex-col justify-between shadow-md">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#F07F00] block">
+                    Cotización Rápida
+                  </span>
+                  <h4 className="text-sm font-bold mt-0.5">¿Requieres maquinaria en obra?</h4>
+                  <p className="text-[11px] text-slate-300 mt-1">
+                    Tarifas por hora, día o mes con soporte técnico in situ 24/7 en Cajamarca.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setCurrentView('machinery'); setActiveDropdown('none'); }}
+                  className="w-full py-2 bg-[#F07F00] hover:bg-[#d97300] text-white text-xs font-bold rounded-xl text-center shadow-xs cursor-pointer transition-colors"
+                >
+                  Ver Catálogo: Alquiler de Maquinaria →
                 </button>
               </div>
             </div>
@@ -1361,6 +1521,15 @@ export const Header: React.FC = () => {
                 <VehicleIcon size={16} />
               </AppleIconBadge>
               <span>Vehículos</span>
+            </button>
+            <button
+              onClick={() => { setCurrentView('machinery'); setIsMobileNavOpen(false); }}
+              className="p-3 min-h-[46px] flex items-center gap-2 text-left bg-surface-container-low rounded-xl cursor-pointer hover:bg-surface-container transition-colors"
+            >
+              <AppleIconBadge variant="subtle-orange" size="sm">
+                <span className="material-symbols-outlined text-[16px] text-[#F07F00]">precision_manufacturing</span>
+              </AppleIconBadge>
+              <span>Maquinaria Pesada</span>
             </button>
           </div>
 

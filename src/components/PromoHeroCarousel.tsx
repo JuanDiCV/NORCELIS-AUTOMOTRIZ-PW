@@ -109,17 +109,13 @@ export const PromoHeroCarousel: React.FC = () => {
                     : 'opacity-0 z-0 pointer-events-none'
                 }`}
               >
-                {/* Background Automotive Image with High Visibility & Subtle Corporate Gradient */}
-                <div className="absolute inset-0 z-0 overflow-hidden bg-[#212955]/[0.98]">
+                {/* Background Panoramic Automotive Image - Sin Opacidad (100% nítida, brillante y limpia) */}
+                <div className="absolute inset-0 z-0 overflow-hidden">
                   <img
                     src={slide.backgroundImage}
                     alt={slide.categoryTitle}
-                    className="w-full h-full object-cover object-center opacity-[0.98] transform scale-100 group-hover:scale-105 transition-transform duration-1000 ease-out"
+                    className="w-full h-full object-cover object-center opacity-100 transform scale-100 group-hover:scale-105 transition-transform duration-1000 ease-out"
                   />
-                  {/* Gradiente de Azul Empresarial (#212955) al 98% de opacidad */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#212955]/[0.98] via-[#212955]/70 to-transparent transition-opacity duration-700" />
-                  {/* Gradiente sutil inferior hacia transparente para soporte de controles */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#212955]/[0.98] via-transparent to-transparent pointer-events-none" />
                 </div>
 
                 {/* Slide Interactive Content */}

@@ -5,6 +5,7 @@ export type ViewMode =
   | 'parts' 
   | 'part-pdp'
   | 'services' 
+  | 'machinery'
   | 'wishlist' 
   | 'cart' 
   | 'login'
@@ -200,6 +201,40 @@ export interface WorkshopService {
   priceUnitText?: string;
   estimatedDuration: string;
   image: string;
+}
+
+export interface MachineryItem {
+  id: string;
+  code: string;
+  name: string;
+  category: 'movimiento_tierras' | 'excavacion' | 'carga_transporte' | 'compactacion' | 'otros';
+  categoryLabel: string;
+  brand: 'Caterpillar' | 'Komatsu' | 'Volvo' | 'JCB' | 'Bobcat' | 'Scania' | string;
+  model: string;
+  year: number;
+  image: string;
+  hourlyRateSoles: number;
+  dailyRateSoles: number;
+  monthlyRateSoles: number;
+  powerHp: number;
+  operatingWeightTons: number;
+  bucketCapacityM3?: number;
+  payloadCapacityTons?: number;
+  availability: 'Disponible Inmediato' | 'Disponible en 24h' | 'En Operación / Reservar';
+  fuelType: 'Diésel B5' | 'Diésel Ultra';
+  operatorIncluded: boolean;
+  telematicsGps: boolean;
+  miningCertification: boolean;
+  shortDescription: string;
+  fullSpecs: {
+    engineModel: string;
+    maxReachOrDepth?: string;
+    speedMax?: string;
+    transmissionType?: string;
+    hydraulicFlow?: string;
+    dimensionsLxWxH?: string;
+  };
+  suitableApplications: string[];
 }
 
 export interface CartItem {

@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { AUTO_PARTS_DATA } from '../data/mockData';
 import { SafeImage } from '../components/SafeImage';
 import { FocalZoomImage } from '../components/FocalZoomImage';
+import { FrequentlyBoughtTogether } from '../components/FrequentlyBoughtTogether';
 
 export const PartPdpView: React.FC = () => {
   const {
@@ -487,6 +488,12 @@ export const PartPdpView: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* SECTION: Cross-Selling Comprados Juntos Frecuentemente (Estilo Falabella) */}
+        <FrequentlyBoughtTogether
+          currentPart={part}
+          allParts={autoParts && autoParts.length > 0 ? autoParts : AUTO_PARTS_DATA}
+        />
       </div>
   );
 };
