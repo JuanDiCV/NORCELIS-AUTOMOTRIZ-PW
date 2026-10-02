@@ -3,6 +3,7 @@
  * Configura el entorno de pruebas con jsdom y mocks de Web Crypto API.
  */
 import '@testing-library/jest-dom';
+import { beforeEach } from 'vitest';
 
 // Polyfill de Web Crypto API para jsdom (Node.js tiene crypto.subtle en v18+)
 import { webcrypto } from 'node:crypto';

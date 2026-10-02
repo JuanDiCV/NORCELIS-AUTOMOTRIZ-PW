@@ -219,14 +219,14 @@ export const HomeView: React.FC = () => {
                   </p>
 
                   {/* Action Link like "LEARN MORE ↗" in reference image */}
-                  <div className="pt-3 border-t border-white/20 w-full flex items-center justify-between">
-                    <span className="font-bold tracking-wider text-xs sm:text-sm text-white group-hover:text-[#F07F00] flex items-center justify-center gap-1.5 transition-colors text-center flex-1">
+                  <div className="pt-3 border-t border-white/20 w-full flex items-center justify-between gap-2">
+                    <span className="font-bold tracking-wider text-xs sm:text-sm text-white group-hover:text-[#F07F00] inline-flex items-center justify-center gap-1.5 transition-colors text-center whitespace-nowrap">
                       <span>VER REPUESTOS</span>
                       <span className="text-sm sm:text-base group-hover:translate-x-1 group-hover:-translate-y-0.5 transition-transform duration-300">
                         ↗
                       </span>
                     </span>
-                    <span className="text-[11px] font-bold text-white/60 group-hover:text-white transition-colors shrink-0 text-center">
+                    <span className="text-[11px] font-bold text-white/60 group-hover:text-white transition-colors shrink-0 text-center whitespace-nowrap">
                       {cat.count}
                     </span>
                   </div>

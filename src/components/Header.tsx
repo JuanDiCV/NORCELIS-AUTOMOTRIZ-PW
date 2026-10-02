@@ -646,10 +646,10 @@ export const Header: React.FC = () => {
 
       {/* Subnav Desktop with Interactive Hover Mega Dropdowns */}
       <div
-        className="border-t border-surface-container bg-surface-container-lowest relative px-2 sm:px-4 lg:px-6 hidden md:block"
+        className="border-t border-surface-container bg-surface-container-lowest relative px-4 sm:px-6 lg:px-8 hidden md:block"
         onMouseLeave={handleMouseLeave}
       >
-        <nav aria-label="Categorías principales" className="max-w-7xl mx-auto flex items-center justify-center gap-2 sm:gap-3 lg:gap-4 xl:gap-6 py-2.5 whitespace-nowrap overflow-x-auto scrollbar-none">
+        <nav aria-label="Categorías principales" className="max-w-7xl mx-auto flex items-center justify-between xl:justify-center gap-1.5 sm:gap-2.5 lg:gap-4 xl:gap-6 py-2.5 whitespace-nowrap overflow-x-auto scrollbar-none">
           {/* Autopartes y Accesorios Nav Item */}
           <div
             className="relative shrink-0"
@@ -657,14 +657,14 @@ export const Header: React.FC = () => {
           >
             <button
               onClick={() => navigateToPartsCatalog('todos')}
-              className={`px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
+              className={`px-2.5 sm:px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
                 currentView === 'parts' || currentView === 'part-pdp' || activeDropdown === 'repuestos'
                   ? 'bg-primary/10 text-primary font-bold'
                   : 'text-[#212955] hover:text-primary hover:bg-surface-container-low'
               }`}
             >
               <AutoPartsIcon size={20} className="text-[#F07F00] shrink-0" />
-              <span className="font-bold text-xs lg:text-[13px] xl:text-sm tracking-wide whitespace-nowrap text-[#212955]">
+              <span className="font-bold text-[13px] sm:text-[13.5px] lg:text-sm xl:text-[15px] tracking-tight whitespace-nowrap text-[#212955]">
                 Autopartes y Accesorios
               </span>
               <AppleChevronDownIcon size={15} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
@@ -678,14 +678,14 @@ export const Header: React.FC = () => {
           >
             <button
               onClick={() => setCurrentView('services')}
-              className={`px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
+              className={`px-2.5 sm:px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
                 currentView === 'services' || activeDropdown === 'taller'
                   ? 'bg-primary/10 text-primary font-bold'
                   : 'text-[#212955] hover:text-primary hover:bg-surface-container-low'
               }`}
             >
               <WorkshopServiceIcon size={20} className="text-[#212955] shrink-0" />
-              <span className="font-bold text-xs lg:text-[13px] xl:text-sm tracking-wide whitespace-nowrap text-[#212955]">
+              <span className="font-bold text-[13px] sm:text-[13.5px] lg:text-sm xl:text-[15px] tracking-tight whitespace-nowrap text-[#212955]">
                 Servicios de Taller
               </span>
               <AppleChevronDownIcon size={15} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
@@ -699,14 +699,14 @@ export const Header: React.FC = () => {
           >
             <button
               onClick={() => setCurrentView('cars')}
-              className={`px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
+              className={`px-2.5 sm:px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
                 currentView === 'cars' || currentView === 'vehicle-pdp' || activeDropdown === 'vehiculos'
                   ? 'bg-primary/10 text-primary font-bold'
                   : 'text-[#212955] hover:text-primary hover:bg-surface-container-low'
               }`}
             >
               <VehicleIcon size={20} className="text-[#212955] shrink-0" />
-              <span className="font-bold text-xs lg:text-[13px] xl:text-sm tracking-wide whitespace-nowrap text-[#212955]">
+              <span className="font-bold text-[13px] sm:text-[13.5px] lg:text-sm xl:text-[15px] tracking-tight whitespace-nowrap text-[#212955]">
                 Vehículos 2025
               </span>
               <AppleChevronDownIcon size={15} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
@@ -720,14 +720,14 @@ export const Header: React.FC = () => {
           >
             <button
               onClick={() => setCurrentView('trade-in')}
-              className={`px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
+              className={`px-2.5 sm:px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
                 currentView === 'trade-in' || currentView === 'financing' || activeDropdown === 'finanzas'
                   ? 'bg-primary/10 text-primary font-bold'
                   : 'text-[#212955] hover:text-primary hover:bg-surface-container-low'
               }`}
             >
               <PlanRetomaIcon size={20} className="text-[#F07F00] shrink-0" />
-              <span className="text-[#212955] font-bold text-xs lg:text-[13px] xl:text-sm tracking-wide whitespace-nowrap">
+              <span className="text-[#212955] font-bold text-[13px] sm:text-[13.5px] lg:text-sm xl:text-[15px] tracking-tight whitespace-nowrap">
                 Plan Retoma &amp; Cuotas
               </span>
               <AppleChevronDownIcon size={15} className="text-[#9D9D9C] transition-transform duration-200 shrink-0" />
@@ -737,14 +737,14 @@ export const Header: React.FC = () => {
           {/* Sede Cajamarca */}
           <button
             onClick={() => setCurrentView('locations')}
-            className={`px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
+            className={`px-2.5 sm:px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
               currentView === 'locations'
                 ? 'bg-primary text-white font-bold'
                 : 'text-[#212955] hover:text-primary hover:bg-surface-container-low'
             }`}
           >
             <DealershipPinIcon size={20} className="text-[#F07F00] shrink-0" />
-            <span className="font-bold text-xs lg:text-[13px] xl:text-sm tracking-wide whitespace-nowrap text-[#212955]">
+            <span className="font-bold text-[13px] sm:text-[13.5px] lg:text-sm xl:text-[15px] tracking-tight whitespace-nowrap text-[#212955]">
               Sede Cajamarca
             </span>
           </button>
@@ -752,7 +752,7 @@ export const Header: React.FC = () => {
           {/* Rastrear Pedido Desktop Link */}
           <button
             onClick={() => navigateToTracking()}
-            className={`px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
+            className={`px-2.5 sm:px-3 lg:px-3.5 py-2 min-h-[44px] rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
               currentView === 'order-tracking'
                 ? 'bg-[#F07F00] text-white font-bold shadow-xs'
                 : 'text-[#212955] hover:text-[#F07F00] hover:bg-[#F07F00]/10 font-bold'
@@ -760,7 +760,7 @@ export const Header: React.FC = () => {
             title="Seguimiento de envíos Shalom en tiempo real"
           >
             <span className="material-symbols-outlined text-[20px] text-[#F07F00] shrink-0">local_shipping</span>
-            <span className="font-bold text-xs lg:text-[13px] xl:text-sm tracking-wide whitespace-nowrap">
+            <span className="font-bold text-[13px] sm:text-[13.5px] lg:text-sm xl:text-[15px] tracking-tight whitespace-nowrap">
               Rastrear Pedido
             </span>
           </button>

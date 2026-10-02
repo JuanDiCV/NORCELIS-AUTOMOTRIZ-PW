@@ -72,7 +72,7 @@ const advisorChatLimiter = rateLimit({
     const rawIp = Array.isArray(forwarded)
       ? forwarded[0]
       : (forwarded?.split(',')[0] ?? req.ip ?? 'unknown');
-    return ipKeyGenerator({ ...req, ip: rawIp.trim() } as Request);
+    return ipKeyGenerator(rawIp.trim());
   },
   handler: (_req: Request, res: Response) => {
     res.status(429).json({
