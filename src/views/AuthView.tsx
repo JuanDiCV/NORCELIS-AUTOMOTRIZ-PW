@@ -774,7 +774,7 @@ export const AuthView: React.FC = () => {
                         a través del backend de WordPress o contactar al equipo técnico. */}
                     <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-800 flex items-start gap-2">
                       <span className="material-symbols-outlined text-sm text-amber-600 mt-0.5 flex-shrink-0">info</span>
-                      <span>El acceso de administrador se configura desde el backend. Registra tu cuenta o contacta al equipo técnico en <strong>965171717</strong>.</span>
+                      <span>El acceso de administrador se configura desde el backend. Registra tu cuenta o contacta al equipo técnico en <strong>910 446 152</strong>.</span>
                     </div>
                   </div>
                 </div>

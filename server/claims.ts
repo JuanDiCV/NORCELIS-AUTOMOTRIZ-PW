@@ -111,3 +111,35 @@ export const recordMailStatus = (code: string, mail: { status: string; consumerC
     console.error('No se pudo registrar el estado de correo del reclamo:', err);
   }
 };
+
+// ── Freno anti-spam por destinatario ──────────────────────────────────────────
+// El formulario envía un correo a la dirección que escribe el visitante; sin freno, alguien podría
+// usarlo para llenar de correos la bandeja de un tercero. Por correo: 3 hojas cada 24 horas.
+
+const THROTTLE_WINDOW_MS = 24 * 60 * 60 * 1000;
+const THROTTLE_MAX_PER_EMAIL = 3;
+const THROTTLE_MAX_TOTAL = 300; // tope global diario: protege la reputación del dominio de correo
+const emailHits = new Map<string, number[]>();
+
+/** true si se permite registrar otra hoja para este correo (y la cuenta como uso). */
+export const allowClaimForEmail = (email: string, now: number = Date.now()): boolean => {
+  const key = email.trim().toLowerCase();
+  const recent = (emailHits.get(key) ?? []).filter((t) => now - t < THROTTLE_WINDOW_MS);
+
+  let total = 0;
+  for (const [k, hits] of emailHits) {
+    const alive = hits.filter((t) => now - t < THROTTLE_WINDOW_MS);
+    if (alive.length === 0) emailHits.delete(k);
+    else total += alive.length;
+  }
+
+  if (recent.length >= THROTTLE_MAX_PER_EMAIL || total >= THROTTLE_MAX_TOTAL) {
+    emailHits.set(key, recent);
+    return false;
+  }
+  emailHits.set(key, [...recent, now]);
+  return true;
+};
+
+/** Solo para pruebas. */
+export const resetClaimThrottle = (): void => emailHits.clear();

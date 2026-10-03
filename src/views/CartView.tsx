@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { summarizeFit } from '../utils/compatibilityEngine';
 import type { AutoPart } from '../types';
 import { useApp } from '../context/AppContext';
+import { validateCoupon, redeemCoupon } from '../services/couponsService';
+import type { CouponCartItem } from '../utils/couponLogic';
 import { SafeImage } from '../components/SafeImage';
 import { SHALOM_DESTINATIONS, CAJAMARCA_FREE_DELIVERY_MIN_SOLES } from '../data/bankAccountsData';
 import { CulqiPaymentModal } from '../components/checkout/CulqiPaymentModal';
@@ -31,8 +33,15 @@ export const CartView: React.FC = () => {
   const [customerAddress, setCustomerAddress] = useState<string>('');
   const [customerDniRuc, setCustomerDniRuc] = useState<string>(user.isLoggedIn && user.docNumber ? user.docNumber : '');
 
-  const [couponCode, setCouponCode] = useState('NORCELIS5');
-  const [couponApplied, setCouponApplied] = useState(true);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponChecking, setCouponChecking] = useState(false);
+  const [couponError, setCouponError] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    name: string;
+    benefit: string;
+    discountSoles: number;
+  } | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<'culqi' | 'transfer' | 'yape'>('culqi');
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isCulqiModalOpen, setIsCulqiModalOpen] = useState(false);
@@ -55,20 +64,68 @@ export const CartView: React.FC = () => {
     selectedDestObj.id === 'cajamarca-local' &&
     cartSubtotalSoles < CAJAMARCA_FREE_DELIVERY_MIN_SOLES;
 
-  // Discount calculation
-  const discountAmount = couponApplied ? Math.round(cartSubtotalSoles * 0.05) : 0;
-  const finalTotalSoles = cartSubtotalSoles - discountAmount + shippingCost;
+  // Cupones: el descuento lo decide siempre el servidor (vigencia, topes, límites de uso)
+  const couponItems: CouponCartItem[] = cartItems.map((it) => ({
+    type: it.type,
+    priceSoles: it.priceSoles,
+    quantity: it.quantity,
+  }));
+  const couponItemsKey = JSON.stringify(couponItems);
+  // Identificador para límites por cliente: correo de la cuenta o DNI/RUC del pedido
+  const couponCustomerKey: string | null = (user.isLoggedIn && user.email ? user.email : customerDniRuc) || null;
+
+  const discountAmount = appliedCoupon?.discountSoles ?? 0;
+  const finalTotalSoles = Math.max(0, cartSubtotalSoles - discountAmount + shippingCost);
   const finalTotalUsd = Math.round(finalTotalSoles / 3.75);
 
-  const handleApplyCoupon = (e: React.FormEvent) => {
+  const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (couponCode.toUpperCase() === 'NORCELIS5') {
-      setCouponApplied(true);
-      showToast('¡Cupón NORCELIS5 aplicado! 5% de descuento adicional');
+    const code = couponCode.trim();
+    if (!code) {
+      setCouponError('Ingresa un código de cupón.');
+      return;
+    }
+    setCouponChecking(true);
+    setCouponError('');
+    const result = await validateCoupon(code, couponItems, couponCustomerKey);
+    setCouponChecking(false);
+
+    if (result.valid) {
+      setAppliedCoupon({
+        code: result.coupon.code,
+        name: result.coupon.name,
+        benefit: result.coupon.benefit,
+        discountSoles: result.discountSoles,
+      });
+      setCouponCode('');
+      showToast(`¡Cupón ${result.coupon.code} aplicado! Ahorras S/ ${result.discountSoles.toLocaleString()}`);
     } else {
-      showToast('Cupón inválido o expirado');
+      setCouponError(result.message);
+      showToast(result.message);
     }
   };
+
+  // Si cambia el carrito o el cliente, el cupón se revalida (puede dejar de aplicar o cambiar de monto)
+  useEffect(() => {
+    if (!appliedCoupon) return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const result = await validateCoupon(appliedCoupon.code, couponItems, couponCustomerKey);
+      if (cancelled) return;
+      if (!result.valid) {
+        setAppliedCoupon(null);
+        setCouponError(result.message);
+        showToast(`Se quitó el cupón ${appliedCoupon.code}: ${result.message}`);
+      } else if (result.discountSoles !== appliedCoupon.discountSoles) {
+        setAppliedCoupon({ ...appliedCoupon, discountSoles: result.discountSoles });
+      }
+    }, 400);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [couponItemsKey, couponCustomerKey, appliedCoupon?.code]);
 
   const savePlacedOrderRecord = (orderNum: string, guide?: string, paymentLabel?: string, totalAmount?: number) => {
     try {
@@ -94,6 +151,8 @@ export const CartView: React.FC = () => {
           image: it.image,
         })),
         totalSoles: totalAmount || finalTotalSoles,
+        couponCode: appliedCoupon?.code,
+        discountSoles: appliedCoupon?.discountSoles,
         timeline: [
           {
             title: 'Pedido Confirmado y Pago Registrado',
@@ -126,17 +185,44 @@ export const CartView: React.FC = () => {
     clearCart();
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (selectedPayment === 'culqi') {
+      // Antes de pagar, se confirma que el cupón siga vigente y con el mismo descuento
+      if (appliedCoupon) {
+        const check = await validateCoupon(appliedCoupon.code, couponItems, couponCustomerKey);
+        if (!check.valid) {
+          setAppliedCoupon(null);
+          setCouponError(check.message);
+          showToast(`${check.message} Se quitó el cupón; revisa el total antes de pagar.`);
+          return;
+        }
+        if (check.discountSoles !== appliedCoupon.discountSoles) {
+          setAppliedCoupon({ ...appliedCoupon, discountSoles: check.discountSoles });
+          showToast('El descuento del cupón cambió. Revisa el total antes de pagar.');
+          return;
+        }
+      }
       setIsCulqiModalOpen(true);
       return;
     }
 
     setIsCheckingOut(true);
-    setTimeout(() => {
-      setIsCheckingOut(false);
+    setTimeout(async () => {
       const generatedOrder = `NC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
       const generatedGuide = deliveryMethod === 'shipping' ? `SHA-CAJ-${Math.floor(100000 + Math.random() * 900000)}` : undefined;
+
+      // El uso del cupón se consume al confirmar el pedido
+      if (appliedCoupon) {
+        const redeemed = await redeemCoupon(appliedCoupon.code, couponItems, couponCustomerKey, generatedOrder);
+        if (!redeemed.valid) {
+          setIsCheckingOut(false);
+          setAppliedCoupon(null);
+          setCouponError(redeemed.message);
+          showToast(`${redeemed.message} Se quitó el cupón; revisa el total y confirma nuevamente.`);
+          return;
+        }
+      }
+      setIsCheckingOut(false);
 
       savePlacedOrderRecord(generatedOrder, generatedGuide, selectedPayment === 'transfer' ? 'Transferencia Bancaria Oficial' : 'Yape / Plin Directo', finalTotalSoles);
 
@@ -153,10 +239,18 @@ export const CartView: React.FC = () => {
     }, 1000);
   };
 
-  const handleCulqiSuccess = (details: { method: string; transactionId: string; amount: number }) => {
+  const handleCulqiSuccess = async (details: { method: string; transactionId: string; amount: number }) => {
     setIsCulqiModalOpen(false);
     const generatedOrder = `NC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
     const generatedGuide = deliveryMethod === 'shipping' ? `SHA-CAJ-${Math.floor(100000 + Math.random() * 900000)}` : undefined;
+
+    // El pago ya se realizó: si el cupón dejó de estar disponible justo ahora, se avisa pero el pedido no se pierde
+    if (appliedCoupon) {
+      const redeemed = await redeemCoupon(appliedCoupon.code, couponItems, couponCustomerKey, generatedOrder);
+      if (!redeemed.valid) {
+        showToast(`Atención: ${redeemed.message} Un asesor revisará el descuento de tu pedido.`);
+      }
+    }
 
     savePlacedOrderRecord(generatedOrder, generatedGuide, details.method, details.amount);
 
@@ -584,22 +678,48 @@ export const CartView: React.FC = () => {
                 <input
                   type="text"
                   value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                  onChange={(e) => {
+                    setCouponCode(e.target.value.toUpperCase());
+                    setCouponError('');
+                  }}
                   placeholder="Cupón de descuento"
-                  className="flex-1 min-h-[44px] bg-surface-container-low border border-surface-container rounded-xl px-3.5 py-2.5 text-xs font-mono uppercase focus:outline-none focus:border-primary"
+                  aria-label="Código de cupón"
+                  maxLength={24}
+                  autoComplete="off"
+                  disabled={!!appliedCoupon}
+                  className="flex-1 min-h-[44px] bg-surface-container-low border border-surface-container rounded-xl px-3.5 py-2.5 text-xs font-mono uppercase focus:outline-none focus:border-primary disabled:opacity-60"
                 />
                 <button
                   type="submit"
-                  className="min-h-[44px] bg-primary hover:bg-primary-container text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer shrink-0"
+                  disabled={couponChecking || !!appliedCoupon}
+                  className="min-h-[44px] bg-primary hover:bg-primary-container disabled:opacity-60 disabled:cursor-not-allowed text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer shrink-0"
                 >
-                  Aplicar
+                  {couponChecking ? 'Validando...' : 'Aplicar'}
                 </button>
               </form>
 
-              {couponApplied && (
+              {couponError && !appliedCoupon && (
+                <div role="alert" className="text-[11px] text-red-700 bg-red-50 p-2.5 rounded-xl border border-red-200">
+                  {couponError}
+                </div>
+              )}
+
+              {appliedCoupon && (
                 <div className="text-[11px] text-emerald-700 bg-emerald-50 p-2.5 rounded-xl border border-emerald-200 flex items-center justify-between min-h-[44px]">
-                  <span>Código NORCELIS5 (-5%) aplicado</span>
-                  <button onClick={() => setCouponApplied(false)} className="min-w-[44px] min-h-[44px] flex items-center justify-center text-error font-bold text-lg cursor-pointer">×</button>
+                  <span>
+                    Cupón <strong>{appliedCoupon.code}</strong> ({appliedCoupon.benefit}) aplicado
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="Quitar cupón"
+                    onClick={() => {
+                      setAppliedCoupon(null);
+                      setCouponError('');
+                    }}
+                    className="min-w-[44px] min-h-[44px] flex items-center justify-center text-error font-bold text-lg cursor-pointer"
+                  >
+                    ×
+                  </button>
                 </div>
               )}
 
@@ -610,9 +730,9 @@ export const CartView: React.FC = () => {
                   <span className="font-mono text-on-surface font-semibold">S/ {cartSubtotalSoles.toLocaleString()}</span>
                 </div>
 
-                {couponApplied && (
+                {appliedCoupon && (
                   <div className="flex justify-between text-emerald-700 font-semibold">
-                    <span>Descuento NORCELIS5 (5%):</span>
+                    <span>Descuento {appliedCoupon.code}:</span>
                     <span className="font-mono">-S/ {discountAmount.toLocaleString()}</span>
                   </div>
                 )}

@@ -27,7 +27,7 @@ describe('datos legales de la empresa', () => {
   });
 
   it('el código no contiene datos antiguos de la empresa', () => {
-    const banned = ['20541982311', '20608754129', '20601234567', 'Evitamiento Sur 6003', 'EVITAMIENTO SUR 6003', '51987654321', 'Alfredo Mendiola'];
+    const banned = ['20541982311', '20608754129', '20601234567', 'Evitamiento Sur 6003', 'EVITAMIENTO SUR 6003', '51987654321', 'Alfredo Mendiola', '965171717', '965 171 717', '51965171717'];
     const hits: string[] = [];
     for (const file of walk(path.resolve(__dirname, '..'))) {
       const text = fs.readFileSync(file, 'utf8');

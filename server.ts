@@ -7,8 +7,14 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { lookupPlate } from './server/plateLookup.ts';
-import { parseClaim, saveClaim, recordMailStatus } from './server/claims.ts';
+import { parseClaim, saveClaim, recordMailStatus, allowClaimForEmail } from './server/claims.ts';
+import { sanitizeAdvisorMessages, sanitizeAdvisorContext } from './server/advisorInput.ts';
 import { sendClaimEmails } from './server/mailer.ts';
+import {
+  listCoupons, createCoupon, updateCoupon, deleteCoupon, couponRedemptions,
+  validateCouponForCart, redeemCoupon,
+} from './server/coupons.ts';
+import { isAdminConfigured, verifyAdminPassword, issueAdminToken, requireAdmin, TOKEN_TTL_MS } from './server/adminAuth.ts';
 
 dotenv.config();
 process.env.DISABLE_HMR = 'true';
@@ -17,46 +23,84 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+const isProduction = process.env.NODE_ENV === 'production';
+
+// No revelar el framework
+app.disable('x-powered-by');
+
+// IP real del cliente. Solo se confía en cabeceras X-Forwarded-For si la conexión viene de un proxy
+// declarado (por defecto, el propio servidor: Nginx/LiteSpeed en la misma máquina). Si el atacante
+// pudiera fijar esa cabecera, evitaría todos los límites de peticiones.
+//   TRUST_PROXY=loopback (por defecto) | número de proxies (ej. 1) | lista de IPs/subredes | false
+const parseTrustProxy = (raw: string | undefined): boolean | number | string => {
+  if (raw === undefined || raw.trim() === '') return 'loopback';
+  const v = raw.trim().toLowerCase();
+  if (v === 'false' || v === '0') return false;
+  if (v === 'true') return 1; // "true" confiaría en cualquier cabecera: se limita a un salto
+  return /^\d+$/.test(v) ? parseInt(v, 10) : raw.trim();
+};
+app.set('trust proxy', parseTrustProxy(process.env.TRUST_PROXY));
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 // ── NC-008 SEGURIDAD: Headers de seguridad HTTP ──────────────────────────────
-// Protección contra XSS, clickjacking, MIME sniffing y fugas de referrer.
-app.use((_req: Request, res: Response, next: NextFunction) => {
-  // Previene inyección de contenido en iframes (clickjacking)
+// En producción la política de contenido es estricta: sin scripts en línea ni eval, de modo que un
+// fallo de XSS no pueda ejecutar código. En desarrollo se relaja solo lo que Vite necesita.
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  isProduction ? "script-src 'self'" : "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com data:",
+  "img-src 'self' data: blob: https:",
+  "connect-src 'self'",
+  "frame-src 'none'",
+  "frame-ancestors 'none'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  ...(isProduction ? ['upgrade-insecure-requests'] : []),
+].join('; ');
+
+app.use((req: Request, res: Response, next: NextFunction) => {
   res.setHeader('X-Frame-Options', 'DENY');
-  // Previene MIME-type sniffing (CWE-430)
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  // Controla referrer information leakage
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  // Restringe acceso a APIs sensibles del dispositivo
-  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
-  // Content-Security-Policy: permite React/Vite en dev; ajustar en producción
-  const csp = [
-    "default-src 'self'",
-    // Scripts: self + inline para Vite HMR en dev; en prod eliminar 'unsafe-inline'
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com",
-    // Estilos: self + inline (Tailwind inyecta estilos en runtime)
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    // Fuentes de Google Fonts
-    "font-src 'self' https://fonts.gstatic.com",
-    // Imágenes: self + data URIs (para thumbnails y avatares en base64)
-    "img-src 'self' data: blob: https:",
-    // Conexiones API: self + Gemini AI
-    "connect-src 'self' https://generativelanguage.googleapis.com",
-    // No iframes externos
-    "frame-src 'none'",
-    // No objetos embebidos
-    "object-src 'none'",
-    // Base URI restringida a self
-    "base-uri 'self'",
-    // Formularios sólo a self
-    "form-action 'self'",
-    // Bloquea contenido mixto HTTP dentro de HTTPS
-    'upgrade-insecure-requests',
-  ].join('; ');
-  res.setHeader('Content-Security-Policy', csp);
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Cross-Origin-Resource-Policy', 'same-site');
+  res.setHeader('Content-Security-Policy', CONTENT_SECURITY_POLICY);
+  if (isProduction) {
+    // Obliga a HTTPS durante 1 año (no se usa en desarrollo para no atascar localhost)
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  // Las respuestas de la API (cupones, reclamos, sesiones) nunca deben quedar en cachés
+  if (req.path.startsWith('/api/')) {
+    res.setHeader('Cache-Control', 'no-store');
+  }
   next();
 });
+
+// Las peticiones que modifican datos solo se aceptan desde nuestro propio sitio: si el navegador
+// indica un Origin distinto, otra página está intentando usar este servidor a nombre del visitante.
+app.use('/api', (req: Request, res: Response, next: NextFunction) => {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+  const origin = req.headers.origin;
+  if (origin) {
+    let sameOrigin = false;
+    try {
+      sameOrigin = new URL(origin).host === req.headers.host;
+    } catch {
+      sameOrigin = false;
+    }
+    if (!sameOrigin) {
+      res.status(403).json({ error: 'Origen no permitido.' });
+      return;
+    }
+  }
+  next();
+});
+
+// Clave de límite por cliente: la IP resuelta por Express (ver trust proxy), nunca la cabecera cruda
+const clientKey = (req: Request): string => ipKeyGenerator(req.ip ?? 'unknown');
 
 // ── NC-009 SEGURIDAD: Rate limiting en endpoint del chatbot ──────────────────
 // 20 peticiones por ventana de 5 minutos por IP para prevenir abuso de la API.
@@ -70,13 +114,7 @@ const advisorChatLimiter = rateLimit({
     retryAfter: 300,
   },
   // Personaliza la clave por IP (respeta X-Forwarded-For para Hostinger/Nginx)
-  keyGenerator: (req: Request) => {
-    const forwarded = req.headers['x-forwarded-for'];
-    const rawIp = Array.isArray(forwarded)
-      ? forwarded[0]
-      : (forwarded?.split(',')[0] ?? req.ip ?? 'unknown');
-    return ipKeyGenerator(rawIp.trim());
-  },
+  keyGenerator: clientKey,
   handler: (_req: Request, res: Response) => {
     res.status(429).json({
       error: 'Demasiadas solicitudes. Por favor espera unos minutos antes de volver a chatear con Don Celis.',
@@ -86,7 +124,7 @@ const advisorChatLimiter = rateLimit({
   skip: (_req: Request) => process.env.NODE_ENV === 'test', // Desactiva en tests
 });
 
-app.use(express.json());
+app.use(express.json({ limit: '100kb', strict: true }));
 
 // Initialize GoogleGenAI server-side with required User-Agent telemetry
 const ai = new GoogleGenAI({
@@ -201,13 +239,7 @@ const plateLookupLimiter = rateLimit({
   max: 12,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  keyGenerator: (req: Request) => {
-    const forwarded = req.headers['x-forwarded-for'];
-    const rawIp = Array.isArray(forwarded)
-      ? forwarded[0]
-      : (forwarded?.split(',')[0] ?? req.ip ?? 'unknown');
-    return ipKeyGenerator(rawIp.trim());
-  },
+  keyGenerator: clientKey,
   handler: (_req: Request, res: Response) => {
     res.status(429).json({
       status: 'unavailable',
@@ -229,13 +261,7 @@ const claimsLimiter = rateLimit({
   max: 6,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  keyGenerator: (req: Request) => {
-    const forwarded = req.headers['x-forwarded-for'];
-    const rawIp = Array.isArray(forwarded)
-      ? forwarded[0]
-      : (forwarded?.split(',')[0] ?? req.ip ?? 'unknown');
-    return ipKeyGenerator(rawIp.trim());
-  },
+  keyGenerator: clientKey,
   handler: (_req: Request, res: Response) => {
     res.status(429).json({ error: 'Demasiados envíos. Intenta de nuevo en unos minutos.' });
   },
@@ -245,6 +271,13 @@ const claimsLimiter = rateLimit({
 app.post('/api/claims', claimsLimiter, async (req: Request, res: Response) => {
   const parsed = parseClaim(req.body);
   if ('error' in parsed) return res.status(400).json({ error: parsed.error });
+
+  // Evita usar el formulario para llenar de correos la bandeja de un tercero
+  if (!allowClaimForEmail(parsed.claim.email)) {
+    return res.status(429).json({
+      error: 'Ya registraste varias hojas con este correo hoy. Si necesitas ayuda, escríbenos por WhatsApp.',
+    });
+  }
 
   let receipt;
   try {
@@ -264,13 +297,111 @@ app.post('/api/claims', claimsLimiter, async (req: Request, res: Response) => {
   });
 });
 
+// ── Cupones de descuento ─────────────────────────────────────────────────────
+// Límite por IP reutilizable (mismo criterio que el resto de rutas: respeta X-Forwarded-For).
+const makeIpLimiter = (windowMs: number, max: number, message: string) =>
+  rateLimit({
+    windowMs,
+    max,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    keyGenerator: clientKey,
+    handler: (_req: Request, res: Response) => {
+      res.status(429).json({ valid: false, error: message, message });
+    },
+    skip: (_req: Request) => process.env.NODE_ENV === 'test',
+  });
+
+// Públicas (carrito): validar no consume el cupón; canjear sí.
+const couponValidateLimiter = makeIpLimiter(10 * 60 * 1000, 60, 'Demasiados intentos con cupones. Espera unos minutos.');
+const couponRedeemLimiter = makeIpLimiter(10 * 60 * 1000, 30, 'Demasiados intentos con cupones. Espera unos minutos.');
+// Anti fuerza bruta de la clave de administrador
+const adminLoginLimiter = makeIpLimiter(15 * 60 * 1000, 8, 'Demasiados intentos de acceso. Espera 15 minutos.');
+const adminApiLimiter = makeIpLimiter(10 * 60 * 1000, 300, 'Demasiadas solicitudes. Espera unos minutos.');
+
+app.post('/api/coupons/validate', couponValidateLimiter, (req: Request, res: Response) => {
+  const { code, items, customer } = req.body ?? {};
+  return res.json(validateCouponForCart(code, items, customer));
+});
+
+app.post('/api/coupons/redeem', couponRedeemLimiter, (req: Request, res: Response) => {
+  const { code, items, customer, orderRef } = req.body ?? {};
+  try {
+    return res.json(redeemCoupon(code, items, customer, orderRef));
+  } catch (err) {
+    console.error('Error al canjear cupón:', err);
+    return res.status(500).json({ valid: false, message: 'No pudimos aplicar el cupón. Inténtalo nuevamente.' });
+  }
+});
+
+app.post('/api/admin/login', adminLoginLimiter, (req: Request, res: Response) => {
+  if (!isAdminConfigured()) {
+    return res.status(503).json({
+      error: 'El panel de cupones está deshabilitado: define ADMIN_PASSWORD (mínimo 10 caracteres) en el .env del servidor.',
+      code: 'admin_not_configured',
+    });
+  }
+  if (!verifyAdminPassword(req.body?.password)) {
+    return res.status(401).json({ error: 'Clave de administrador incorrecta.', code: 'bad_password' });
+  }
+  return res.json({ token: issueAdminToken(), expiresInMs: TOKEN_TTL_MS });
+});
+
+app.get('/api/admin/coupons', adminApiLimiter, requireAdmin, (_req: Request, res: Response) => {
+  try {
+    return res.json({ coupons: listCoupons() });
+  } catch (err) {
+    console.error('Error al listar cupones:', err);
+    return res.status(500).json({ error: 'No pudimos leer los cupones.' });
+  }
+});
+
+app.post('/api/admin/coupons', adminApiLimiter, requireAdmin, (req: Request, res: Response) => {
+  try {
+    const result = createCoupon(req.body);
+    return result.ok ? res.status(201).json({ coupon: result.coupon }) : res.status(result.status).json(result);
+  } catch (err) {
+    console.error('Error al crear cupón:', err);
+    return res.status(500).json({ error: 'No pudimos guardar el cupón.' });
+  }
+});
+
+app.put('/api/admin/coupons/:id', adminApiLimiter, requireAdmin, (req: Request, res: Response) => {
+  try {
+    const result = updateCoupon(String(req.params.id), req.body);
+    return result.ok ? res.json({ coupon: result.coupon }) : res.status(result.status).json(result);
+  } catch (err) {
+    console.error('Error al actualizar cupón:', err);
+    return res.status(500).json({ error: 'No pudimos guardar el cupón.' });
+  }
+});
+
+app.delete('/api/admin/coupons/:id', adminApiLimiter, requireAdmin, (req: Request, res: Response) => {
+  try {
+    return deleteCoupon(String(req.params.id))
+      ? res.json({ ok: true })
+      : res.status(404).json({ error: 'El cupón no existe.' });
+  } catch (err) {
+    console.error('Error al eliminar cupón:', err);
+    return res.status(500).json({ error: 'No pudimos eliminar el cupón.' });
+  }
+});
+
+app.get('/api/admin/coupons/:id/redemptions', adminApiLimiter, requireAdmin, (req: Request, res: Response) => {
+  return res.json({ redemptions: couponRedemptions(String(req.params.id)) });
+});
+
 // Multi-turn chat route for the Automotive Advisor with resilient cascading fallbacks
 // NC-009: Rate limiter aplicado — 20 req/5min por IP
 app.post('/api/advisor/chat', advisorChatLimiter, async (req: Request, res: Response) => {
   try {
-    const { messages, model = 'gemini-3.8-flash', context } = req.body;
+    const body = (req.body && typeof req.body === 'object' ? req.body : {}) as Record<string, unknown>;
+    const model = typeof body.model === 'string' ? body.model : 'gemini-3.8-flash';
+    // Entrada no confiable: tamaño acotado y contexto limpio antes de llegar al modelo
+    const messages = sanitizeAdvisorMessages(body.messages);
+    const context = sanitizeAdvisorContext(body.context);
 
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+    if (!messages) {
       return res.status(400).json({
         error: 'Se requiere una lista de mensajes válida.',
       });
@@ -399,7 +530,7 @@ function generateAdvisorKnowledgeReply(userText: string, context?: any): string 
 
 Para proteger la seguridad de tus transacciones, los datos de cuentas bancarias se brindan únicamente por canales oficiales verificados:
 
-• 📱 **WhatsApp Oficial:** [965 171 717](https://wa.me/51965171717)
+• 📱 **WhatsApp Oficial:** [910 446 152](https://wa.me/51910446152)
 • 🌐 **Área de cliente:** Ingresa a tu cuenta en esta web para ver los datos bancarios verificados.
 • 🏢 **Presencial:** Cas. Huacariz Mz A Lote S/N, Cajamarca.
 • 💳 **Pasarela Culqi:** Paga en línea con tarjeta (Visa, Mastercard, Amex) o Yape de forma segura.
@@ -445,7 +576,7 @@ Cada envío genera su **Número de Guía Shalom** (ej. \`SHA-CAJ-XXXXXX\`) para 
 • **Terminal POS Inalámbrico Culqi:**
   - Disponible para pagos presenciales en nuestro Showroom de Cajamarca y entregas coordinadas contraentrega.
   - Acepta pagos sin contacto (Contactless), chip y billeteras digitales (Apple Pay / Google Wallet).
-• **Transferencia Bancaria:** Los datos de cuentas oficiales los recibirás por WhatsApp verificado (+51 965 171 717) o en tu área de cliente.
+• **Transferencia Bancaria:** Los datos de cuentas oficiales los recibirás por WhatsApp verificado (910 446 152) o en tu área de cliente.
 
 ¿Deseas completar una compra con Culqi o revisar las opciones en el Carrito?`;
   }
@@ -596,14 +727,19 @@ Te puedo orientar al instante en toda nuestra web:
 • **Repuestos y Accesorios Oficiales:** Llantas Mickey Thompson M/T, láminas de seguridad LLumar, lubricantes Mobil 1, aros Black Rhino, frenos Trakko y accesorios Keko.
 • **Simulación de Cuotas & Plan Retoma:** Convenios con BCP, BBVA y Santander desde 20% inicial y bono de hasta S/ 7,500.
 • **Taller Mecánico & Citas:** Mantenimiento por kilometraje, scanner computarizado y alineación 3D.
-• **Políticas & Libro de Reclamaciones:** Validez de 7 días en cotizaciones y atención virtual conforme a INDECOPI.
+• **Políticas & Libro de Reclamaciones:** Cotizaciones válidas por 24 horas hábiles y atención virtual conforme a INDECOPI.
 
 ¿Qué vehículo, repuesto, cotización o servicio te interesa revisar hoy?${garageInfo}`;
 }
 
 // Configure Vite middleware in dev or static files in production
 async function startServer() {
-  if (process.env.NODE_ENV !== 'production') {
+  // Una ruta /api desconocida responde JSON 404 (nunca el HTML de la aplicación)
+  app.use('/api', (_req: Request, res: Response) => {
+    res.status(404).json({ error: 'Ruta no encontrada.' });
+  });
+
+  if (!isProduction) {
     const vite = await createViteServer({
       server: {
         middlewareMode: true,
@@ -613,11 +749,45 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    app.use(express.static(path.resolve(__dirname, 'dist')));
-    app.get('*', (_req: Request, res: Response) => {
-      res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
+    const dist = path.resolve(__dirname, 'dist');
+    app.use(
+      express.static(dist, {
+        dotfiles: 'ignore',
+        index: false,
+        setHeaders: (res, filePath) => {
+          // Archivos con hash de Vite: caché larga; el resto, siempre fresco
+          if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+          } else {
+            res.setHeader('Cache-Control', 'no-cache');
+          }
+        },
+      })
+    );
+    app.get('*', (req: Request, res: Response) => {
+      // Un archivo inexistente (.js, .css, .map...) o un archivo oculto (.htaccess, .env...) es un 404 real,
+      // nunca la página principal
+      if (path.extname(req.path) !== '' || req.path.split('/').some((segment) => segment.startsWith('.'))) {
+        res.status(404).type('text/plain').send('No encontrado');
+        return;
+      }
+      res.setHeader('Cache-Control', 'no-cache');
+      res.sendFile(path.resolve(dist, 'index.html'));
     });
   }
+
+  // Manejo de errores: nunca se devuelven trazas ni rutas internas al visitante
+  app.use((err: Error & { status?: number; type?: string }, req: Request, res: Response, _next: NextFunction) => {
+    const status = err.type === 'entity.too.large' ? 413 : err.type === 'entity.parse.failed' ? 400 : (err.status ?? 500);
+    if (status >= 500) console.error('Error no controlado:', err);
+    const message =
+      status === 413 ? 'La solicitud es demasiado grande.' :
+      status === 400 ? 'La solicitud no tiene un formato válido.' :
+      'Ocurrió un error inesperado.';
+    if (res.headersSent) return;
+    if (req.path.startsWith('/api/')) res.status(status).json({ error: message });
+    else res.status(status).type('text/plain').send(message);
+  });
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Nor Celis Server listening on http://0.0.0.0:${PORT}`);

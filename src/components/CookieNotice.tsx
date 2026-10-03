@@ -34,7 +34,7 @@ export const CookieNotice: React.FC = () => {
     <div
       role="dialog"
       aria-label="Aviso de cookies"
-      className="fixed bottom-0 inset-x-0 z-[60] p-3 sm:p-4 pointer-events-none"
+      className="fixed bottom-0 inset-x-0 z-40 p-3 sm:p-4 pointer-events-none"
     >
       <div className="pointer-events-auto max-w-3xl mx-auto bg-white text-[#212955] rounded-2xl shadow-[var(--shadow-xl)] border border-gray-200 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
         <p className="text-xs sm:text-[13px] leading-relaxed text-gray-700 flex-1">

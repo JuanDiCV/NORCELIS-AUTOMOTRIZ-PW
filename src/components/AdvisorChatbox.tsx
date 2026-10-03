@@ -193,7 +193,7 @@ Estoy listo para orientarte en toda nuestra plataforma web:
         suggestedActions: [
           {
             label: 'WhatsApp Atención Directa',
-            action: () => window.open('https://wa.me/51965171717?text=Hola%20Nor%20Celis,%20tengo%20una%20consulta', '_blank'),
+            action: () => window.open('https://wa.me/51910446152?text=Hola%20Nor%20Celis,%20tengo%20una%20consulta', '_blank', 'noopener,noreferrer'),
             icon: 'chat',
           },
           {
@@ -221,7 +221,7 @@ Estoy listo para orientarte en toda nuestra plataforma web:
 
 Para proteger la seguridad de tus transacciones, los datos de cuentas bancarias se brindan únicamente por canales oficiales verificados:
 
-• 📱 **WhatsApp Oficial:** [965 171 717](https://wa.me/51965171717) — Te enviamos los datos directamente.
+• 📱 **WhatsApp Oficial:** [910 446 152](https://wa.me/51910446152) — Te enviamos los datos directamente.
 • 🌐 **Área de cliente:** Ingresa a tu cuenta en esta web para ver los métodos de pago habilitados.
 • 🏢 **Presencial:** Cas. Huacariz Mz A Lote S/N, Cajamarca.
 
@@ -323,7 +323,7 @@ Contamos con stock en tiempo real de marcas líderes:
     if (actions.length < 2) {
       actions.push({
         label: 'Asesor Humano WhatsApp',
-        action: () => window.open('https://wa.me/51965171717?text=Hola%20Nor%20Celis,%20deseo%20asesoria', '_blank'),
+        action: () => window.open('https://wa.me/51910446152?text=Hola%20Nor%20Celis,%20deseo%20asesoria', '_blank', 'noopener,noreferrer'),
         icon: 'chat',
       });
     }

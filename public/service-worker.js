@@ -89,7 +89,12 @@ self.addEventListener('notificationclick', (event) => {
     return;
   }
 
-  const targetUrl = (event.notification.data && event.notification.data.url) || '/';
+  // Solo rutas internas ("/algo"): una URL externa o "//otro.com" abriría un sitio ajeno desde nuestra notificación
+  const requested = event.notification.data && event.notification.data.url;
+  const targetUrl =
+    typeof requested === 'string' && requested.startsWith('/') && !requested.startsWith('//') && !requested.includes('\\')
+      ? requested
+      : '/';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {

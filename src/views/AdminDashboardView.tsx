@@ -3,9 +3,10 @@ import { useApp } from '../context/AppContext';
 import { HeroSlide, Vehicle, AutoPart, CinematicCategory, OfficialBrand, PanoramicBannerConfig, ShowcaseOfferCard, PanoramicSideCard } from '../types';
 import { ImageUploadField } from '../components/admin/ImageUploadField';
 import { AccountingExportCenter } from '../components/admin/AccountingExportCenter';
+import { CouponsManager } from '../components/admin/CouponsManager';
 import { generateVehiclesCsv, generateAutoPartsCsv, downloadCsvFile } from '../utils/csvExportService';
 
-type AdminTab = 'banners' | 'cars' | 'autoparts' | 'offers' | 'brands_categories' | 'reports' | 'security';
+type AdminTab = 'banners' | 'cars' | 'autoparts' | 'offers' | 'coupons' | 'brands_categories' | 'reports' | 'security';
 type ViewModeDisplay = 'grid' | 'table';
 
 interface CustomOffer {
@@ -982,6 +983,7 @@ export const AdminDashboardView: React.FC = () => {
                   {activeTab === 'banners' && 'Contenido Web > Banners & Publicidad'}
                   {activeTab === 'brands_categories' && 'Contenido Web > Marcas & Categorías'}
                   {activeTab === 'offers' && 'Contenido Web > Ofertas & Campañas'}
+                  {activeTab === 'coupons' && 'Contenido Web > Cupones & Descuentos'}
                   {activeTab === 'cars' && 'Inventario > Vehículos & Autos'}
                   {activeTab === 'autoparts' && 'Inventario > Catálogo de Autopartes'}
                   {activeTab === 'reports' && 'Operaciones > Reportes Contables CSV'}
@@ -1079,6 +1081,21 @@ export const AdminDashboardView: React.FC = () => {
                   local_offer
                 </span>
                 <span>Ofertas ({offersList.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('coupons')}
+                className={`min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                  activeTab === 'coupons'
+                    ? 'bg-[#212955] text-white shadow-xs'
+                    : 'text-gray-600 hover:text-[#212955] hover:bg-white'
+                }`}
+              >
+                <span className={`material-symbols-outlined text-base ${activeTab === 'coupons' ? 'text-[#F07F00]' : 'text-gray-400'}`}>
+                  confirmation_number
+                </span>
+                <span>Cupones</span>
               </button>
             </div>
 
@@ -4757,6 +4774,8 @@ export const AdminDashboardView: React.FC = () => {
         {/* ============================================================== */}
         {/* TAB 5: REPORTES & CONTABILIDAD CSV                             */}
         {/* ============================================================== */}
+        {activeTab === 'coupons' && <CouponsManager />}
+
         {activeTab === 'reports' && <AccountingExportCenter />}
 
         {/* ============================================================== */}

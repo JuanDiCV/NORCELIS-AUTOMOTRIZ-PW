@@ -3,10 +3,21 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig } from 'vite';
 
+/**
+ * El script en línea de index.html solo silencia errores de WebSocket del servidor de desarrollo.
+ * Se elimina del build de producción: así la política de seguridad puede prohibir scripts en línea.
+ */
+const stripDevInlineScript = () => ({
+  name: 'strip-dev-inline-script',
+  apply: 'build' as const,
+  transformIndexHtml: (html: string) => html.replace(/<script>[\s\S]*?<\/script>/, ''),
+});
+
 export default defineConfig(() => {
   return {
-    base: '/NORCELIS-AUTOMATRIZ-PW/', // ◄ Añade esta línea obligatoria para GitHub Pages
-    plugins: [react(), tailwindcss()],
+    // Raíz por defecto. Solo para GitHub Pages u otro subdirectorio: VITE_BASE_PATH="/mi-ruta/"
+    base: process.env.VITE_BASE_PATH || '/',
+    plugins: [react(), tailwindcss(), stripDevInlineScript()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

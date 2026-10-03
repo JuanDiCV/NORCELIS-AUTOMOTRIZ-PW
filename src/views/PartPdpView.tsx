@@ -334,7 +334,7 @@ export const PartPdpView: React.FC = () => {
                 </button>
 
                 <a
-                  href={`https://wa.me/51965171717?text=Hola%20Nor%20Celis,%20consulto%20stock%20del%20repuesto%20${encodeURIComponent(part.name)}%20(SKU:%20${part.sku})`}
+                  href={`https://wa.me/51910446152?text=Hola%20Nor%20Celis,%20consulto%20stock%20del%20repuesto%20${encodeURIComponent(part.name)}%20(SKU:%20${part.sku})`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-[#25D366] hover:bg-[#20ba59] text-white py-3.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.02] cursor-pointer"

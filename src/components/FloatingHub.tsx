@@ -161,12 +161,12 @@ export const FloatingHub: React.FC = () => {
                 transition={{ delay: 0.2, duration: 0.2 }}
                 className="bg-[#128C7E] text-white text-xs font-bold py-1.5 px-3 rounded-xl shadow-lg border border-white/10 opacity-95 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none"
               >
-                WhatsApp Oficial (+51 965 171 717)
+                WhatsApp Oficial (910 446 152)
               </motion.span>
               <motion.a
                 whileHover={{ scale: 1.08, rotate: -2 }}
                 whileTap={{ scale: 0.92 }}
-                href="https://wa.me/51965171717?text=Hola%20Nor%20Celis,%20deseo%20asesoria%20personalizada%20y%20cotizaciones"
+                href="https://wa.me/51910446152?text=Hola%20Nor%20Celis,%20deseo%20asesoria%20personalizada%20y%20cotizaciones"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setIsExpanded(false)}

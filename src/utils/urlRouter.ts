@@ -12,6 +12,19 @@ export interface RouteState {
   modal?: 'garage' | 'quote' | 'test-drive' | 'viewer-360' | 'pdf' | null;
 }
 
+/**
+ * decodeURIComponent lanza URIError con un "%" mal formado (ej. /repuesto/%E0%A4%A). Como la URL se lee
+ * al arrancar, cualquiera podría compartir un enlace así y dejar el sitio sin cargar. Si no se puede
+ * decodificar, se usa el texto tal cual.
+ */
+const safeDecode = (value: string): string => {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+};
+
 export function parseCurrentUrl(): RouteState {
   if (typeof window === 'undefined') {
     return { view: 'home' };
@@ -33,7 +46,7 @@ export function parseCurrentUrl(): RouteState {
     const sku = window.location.pathname.split('/repuesto/')[1]?.split('?')[0]?.trim();
     return {
       view: 'part-pdp',
-      partSku: sku ? decodeURIComponent(sku) : undefined,
+      partSku: sku ? safeDecode(sku) : undefined,
       modal,
     };
   }
@@ -42,7 +55,7 @@ export function parseCurrentUrl(): RouteState {
     const id = window.location.pathname.split('/vehiculo/')[1]?.split('?')[0]?.trim();
     return {
       view: 'vehicle-pdp',
-      vehicleId: id ? decodeURIComponent(id) : undefined,
+      vehicleId: id ? safeDecode(id) : undefined,
       modal,
     };
   }
@@ -69,6 +82,10 @@ export function parseCurrentUrl(): RouteState {
 
   if (pathname === '/servicios' || pathname === '/taller') {
     return { view: 'services', modal };
+  }
+
+  if (pathname === '/maquinaria' || pathname === '/alquiler-maquinaria') {
+    return { view: 'machinery', modal };
   }
 
   if (pathname === '/carrito' || pathname === '/bolsa') {
@@ -167,6 +184,9 @@ export function buildUrlForRoute(state: RouteState): string {
       break;
     case 'services':
       path = '/servicios';
+      break;
+    case 'machinery':
+      path = '/maquinaria';
       break;
     case 'cart':
       path = '/carrito';

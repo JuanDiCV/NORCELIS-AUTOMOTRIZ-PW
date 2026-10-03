@@ -52,7 +52,7 @@ export const QuickQuoteModal: React.FC<QuickQuoteModalProps> = ({
 
   // Customer Data
   const [clientName, setClientName] = useState(user?.name || '');
-  const [clientPhone, setClientPhone] = useState('965171717');
+  const [clientPhone, setClientPhone] = useState('');
   const [clientDoc, setClientDoc] = useState('');
   const [clientEmail, setClientEmail] = useState(user?.email || '');
   const [selectedBranch, setSelectedBranch] = useState<'cajamarca' | 'lima' | 'shalom'>('cajamarca');
@@ -187,7 +187,7 @@ export const QuickQuoteModal: React.FC<QuickQuoteModalProps> = ({
               : selectedBranch === 'lima'
               ? 'Sede Lima: Av. Elmer Faucett 1450'
               : 'Despacho Nacional Express (Shalom Express)',
-          telefono: clientPhone.trim() || '965171717',
+          telefono: clientPhone.trim() || 'No indicado',
           correo: clientEmail.trim() || 'cliente@norcelis.com',
           placaVehiculo: vehiclePlateOrModel.trim() || 'POR ASIGNAR',
         },
@@ -237,7 +237,7 @@ export const QuickQuoteModal: React.FC<QuickQuoteModalProps> = ({
       `*COTIZACIÓN OFICIAL - NORCELIS AUTOMOTRIZ*`,
       `📄 *N° Documento:* ${docCorrelative}`,
       `👤 *Cliente:* ${clientName.trim() || 'Interesado Web'}`,
-      `📞 *Teléfono:* ${clientPhone.trim() || '965171717'}`,
+      `📞 *Teléfono:* ${clientPhone.trim() || 'No indicado'}`,
       clientDoc ? `🆔 *DNI / RUC:* ${clientDoc}` : '',
       `📍 *Sede / Entrega:* ${branchLabel}`,
       `🚗 *Vehículo Referencia:* ${vehiclePlateOrModel}`,
@@ -256,14 +256,14 @@ export const QuickQuoteModal: React.FC<QuickQuoteModalProps> = ({
     ].filter(Boolean);
 
     const fullMessage = messageLines.join('\n');
-    const url = `https://wa.me/51965171717?text=${encodeURIComponent(fullMessage)}`;
+    const url = `https://wa.me/51910446152?text=${encodeURIComponent(fullMessage)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
     showToast('✓ Redirigiendo a WhatsApp con tu cotización oficial prellenada');
   };
 
   // Handler: Copy summary text
   const handleCopySummary = () => {
-    const summary = `Cotización Norcelis ${docCorrelative}: ${quantity}x ${activeItemDetails.title} - Total: S/ ${totalPriceSoles.toFixed(2)} (Inc. IGV). Contacto: 965171717`;
+    const summary = `Cotización Norcelis ${docCorrelative}: ${quantity}x ${activeItemDetails.title} - Total: S/ ${totalPriceSoles.toFixed(2)} (Inc. IGV). Contacto: 910 446 152`;
     navigator.clipboard?.writeText(summary);
     showToast('✓ Resumen de cotización copiado al portapapeles');
   };
@@ -547,7 +547,7 @@ export const QuickQuoteModal: React.FC<QuickQuoteModalProps> = ({
                   type="tel"
                   value={clientPhone}
                   onChange={(e) => setClientPhone(e.target.value)}
-                  placeholder="965171717"
+                  placeholder="Ej. 987 654 321"
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#212955]"
                 />
               </div>

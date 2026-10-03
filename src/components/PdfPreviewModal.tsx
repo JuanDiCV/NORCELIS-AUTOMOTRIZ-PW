@@ -66,8 +66,8 @@ export const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({ data, onClose,
     if (data.vehicle) {
       text += ` Vehículo: ${data.vehicle.name} - Precio: S/ ${data.vehicle.priceSoles.toLocaleString()}`;
     }
-    const url = `https://wa.me/51965171717?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
+    const url = `https://wa.me/51910446152?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   // Cálculos dinámicos para la vista previa en pantalla

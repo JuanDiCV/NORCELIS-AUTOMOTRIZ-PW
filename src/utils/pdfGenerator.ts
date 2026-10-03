@@ -684,7 +684,7 @@ export function generateWishlistQuotePdf(
     cliente: {
       nombreOrazonSocial: customerName,
       direccion: 'Cajamarca / Lima - Perú',
-      telefono: '965171717',
+      telefono: 'No indicado',
       correo: 'gerencia@norcelis.com',
       placaVehiculo: customerPlate,
     },
