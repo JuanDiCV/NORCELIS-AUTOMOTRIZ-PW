@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { AUTO_PARTS_DATA } from '../data/mockData';
 import { SafeImage } from '../components/SafeImage';
 import { FocalZoomImage } from '../components/FocalZoomImage';
 import { FrequentlyBoughtTogether } from '../components/FrequentlyBoughtTogether';
+import { CrossSellRail } from '../components/CrossSellRail';
+import { TrustStrip } from '../components/TrustStrip';
 
 export const PartPdpView: React.FC = () => {
   const {
@@ -20,7 +22,20 @@ export const PartPdpView: React.FC = () => {
     autoParts,
   } = useApp();
 
-  const part = (autoParts && autoParts.length > 0 ? autoParts : AUTO_PARTS_DATA).find((p) => p.sku === selectedPartSku) || autoParts[0] || AUTO_PARTS_DATA[0];
+  const catalogParts = autoParts && autoParts.length > 0 ? autoParts : AUTO_PARTS_DATA;
+  const part = catalogParts.find((p) => p.sku === selectedPartSku) || autoParts[0] || AUTO_PARTS_DATA[0];
+
+  // Productos relacionados: misma categoría primero, completando con los mejor valorados
+  const relatedParts = useMemo(() => {
+    const others = catalogParts.filter((p) => p.sku !== part.sku);
+    const sameCategory = others
+      .filter((p) => p.category === part.category)
+      .sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    const topRated = others
+      .filter((p) => p.category !== part.category)
+      .sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    return [...sameCategory, ...topRated].slice(0, 8);
+  }, [catalogParts, part.sku, part.category]);
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [includeInstallation, setIncludeInstallation] = useState(true);
@@ -489,10 +504,21 @@ export const PartPdpView: React.FC = () => {
           </div>
         </div>
 
+        {/* Franja de confianza para reforzar la compra */}
+        <TrustStrip />
+
         {/* SECTION: Cross-Selling Comprados Juntos Frecuentemente (Estilo Falabella) */}
         <FrequentlyBoughtTogether
           currentPart={part}
-          allParts={autoParts && autoParts.length > 0 ? autoParts : AUTO_PARTS_DATA}
+          allParts={catalogParts}
+        />
+
+        {/* SECTION: Productos relacionados: misma categoría primero, luego los mejor valorados */}
+        <CrossSellRail
+          eyebrow="Te puede interesar"
+          title="Clientes que compraron esto también llevaron"
+          items={relatedParts}
+          contextLabel={`Repuesto relacionado a ${part.name}`}
         />
       </div>
   );
