@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { ActiveGarageVehicle } from '../types';
+import { ModelSelect } from './ModelSelect';
+import { lookupPlate, type PlateLookupStatus } from '../services/vehicles/plateLookupService';
+import { isValidPeruvianPlate, formatPlate } from '../utils/plateUtils';
 
 export const GarageModal: React.FC = () => {
   const {
@@ -33,6 +36,11 @@ export const GarageModal: React.FC = () => {
   const [customModel, setCustomModel] = useState('');
   const [customYear, setCustomYear] = useState('2025');
   const [customEngine, setCustomEngine] = useState('');
+  const [lookupStatus, setLookupStatus] = useState<PlateLookupStatus | 'idle' | 'loading'>('idle');
+  const [lookupMessage, setLookupMessage] = useState('');
+  const [plateVerified, setPlateVerified] = useState(false);
+  const [verifiedVin, setVerifiedVin] = useState<string | undefined>(undefined);
+  const [verifiedColor, setVerifiedColor] = useState<string | undefined>(undefined);
 
   // Edit form state
   const [editingVehicle, setEditingVehicle] = useState<ActiveGarageVehicle | null>(null);
@@ -53,8 +61,54 @@ export const GarageModal: React.FC = () => {
     showToast(`Vehículo activo cambiado a ${vehicle.brand} ${vehicle.model}`);
   };
 
+  const handlePlateChange = (value: string) => {
+    setCustomPlate(value.toUpperCase());
+    // Editar la placa invalida cualquier verificación previa
+    if (plateVerified || lookupStatus !== 'idle') {
+      setPlateVerified(false);
+      setVerifiedVin(undefined);
+      setVerifiedColor(undefined);
+      setLookupStatus('idle');
+      setLookupMessage('');
+    }
+  };
+
+  const handleVerifyPlate = async () => {
+    if (!isValidPeruvianPlate(customPlate)) {
+      setLookupStatus('invalid');
+      setLookupMessage('El formato de la placa no es válido. Ejemplo: ABC-123.');
+      return;
+    }
+    setLookupStatus('loading');
+    setLookupMessage('Consultando el Registro Vehicular...');
+
+    const result = await lookupPlate(customPlate);
+    setLookupStatus(result.status);
+    setLookupMessage(result.message);
+
+    if (result.status === 'verified' && result.vehicle) {
+      const v = result.vehicle;
+      if (v.brand) {
+        const match = POPULAR_BRANDS.find(
+          (b) => b.toLowerCase().includes(v.brand!.toLowerCase()) || v.brand!.toLowerCase().includes(b.toLowerCase())
+        );
+        setCustomBrand(match ?? v.brand.charAt(0) + v.brand.slice(1).toLowerCase());
+      }
+      if (v.model) setCustomModel(v.model);
+      if (v.year) setCustomYear(String(v.year));
+      if (v.engine && !customEngine.trim()) setCustomEngine(v.engine);
+      setVerifiedVin(v.vin);
+      setVerifiedColor(v.color);
+      setPlateVerified(true);
+    }
+  };
+
   const handleAddNewVehicle = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isValidPeruvianPlate(customPlate)) {
+      showToast('Ingresa una placa válida (ej. ABC-123)');
+      return;
+    }
     if (!customModel.trim()) {
       showToast('Por favor escribe el modelo de tu auto');
       return;
@@ -62,16 +116,25 @@ export const GarageModal: React.FC = () => {
     const newVehicle: Omit<ActiveGarageVehicle, 'id'> = {
       brand: customBrand,
       model: `${customModel.trim()} (${customYear})`,
-      year: parseInt(customYear) || 2025,
-      engine: customEngine.trim() || 'Motorización Estándar Gasolina / GLP',
-      plate: customPlate.trim().toUpperCase() || `NC-${Math.floor(100 + Math.random() * 900)}`,
-      vin: 'NC' + Date.now().toString().slice(-8),
+      year: parseInt(customYear, 10) || new Date().getFullYear(),
+      engine: customEngine.trim() || 'Motorización no especificada',
+      plate: formatPlate(customPlate),
+      vin: verifiedVin,
+      color: verifiedColor,
+      verification: plateVerified
+        ? { status: 'verified', source: 'sunarp', checkedAt: new Date().toISOString() }
+        : { status: 'unverified', source: 'manual' },
     };
 
     addGarageVehicle(newVehicle);
     setCustomModel('');
     setCustomPlate('');
     setCustomEngine('');
+    setPlateVerified(false);
+    setVerifiedVin(undefined);
+    setVerifiedColor(undefined);
+    setLookupStatus('idle');
+    setLookupMessage('');
     setActiveTab('switch');
     setIsGarageModalOpen(false);
   };
@@ -167,6 +230,8 @@ export const GarageModal: React.FC = () => {
       showToast(`✓ Notificación compacta de prueba enviada al navegador`);
     }
   };
+
+  const YEAR_OPTIONS = Array.from({ length: 16 }, (_, i) => String(new Date().getFullYear() + 1 - i));
 
   const POPULAR_BRANDS = [
     'Toyota', 'Nissan', 'Hyundai', 'Kia', 'Ford', 'Mitsubishi', 'Suzuki', 'BMW', 'Audi', 'Mercedes-Benz', 'Volkswagen',
@@ -426,6 +491,15 @@ export const GarageModal: React.FC = () => {
                                   Activo
                                 </span>
                               )}
+                              <span
+                                className={`text-[10px] px-2 py-0.5 rounded-full font-bold shrink-0 ${
+                                  veh.verification?.status === 'verified'
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : 'bg-amber-100 text-amber-800'
+                                }`}
+                              >
+                                {veh.verification?.status === 'verified' ? 'Verificado' : 'No verificado'}
+                              </span>
                             </div>
                             <div className="text-[11px] text-outline mt-0.5 truncate">
                               Placa: <span className="font-mono font-semibold text-on-surface">{veh.plate}</span> • {veh.engine}
@@ -549,36 +623,84 @@ export const GarageModal: React.FC = () => {
               <div className="bg-primary/5 p-3.5 rounded-2xl border border-primary/15 text-xs text-primary flex items-start gap-2.5">
                 <span className="material-symbols-outlined text-lg text-primary shrink-0 mt-0.5">info</span>
                 <span>
-                  Registra marcas oficiales o alternativas/chinas. Podrás editar o eliminar cualquier vehículo en todo momento.
+                  Ingresa tu placa y verificaremos los datos de tu vehículo en el Registro Vehicular para recomendarte
+                  repuestos que realmente calcen. No guardamos datos del propietario.
                 </span>
+              </div>
+
+              {/* Placa + verificación */}
+              <div>
+                <label htmlFor="garage-plate" className="block text-xs font-bold text-on-surface mb-1">
+                  Número de placa <span className="text-red-500">*</span>
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    id="garage-plate"
+                    type="text"
+                    value={customPlate}
+                    onChange={(e) => handlePlateChange(e.target.value)}
+                    placeholder="Ej: ABC-123"
+                    maxLength={8}
+                    autoComplete="off"
+                    className="flex-1 bg-surface-container-low border border-surface-container rounded-xl p-2.5 text-sm font-bold uppercase tracking-wider focus:outline-none focus:border-primary"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={handleVerifyPlate}
+                    disabled={lookupStatus === 'loading' || plateVerified}
+                    className="px-4 rounded-xl bg-[#212955] hover:bg-[#181e40] disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-bold transition-colors cursor-pointer min-h-[44px] whitespace-nowrap"
+                  >
+                    {lookupStatus === 'loading' ? 'Verificando...' : plateVerified ? 'Verificada' : 'Verificar placa'}
+                  </button>
+                </div>
+
+                {lookupMessage && (
+                  <div
+                    role="status"
+                    className={`mt-2 p-2.5 rounded-xl text-xs font-medium flex items-start gap-2 ${
+                      lookupStatus === 'verified'
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                        : lookupStatus === 'idle' || lookupStatus === 'loading'
+                          ? 'bg-surface-container text-on-surface'
+                          : 'bg-amber-50 text-amber-900 border border-amber-200'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-base shrink-0">
+                      {lookupStatus === 'verified' ? 'verified' : 'info'}
+                    </span>
+                    <span>{lookupMessage}</span>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-on-surface mb-1">
-                    Marca del Vehículo
-                  </label>
+                  <label className="block text-xs font-bold text-on-surface mb-1">Marca del vehículo</label>
                   <select
                     value={customBrand}
-                    onChange={(e) => setCustomBrand(e.target.value)}
-                    className="w-full bg-surface-container-low border border-surface-container rounded-xl p-2.5 text-xs font-medium focus:outline-none focus:border-primary cursor-pointer"
+                    onChange={(e) => {
+                      setCustomBrand(e.target.value);
+                      setCustomModel('');
+                    }}
+                    disabled={plateVerified}
+                    className="w-full bg-surface-container-low border border-surface-container rounded-xl p-2.5 text-xs font-medium focus:outline-none focus:border-primary cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    {POPULAR_BRANDS.map((b) => (
+                    {(POPULAR_BRANDS.includes(customBrand) ? POPULAR_BRANDS : [customBrand, ...POPULAR_BRANDS]).map((b) => (
                       <option key={b} value={b}>{b}</option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-on-surface mb-1">
-                    Año de Fabricación
-                  </label>
+                  <label className="block text-xs font-bold text-on-surface mb-1">Año de fabricación</label>
                   <select
                     value={customYear}
                     onChange={(e) => setCustomYear(e.target.value)}
-                    className="w-full bg-surface-container-low border border-surface-container rounded-xl p-2.5 text-xs font-medium focus:outline-none focus:border-primary cursor-pointer"
+                    disabled={plateVerified}
+                    className="w-full bg-surface-container-low border border-surface-container rounded-xl p-2.5 text-xs font-medium focus:outline-none focus:border-primary cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    {['2025', '2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015'].map((y) => (
+                    {(YEAR_OPTIONS.includes(customYear) ? YEAR_OPTIONS : [customYear, ...YEAR_OPTIONS]).map((y) => (
                       <option key={y} value={y}>{y}</option>
                     ))}
                   </select>
@@ -587,46 +709,30 @@ export const GarageModal: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-bold text-on-surface mb-1">
-                  Modelo y Versión <span className="text-red-500">*</span>
+                  Modelo y versión <span className="text-red-500">*</span>
+                </label>
+                <ModelSelect id="garage-model" brand={customBrand} value={customModel} onChange={setCustomModel} />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-on-surface mb-1">
+                  Motorización (recomendado: mejora la compatibilidad)
                 </label>
                 <input
                   type="text"
-                  value={customModel}
-                  onChange={(e) => setCustomModel(e.target.value)}
-                  placeholder="Ej: RAV4 Hybrid / Coolray Turbo / Tucson GLS / Hilux 4x4"
+                  value={customEngine}
+                  onChange={(e) => setCustomEngine(e.target.value)}
+                  placeholder="Ej: 2.5L Híbrido / 1.5L Turbo / 2.8L Diésel"
                   className="w-full bg-surface-container-low border border-surface-container rounded-xl p-2.5 text-xs font-medium focus:outline-none focus:border-primary"
-                  required
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-on-surface mb-1">
-                    Número de Placa (Opcional)
-                  </label>
-                  <input
-                    type="text"
-                    value={customPlate}
-                    onChange={(e) => setCustomPlate(e.target.value.toUpperCase())}
-                    placeholder="Ej: ABC-123"
-                    maxLength={8}
-                    className="w-full bg-surface-container-low border border-surface-container rounded-xl p-2.5 text-xs font-medium uppercase font-mono focus:outline-none focus:border-primary"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-on-surface mb-1">
-                    Motorización (Opcional)
-                  </label>
-                  <input
-                    type="text"
-                    value={customEngine}
-                    onChange={(e) => setCustomEngine(e.target.value)}
-                    placeholder="Ej: 2.5L Híbrido / 1.5L Turbo / 2.8L Diésel"
-                    className="w-full bg-surface-container-low border border-surface-container rounded-xl p-2.5 text-xs font-medium focus:outline-none focus:border-primary"
-                  />
-                </div>
-              </div>
+              {!plateVerified && (
+                <p className="text-[11px] text-outline leading-snug">
+                  Si no verificas la placa, tu vehículo se guardará como <strong>no verificado</strong> y las
+                  sugerencias serán orientativas.
+                </p>
+              )}
 
               <div className="pt-2 flex items-center gap-2">
                 <button
@@ -641,7 +747,7 @@ export const GarageModal: React.FC = () => {
                   className="w-2/3 bg-primary hover:bg-primary-container text-white py-3 rounded-xl font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
                 >
                   <span className="material-symbols-outlined text-[18px]">add_circle</span>
-                  <span>Guardar y Activar Vehículo</span>
+                  <span>{plateVerified ? 'Guardar vehículo verificado' : 'Guardar sin verificar'}</span>
                 </button>
               </div>
             </form>
@@ -671,7 +777,10 @@ export const GarageModal: React.FC = () => {
                   </label>
                   <select
                     value={editBrand}
-                    onChange={(e) => setEditBrand(e.target.value)}
+                    onChange={(e) => {
+                      setEditBrand(e.target.value);
+                      setEditModel('');
+                    }}
                     className="w-full bg-surface-container-low border border-surface-container rounded-xl p-2.5 text-xs font-medium focus:outline-none focus:border-primary cursor-pointer"
                   >
                     {POPULAR_BRANDS.map((b) => (
@@ -700,14 +809,7 @@ export const GarageModal: React.FC = () => {
                 <label className="block text-xs font-bold text-on-surface mb-1">
                   Modelo y Versión <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  value={editModel}
-                  onChange={(e) => setEditModel(e.target.value)}
-                  placeholder="Ej: RAV4 Hybrid / Coolray Turbo"
-                  className="w-full bg-surface-container-low border border-surface-container rounded-xl p-2.5 text-xs font-medium focus:outline-none focus:border-primary"
-                  required
-                />
+                <ModelSelect id="garage-edit-model" brand={editBrand} value={editModel} onChange={setEditModel} />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

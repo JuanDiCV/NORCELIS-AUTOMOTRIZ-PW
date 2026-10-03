@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { evaluateFit, getSuggestedParts, FIT_LABELS } from '../utils/compatibilityEngine';
+import { decodeVin } from '../utils/vinDecoder';
 import { useApp } from '../context/AppContext';
 import { AutoPart } from '../types';
 import { SafeImage } from '../components/SafeImage';
@@ -233,6 +235,12 @@ export const PartsCatalogView: React.FC = () => {
     });
   }, [ALL_PART_BRANDS, brandSegment, brandSearchTerm]);
 
+  // Sugerencias reales para el vehículo activo (ficha de compatibilidad + necesidades por edad)
+  const suggestedParts = useMemo(
+    () => (activeGarage ? getSuggestedParts(autoParts, activeGarage, 6) : []),
+    [autoParts, activeGarage]
+  );
+
   // Main Filter & Sort Logic with token-based normalized search
   const filteredParts = useMemo(() => {
     return autoParts
@@ -288,18 +296,10 @@ export const PartsCatalogView: React.FC = () => {
           return false;
         }
 
-        // Compatibilidad con Garaje Activo
+        // Compatibilidad con Garaje Activo (motor de compatibilidad: ficha estructurada > texto del catálogo)
         if (onlyCompatible && !isTargetPart && activeGarage) {
-          const garBrand = activeGarage.brand.toLowerCase();
-          const garModel = activeGarage.model.toLowerCase();
-          const compText = (part.compatibleVehicle || '').toLowerCase();
-          const isComp =
-            compText.includes(garBrand) ||
-            compText.includes(garModel) ||
-            compText.includes('universal') ||
-            compText.includes('todo tipo') ||
-            compText.includes('garantizado');
-          if (!isComp) return false;
+          const { level } = evaluateFit(part, activeGarage);
+          if (level === 'incompatible' || level === 'unknown') return false;
         }
 
         // Búsqueda inteligente por palabras clave normalizadas (sin problemas por tildes o signos)
@@ -391,13 +391,31 @@ export const PartsCatalogView: React.FC = () => {
 
   const handleVinValidate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!vinInput.trim() || vinInput.trim().length < 6) {
-      showToast('Ingresa los dígitos de tu chasis / VIN para verificar compatibilidad');
+    const decoded = decodeVin(vinInput);
+    if (!decoded.valid) {
+      setVinValidated(false);
+      showToast(decoded.error ?? 'VIN no válido');
       return;
     }
+
     setVinValidated(true);
+    const summary = [decoded.brand, decoded.modelYear].filter(Boolean).join(' ');
+
+    if (!activeGarage) {
+      showToast(
+        `VIN válido${summary ? ' (' + summary + ')' : ''}. Registra tu vehículo en Mi Garaje para filtrar los repuestos compatibles.`
+      );
+      setIsGarageModalOpen(true);
+      return;
+    }
+
+    if (decoded.brand && !activeGarage.brand.toLowerCase().includes(decoded.brand.split(' ')[0].toLowerCase())) {
+      showToast(`Atención: el VIN corresponde a ${decoded.brand}, pero tu vehículo activo es ${activeGarage.brand}.`);
+      return;
+    }
+
     setOnlyCompatible(true);
-    showToast(`✓ Chasis "${vinInput.toUpperCase()}" validado con catálogo oficial OEM. Mostrando solo repuestos compatibles.`);
+    showToast(`VIN válido${summary ? ' (' + summary + ')' : ''}. Mostrando repuestos compatibles con tu ${activeGarage.brand}.`);
   };
 
   const activeFiltersCount = useMemo(() => {
@@ -494,7 +512,7 @@ export const PartsCatalogView: React.FC = () => {
             {vinValidated && (
               <span className="text-[9px] bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
                 <span className="material-symbols-outlined text-[11px]">verified</span>
-                OEM OK
+                VIN válido
               </span>
             )}
           </div>
@@ -1290,6 +1308,42 @@ export const PartsCatalogView: React.FC = () => {
             )}
           </div>
 
+          {activeGarage && suggestedParts.length > 0 && (
+            <section className="bg-white rounded-2xl border border-[#9D9D9C]/40 shadow-sm p-4 sm:p-5 space-y-3" aria-label="Sugerencias para tu vehículo">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h2 className="font-bold text-sm text-[#212955]">
+                    Sugerencias para tu {activeGarage.brand} {activeGarage.model.replace(/s*(d{4})$/, '')}
+                  </h2>
+                  <p className="text-[11px] text-gray-500">
+                    {activeGarage.verification?.status === 'verified'
+                      ? 'Basadas en los datos verificados de tu vehículo.'
+                      : 'Tu vehículo no está verificado: confirma la compatibilidad con un asesor antes de comprar.'}
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
+                {suggestedParts.map(({ part, fit }) => (
+                  <button
+                    key={part.sku}
+                    type="button"
+                    onClick={() => openPartDetail(part.sku)}
+                    className="flex items-center gap-3 p-2.5 rounded-xl border border-[#9D9D9C]/30 hover:border-[#F07F00] text-left transition-colors cursor-pointer"
+                  >
+                    <img src={part.image} alt="" loading="lazy" className="w-14 h-14 rounded-lg object-cover bg-gray-100 shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-[#212955] line-clamp-2 leading-snug">{part.name}</div>
+                      <div className={`text-[11px] font-semibold mt-0.5 ${fit.level === 'exact' ? 'text-emerald-700' : 'text-amber-700'}`}>
+                        {FIT_LABELS[fit.level]}
+                      </div>
+                      <div className="text-xs font-extrabold text-[#212955] mt-0.5">S/ {part.priceSoles.toLocaleString()}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Product Cards Grid */}
           {filteredParts.length === 0 ? (
             <div className="bg-white p-12 rounded-3xl border border-[#9D9D9C]/30 text-center space-y-4 shadow-sm">
@@ -1417,12 +1471,33 @@ export const PartsCatalogView: React.FC = () => {
                           {part.name}
                         </h3>
 
-                        <div className="flex items-center gap-1.5 text-xs text-gray-500 h-5">
-                          <span className="material-symbols-outlined text-[14px] text-emerald-600 shrink-0">verified</span>
-                          <span className="truncate text-[11px] font-medium">
-                            {part.compatibleVehicle}
-                          </span>
-                        </div>
+                        {(() => {
+                          const fit = activeGarage ? evaluateFit(part, activeGarage) : null;
+                          if (!fit) {
+                            return (
+                              <div className="flex items-center gap-1.5 text-xs text-gray-500 h-5">
+                                <span className="material-symbols-outlined text-[14px] text-gray-400 shrink-0">directions_car</span>
+                                <span className="truncate text-[11px] font-medium">{part.compatibleVehicle}</span>
+                              </div>
+                            );
+                          }
+                          const tone =
+                            fit.level === 'exact'
+                              ? 'text-emerald-700'
+                              : fit.level === 'probable'
+                                ? 'text-amber-700'
+                                : fit.level === 'incompatible'
+                                  ? 'text-red-600'
+                                  : 'text-gray-500';
+                          const icon =
+                            fit.level === 'exact' ? 'check_circle' : fit.level === 'incompatible' ? 'cancel' : 'info';
+                          return (
+                            <div className={`flex items-center gap-1.5 text-xs h-5 ${tone}`} title={fit.reason}>
+                              <span className="material-symbols-outlined text-[14px] shrink-0">{icon}</span>
+                              <span className="truncate text-[11px] font-semibold">{FIT_LABELS[fit.level]}</span>
+                            </div>
+                          );
+                        })()}
 
                         <div className="flex flex-wrap gap-1 pt-1 h-6 overflow-hidden">
                           {part.features.slice(0, 2).map((feat, idx) => (

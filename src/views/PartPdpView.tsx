@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { evaluateFit, FIT_LABELS } from '../utils/compatibilityEngine';
 import { useApp } from '../context/AppContext';
 import { AUTO_PARTS_DATA } from '../data/mockData';
 import { SafeImage } from '../components/SafeImage';
@@ -51,25 +52,19 @@ export const PartPdpView: React.FC = () => {
   const installationFeeSoles = 85;
   const isWishlisted = isInWishlist(part.id);
 
-  // Check garage compatibility
-  const isCompatibleWithGarage = activeGarage ? (
-    part.compatibleVehicle.toLowerCase().includes(activeGarage.brand.toLowerCase()) ||
-    part.compatibleVehicle.toLowerCase().includes(activeGarage.model.toLowerCase().split(' ')[0])
-  ) : false;
+  // Compatibilidad real con el vehículo activo (ficha estructurada > texto del catálogo)
+  const fit = activeGarage ? evaluateFit(part, activeGarage) : null;
+  const isCompatibleWithGarage = fit?.level === 'exact';
+  const fitTone =
+    fit?.level === 'exact'
+      ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
+      : fit?.level === 'incompatible'
+        ? 'bg-red-50 text-red-900 border-red-200'
+        : 'bg-amber-50 text-amber-900 border-amber-200';
+  const fitIcon = fit?.level === 'exact' ? 'check_circle' : fit?.level === 'incompatible' ? 'cancel' : 'warning';
 
-  // Comprehensive compatibility list
-  const defaultCompatibilityList = [
-    { brand: 'Toyota', model: 'RAV4 (5ta Gen / XA50)', years: '2019 - 2025', engine: '2.5L Hybrid (A25A-FXS) / 2.0L Gasolina' },
-    { brand: 'Toyota', model: 'Corolla Cross', years: '2021 - 2025', engine: '1.8L Hybrid / 2.0L Dynamic Force' },
-    { brand: 'Toyota', model: 'Camry', years: '2018 - 2024', engine: '2.5L DOHC Dual VVT-i' },
-    { brand: 'Toyota', model: 'Hilux Revo / Rocco', years: '2016 - 2024', engine: '2.4L / 2.8L 1GD-FTV Turbo Diésel' },
-    { brand: 'Lexus', model: 'NX 250 / NX 350h', years: '2022 - 2025', engine: '2.5L HEV E-Four' },
-  ];
-
-  const activeCompatibilityList =
-    part.vehicleCompatibility && part.vehicleCompatibility.length > 0
-      ? part.vehicleCompatibility
-      : defaultCompatibilityList;
+  // Solo se muestra la compatibilidad que el catálogo realmente declara (nunca una lista genérica)
+  const activeCompatibilityList = part.vehicleCompatibility ?? [];
 
   const handleAddToCart = () => {
     addToCart({
@@ -106,24 +101,18 @@ export const PartPdpView: React.FC = () => {
         {/* Garage Active Compatibility Alert Banner */}
         {activeGarage ? (
           <div
-            className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs ${
-              isCompatibleWithGarage
-                ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
-                : 'bg-amber-50 text-amber-900 border-amber-200'
-            }`}
+            className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs ${fitTone}`}
           >
             <div className="flex items-start sm:items-center gap-3">
               <span className="material-symbols-outlined text-2xl shrink-0 mt-0.5 sm:mt-0">
-                {isCompatibleWithGarage ? 'check_circle' : 'warning'}
+                {fitIcon}
               </span>
               <div>
                 <span className="font-bold block break-words">
-                  {isCompatibleWithGarage
-                    ? `✓ Pieza 100% Homologada para tu Garaje Activo: ${activeGarage.brand} ${activeGarage.model} (${activeGarage.year})`
-                    : `⚠️ Atención: Verifica compatibilidad para tu ${activeGarage.brand} ${activeGarage.model}`}
+                  {`${fit ? FIT_LABELS[fit.level] : ''}: ${activeGarage.brand} ${activeGarage.model}`}
                 </span>
                 <span className="text-[11px] opacity-85 block break-words">
-                  Placa registrada: <strong className="font-mono">{activeGarage.plate}</strong> • Código OEM: {part.oemCode}
+                  {fit?.reason} Placa: <strong className="font-mono">{activeGarage.plate}</strong>{activeGarage.verification?.status !== 'verified' && ' (no verificada)'} • Código OEM: {part.oemCode}
                 </span>
               </div>
             </div>
@@ -400,6 +389,15 @@ export const PartPdpView: React.FC = () => {
               </div>
             </div>
 
+            {activeCompatibilityList.length === 0 ? (
+              <div className="p-4 rounded-xl bg-surface-container-low text-xs text-on-surface space-y-1">
+                <p className="font-semibold">Esta pieza aún no tiene una ficha de compatibilidad por modelo.</p>
+                <p className="text-outline">
+                  Catálogo indica: {part.compatibleVehicle || 'sin especificar'}. Escríbenos con tu placa y confirmamos
+                  si calza con tu vehículo antes de la compra.
+                </p>
+              </div>
+            ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
@@ -422,6 +420,7 @@ export const PartPdpView: React.FC = () => {
                 </tbody>
               </table>
             </div>
+            )}
 
             {part.crossOemCodes && part.crossOemCodes.length > 0 && (
               <div className="pt-3 border-t border-surface-container">

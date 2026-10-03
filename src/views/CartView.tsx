@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { summarizeFit } from '../utils/compatibilityEngine';
+import type { AutoPart } from '../types';
 import { useApp } from '../context/AppContext';
 import { SafeImage } from '../components/SafeImage';
 import { SHALOM_DESTINATIONS } from '../data/bankAccountsData';
@@ -13,6 +15,7 @@ export const CartView: React.FC = () => {
     toggleCartInstallation,
     cartSubtotalSoles,
     activeGarage,
+    autoParts,
     setIsGarageModalOpen,
     setCurrentView,
     showToast,
@@ -195,19 +198,34 @@ export const CartView: React.FC = () => {
       </div>
 
       {/* Active Garage Check */}
-      {activeGarage ? (
-        <div className="bg-white/95 text-gray-800 p-3.5 rounded-2xl border border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs shadow-xs">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#212955] text-lg shrink-0">garage</span>
-            <span className="text-gray-600 break-words">
-              Repuestos validados para: <strong className="text-[#212955]">{activeGarage.brand} {activeGarage.model} ({activeGarage.year})</strong>
-            </span>
+      {activeGarage ? (() => {
+        const summary = summarizeFit(cartItems.filter((i) => i.type === 'part').map((i) => autoParts.find((p) => p.sku === i.skuOrCode)).filter((p): p is AutoPart => !!p), activeGarage);
+        const tone =
+          summary.incompatible.length > 0
+            ? 'border-red-200 bg-red-50'
+            : summary.needsCheck.length > 0
+              ? 'border-amber-200 bg-amber-50'
+              : 'border-emerald-200 bg-emerald-50';
+        const message =
+          summary.total === 0
+            ? 'Aún no hay repuestos para comparar con tu vehículo.'
+            : summary.incompatible.length > 0
+              ? `${summary.incompatible.length} repuesto(s) no calzan con tu vehículo: ${summary.incompatible.map((p) => p.name).slice(0, 2).join(', ')}${summary.incompatible.length > 2 ? '…' : ''}`
+              : summary.needsCheck.length > 0
+                ? `${summary.needsCheck.length} repuesto(s) requieren confirmar compatibilidad con un asesor.`
+                : 'Todos los repuestos son compatibles con tu vehículo.';
+        return (
+          <div className={`text-gray-800 p-3.5 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs shadow-xs ${tone}`} role="status">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[#212955] text-lg shrink-0">garage</span>
+              <span className="break-words">
+                <strong className="text-[#212955]">{activeGarage.brand} {activeGarage.model}</strong> · {message}
+                {activeGarage.verification?.status !== 'verified' && ' Vehículo no verificado.'}
+              </span>
+            </div>
           </div>
-          <span className="text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded text-[10px] shrink-0">
-            100% Compatibilidad Garantizada
-          </span>
-        </div>
-      ) : (
+        );
+      })() : (
         <div className="bg-white/95 text-gray-800 p-3.5 rounded-2xl border border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs shadow-xs">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[#212955] text-lg shrink-0">garage</span>

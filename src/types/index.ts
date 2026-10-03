@@ -275,6 +275,16 @@ export interface ActiveGarageVehicle {
   engine: string;
   plate: string;
   vin?: string;
+  color?: string;
+  /** Estado de verificación del vehículo. Si falta, se considera no verificado. */
+  verification?: VehicleVerification;
+}
+
+export interface VehicleVerification {
+  status: 'verified' | 'unverified';
+  /** 'sunarp' = confirmado en el Registro Vehicular; 'manual' = datos ingresados por el cliente */
+  source: 'sunarp' | 'manual';
+  checkedAt?: string;
 }
 
 export interface MaintenanceRecord {

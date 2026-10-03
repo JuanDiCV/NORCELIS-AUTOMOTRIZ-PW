@@ -6,6 +6,7 @@ import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { lookupPlate } from './server/plateLookup.ts';
 
 dotenv.config();
 process.env.DISABLE_HMR = 'true';
@@ -189,6 +190,35 @@ DIRECTRICES DE PERSONALIDAD Y FORMATO DE RESPUESTA:
 3. Sé conciso y claro. Usa formato Markdown con viñetas cortas y negritas en datos clave (precios, cuentas, marcas, modelos, bonos, tarifas).
 4. Ofrece siempre respuestas accionables mencionando las opciones disponibles en la web (Catálogo, Repuestos, Cuentas Bancarias, Despacho Shalom Express, Pasarela Culqi, Plan Retoma, Citas de Taller, Libro de Reclamaciones).
 5. Si el cliente tiene un auto registrado en su Garaje Virtual o consulta por repuestos, valida compatibilidad con marcas oficiales (Mickey Thompson, Mobil, Keko, LLumar, Trakko, 3M, etc.).`;
+
+// Verificación de placa (Registro Vehicular / SUNARP vía proveedor configurado por entorno).
+// Límite estricto por IP: protege la cuota del proveedor y evita enumeración de placas.
+const plateLookupLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 12,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  keyGenerator: (req: Request) => {
+    const forwarded = req.headers['x-forwarded-for'];
+    const rawIp = Array.isArray(forwarded)
+      ? forwarded[0]
+      : (forwarded?.split(',')[0] ?? req.ip ?? 'unknown');
+    return ipKeyGenerator(rawIp.trim());
+  },
+  handler: (_req: Request, res: Response) => {
+    res.status(429).json({
+      status: 'unavailable',
+      message: 'Demasiadas consultas de placa. Intenta de nuevo en unos minutos.',
+    });
+  },
+  skip: (_req: Request) => process.env.NODE_ENV === 'test',
+});
+
+app.post('/api/vehicles/lookup-plate', plateLookupLimiter, async (req: Request, res: Response) => {
+  const plate = typeof req.body?.plate === 'string' ? req.body.plate.slice(0, 12) : '';
+  const result = await lookupPlate(plate);
+  res.status(result.status === 'invalid' ? 400 : 200).json(result);
+});
 
 // Multi-turn chat route for the Automotive Advisor with resilient cascading fallbacks
 // NC-009: Rate limiter aplicado — 20 req/5min por IP
