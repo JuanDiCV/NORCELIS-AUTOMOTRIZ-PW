@@ -1,7 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { VehicleFinancingCalculator } from '../components/VehicleFinancingCalculator';
 import { SafeImage } from '../components/SafeImage';
+import { CrossSellRail } from '../components/CrossSellRail';
+import { TrustStrip } from '../components/TrustStrip';
 import { generateVehicleQuotePdf } from '../utils/pdfGenerator';
 import {
   HorsepowerIcon,
@@ -98,8 +100,23 @@ export const VehiclePdpView: React.FC = () => {
 
   const inWish = isInWishlist(currentCar.id);
 
-  // Compatible parts for cross-selling
-  const compatibleParts = autoParts.slice(0, 3);
+  // Accesorios recomendados para este vehículo: prioriza los compatibles por marca/modelo
+  // y completa con los productos mejor valorados del catálogo.
+  const compatibleParts = useMemo(() => {
+    const keywords = [currentCar.brand, currentCar.name]
+      .join(' ')
+      .toLowerCase()
+      .split(/[\s,/]+/)
+      .filter((w) => w.length > 2);
+    const matches = autoParts.filter((p) => {
+      const compat = (p.compatibleVehicle || '').toLowerCase();
+      return keywords.some((k) => compat.includes(k));
+    });
+    const rest = autoParts
+      .filter((p) => !matches.includes(p))
+      .sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    return [...matches, ...rest].slice(0, 8);
+  }, [autoParts, currentCar.brand, currentCar.name]);
 
   const handleReserveNow = () => {
     addToCart({
@@ -767,60 +784,17 @@ export const VehiclePdpView: React.FC = () => {
         </div>
       </div>
 
-      {/* Cross-selling: Repuestos y Equipamiento Compatible (Screen 4 spec) */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between border-b border-surface-container pb-3">
-          <div>
-            <span className="text-xs font-bold text-secondary uppercase tracking-wider">
-              Accesorios &amp; Mantenimiento
-            </span>
-            <h3 className="font-headline font-bold text-xl text-on-surface">
-              Equipamiento Original para tu RAV4 2025
-            </h3>
-          </div>
-        </div>
+      {/* Franja de confianza para reforzar la compra */}
+      <TrustStrip />
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          {compatibleParts.map((part) => (
-            <div
-              key={part.id}
-              className="bg-surface-container-lowest p-4 rounded-3xl border border-surface-container hover:shadow-md transition-all flex flex-col justify-between"
-            >
-              <div className="flex items-center gap-3">
-                <SafeImage src={part.image} alt={part.name} typeHint="part" className="w-20 h-20 object-contain rounded-xl bg-surface-container-low p-1" />
-                <div>
-                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                    100% Compatible
-                  </span>
-                  <h5 className="font-headline font-bold text-xs text-on-surface line-clamp-2 mt-1">
-                    {part.name}
-                  </h5>
-                  <div className="font-bold text-primary text-sm mt-0.5">
-                    S/ {part.priceSoles.toLocaleString()}
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={() =>
-                  addToCart({
-                    type: 'part',
-                    title: part.name,
-                    skuOrCode: part.sku,
-                    priceSoles: part.priceSoles,
-                    image: part.image,
-                    specsSubtitle: 'Accesorio homologado RAV4 2025',
-                  })
-                }
-                className="mt-3 w-full bg-primary hover:bg-primary-container text-white py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <AppleCartIcon size={15} />
-                <span>Añadir al Carrito</span>
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Cross-selling: accesorios y mantenimiento compatibles con el vehículo */}
+      <CrossSellRail
+        eyebrow="Accesorios & Mantenimiento"
+        title={`Equipamiento original para tu ${currentCar.name}`}
+        subtitle="Productos seleccionados por compatibilidad con tu vehículo. Llévalos junto a tu compra."
+        items={compatibleParts}
+        contextLabel={`Accesorio homologado ${currentCar.name}`}
+      />
     </div>
   );
 };
