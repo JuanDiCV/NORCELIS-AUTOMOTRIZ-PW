@@ -64,7 +64,6 @@ export const HomeView: React.FC = () => {
   const [filterModel, setFilterModel] = useState('RAV4 Hybrid');
   const [filterPlate, setFilterPlate] = useState('');
   const [partsShowcaseCategory, setPartsShowcaseCategory] = useState<string>('todos');
-  const [categoryDisplayMode, setCategoryDisplayMode] = useState<'flagship' | 'all'>('flagship');
 
   const newCars = useMemo(() => vehicles.filter((v) => v.condition === 'nuevo'), [vehicles]);
   const usedCars = useMemo(() => vehicles.filter((v) => v.condition === 'seminuevo'), [vehicles]);
@@ -115,202 +114,102 @@ export const HomeView: React.FC = () => {
       {/* 2. CATEGORÍAS POPULARES DE AUTOPARTES & MARCAS - CINEMATIC CARDS + INFINITE MARQUEE */}
       <section className="px-gutter">
         <div className="max-w-7xl mx-auto space-y-8">
-          {/* Header with Title and Mode Switcher */}
-          <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-4 border-b border-white/15 pb-4">
-            <div>
-              <span className="text-xs font-extrabold uppercase tracking-widest text-[#F07F00] mb-1.5 block">
-                Líneas Especializadas Nor Celis
-              </span>
-              <h2 className="font-headline font-black text-2xl sm:text-3xl text-white tracking-wide">
-                Categorías de Autopartes &amp; Repuestos
-              </h2>
-              <p className="text-xs sm:text-sm text-white/80 mt-1 font-medium max-w-2xl">
-                Autopartes de ingeniería certificada con garantía de fábrica y servicio de instalación opcional en taller.
+          <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-5">
+            <div className="space-y-3">
+              <span className="section-eyebrow">Líneas especializadas</span>
+              <h2 className="section-title">Categorías de autopartes y repuestos</h2>
+              <p className="section-subtitle">
+                Autopartes de ingeniería certificada con garantía de fábrica e instalación opcional en nuestro taller.
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5">
-              {/* Toggle 4 Flagship vs 6 All */}
-              <div className="flex bg-white/10 p-1 rounded-md border border-white/15 text-xs font-bold">
-                <button
-                  type="button"
-                  onClick={() => setCategoryDisplayMode('flagship')}
-                  className={`px-3 py-1.5 rounded-sm transition-all cursor-pointer ${
-                    categoryDisplayMode === 'flagship'
-                      ? 'bg-[#F07F00] text-white shadow-sm'
-                      : 'text-white/70 hover:text-white'
-                  }`}
-                >
-                  Líneas Principales (4)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCategoryDisplayMode('all')}
-                  className={`px-3 py-1.5 rounded-sm transition-all cursor-pointer ${
-                    categoryDisplayMode === 'all'
-                      ? 'bg-[#F07F00] text-white shadow-sm'
-                      : 'text-white/70 hover:text-white'
-                  }`}
-                >
-                  Todas las Líneas (6)
-                </button>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => navigateToPartsCatalog('todos')}
-                className="min-h-[40px] px-4 py-2 text-xs font-bold text-white hover:text-[#F07F00] bg-white/10 hover:bg-white/20 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer border border-white/20"
-              >
-                <span>Ver Catálogo Completo ({autoParts.length})</span>
+            <button
+              type="button"
+              onClick={() => navigateToPartsCatalog('todos')}
+              className="group min-h-[44px] px-5 text-sm font-semibold text-white bg-white/10 hover:bg-white/20 rounded-full flex items-center gap-2 transition-colors cursor-pointer border border-white/20 shrink-0"
+            >
+              <span>Ver catálogo completo ({autoParts.length})</span>
+              <span className="group-hover:translate-x-0.5 transition-transform">
                 <AppleChevronRightIcon size={16} />
-              </button>
-            </div>
+              </span>
+            </button>
           </div>
 
-          {/* Cinematic Category Cards (Inspired by Fox Factory / Live Valve Reference) */}
-          <div
-            className={`grid gap-2.5 sm:gap-3 lg:gap-3.5 ${
-              categoryDisplayMode === 'flagship'
-                ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
-                : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-            }`}
-          >
-            {(categoryDisplayMode === 'flagship'
-              ? categoriesList.slice(0, 4)
-              : categoriesList
-            ).map((cat) => (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {categoriesList.map((cat) => (
               <button
                 key={cat.code}
                 type="button"
                 onClick={() => navigateToPartsCatalog(cat.code)}
-                className="group relative h-[440px] sm:h-[480px] rounded-md overflow-hidden border border-white/15 hover:border-white/80 transition-all duration-500 text-left flex flex-col justify-end p-5 sm:p-6 cursor-pointer shadow-2xl hover:shadow-[0_0_35px_rgba(255,255,255,0.25)] hover:-translate-y-1"
+                className="group relative h-[340px] sm:h-[380px] rounded-2xl overflow-hidden text-left flex flex-col justify-end p-6 cursor-pointer shadow-[var(--shadow-lg)] hover:shadow-[var(--shadow-xl)] transition-shadow duration-500"
               >
-                {/* Background Image with Grayscale-to-Color + Smooth Scale on hover */}
                 <img
                   src={cat.image}
                   alt={cat.name}
-                  className="absolute inset-0 w-full h-full object-cover grayscale contrast-[1.25] brightness-[0.55] group-hover:grayscale-0 group-hover:contrast-[1.15] group-hover:brightness-[1.1] group-hover:scale-105 transition-all duration-700 ease-out cinematic-card-img"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                   loading="lazy"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#101530] via-[#101530]/45 to-transparent" />
 
-                {/* Dark cinematic gradient overlays */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/20 opacity-90 group-hover:opacity-75 transition-opacity duration-500" />
+                <span className="absolute top-5 left-5 z-10 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-[11px] font-bold uppercase tracking-wider text-white">
+                  {cat.tag}
+                </span>
 
-                {/* Ambient warm glow at the base on hover */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#F07F00]/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-
-                {/* Top Floating Category Labels */}
-                <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10 pointer-events-none">
-                  <span className="text-[11px] font-black uppercase tracking-widest text-[#F07F00] drop-shadow-md">
-                    {cat.tag}
-                  </span>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-white/90 drop-shadow-md">
-                    {cat.badge}
-                  </span>
-                </div>
-
-                {/* Bottom Content Area */}
-                <div className="relative z-10 space-y-2 text-center flex flex-col items-center">
-                  <h3 className="font-extrabold text-xl sm:text-2xl lg:text-3xl text-white tracking-tight leading-tight uppercase drop-shadow-md group-hover:text-white transition-colors text-center">
+                <div className="relative z-10 space-y-2">
+                  <h3 className="font-extrabold text-2xl text-white tracking-tight leading-tight">
                     {cat.name}
                   </h3>
-                  <p className="text-xs text-white/75 line-clamp-2 leading-relaxed font-medium text-center">
-                    {cat.subtitle}
-                  </p>
-
-                  {/* Action Link like "LEARN MORE ↗" in reference image */}
-                  <div className="pt-3 border-t border-white/20 w-full flex items-center justify-between gap-2">
-                    <span className="font-bold tracking-wider text-xs sm:text-sm text-white group-hover:text-[#F07F00] inline-flex items-center justify-center gap-1.5 transition-colors text-center whitespace-nowrap">
-                      <span>VER REPUESTOS</span>
-                      <span className="text-sm sm:text-base group-hover:translate-x-1 group-hover:-translate-y-0.5 transition-transform duration-300">
-                        ↗
-                      </span>
+                  <p className="text-sm text-white/75 line-clamp-2 leading-relaxed">{cat.subtitle}</p>
+                  <div className="pt-3 flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-2 text-sm font-bold text-[#F07F00]">
+                      Ver repuestos
+                      <span className="group-hover:translate-x-1 transition-transform duration-300">→</span>
                     </span>
-                    <span className="text-[11px] font-bold text-white/60 group-hover:text-white transition-colors shrink-0 text-center whitespace-nowrap">
-                      {cat.count}
-                    </span>
+                    <span className="text-xs font-semibold text-white/65">{cat.count}</span>
                   </div>
                 </div>
               </button>
             ))}
           </div>
 
-          {/* Marcas Oficiales - Pasarela Continua Infinita (Infinite Marquee Carousel) */}
-          <div className="space-y-3 pt-2">
-            <div className="px-1">
-              <h3 className="text-xs font-black uppercase tracking-wider text-white">
-                Marcas Oficiales Garantizadas en Nor Celis Automotriz
-              </h3>
-            </div>
+          <div className="space-y-4 pt-4">
+            <h3 className="text-center text-sm font-bold uppercase tracking-[0.18em] text-white">
+              Marcas oficiales garantizadas en Nor Celis Automotriz
+            </h3>
 
-            {/* Marquee Track with Smooth Left/Right Gradient Mask */}
-            <div className="relative overflow-hidden rounded-2xl bg-black/40 border border-white/10 p-3 backdrop-blur-md">
-              {/* Left & Right gradient fades for smooth marquee blending */}
-              <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-black/85 to-transparent z-10" />
-              <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-black/85 to-transparent z-10" />
+            <div className="relative overflow-hidden py-1">
+              <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-[#212955] to-transparent z-10" />
+              <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-[#212955] to-transparent z-10" />
 
-              <div className="animate-marquee-infinite flex gap-4 py-1">
-                {/* Batch 1 */}
-                {brandsList.map((brand, bIdx) => (
-                  <button
-                    key={`brand-1-${bIdx}`}
-                    type="button"
-                    onClick={() => navigateToPartsCatalog('todos', brand.code)}
-                    className="group shrink-0 flex items-center gap-3.5 px-5 py-3 rounded-md bg-white/[0.05] hover:bg-white/[0.14] border border-white/10 hover:border-[#F07F00]/70 transition-all duration-300 text-left cursor-pointer shadow-md hover:shadow-[0_0_25px_rgba(240,127,0,0.3)] hover:scale-105"
-                  >
-                    <div className="w-10 h-10 rounded-sm bg-white/10 flex items-center justify-center font-headline font-black text-sm text-white/90 border border-white/15 group-hover:border-[#F07F00] group-hover:text-[#F07F00] group-hover:bg-[#F07F00]/15 transition-all overflow-hidden p-1">
-                      {brand.logoUrl ? (
-                        <img src={brand.logoUrl} alt={brand.name} className="w-full h-full object-contain" />
-                      ) : (
-                        brand.iconText
-                      )}
-                    </div>
-                    <div>
-                      <div className="text-xs font-black text-white uppercase tracking-wider group-hover:text-[#F07F00] transition-colors flex items-center gap-1">
-                        <span>{brand.name}</span>
-                        <span className="text-xs text-white/40 group-hover:text-[#F07F00] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all">
-                          ↗
-                        </span>
+              <div className="animate-marquee-infinite">
+                {[0, 1].map((batch) =>
+                  brandsList.map((brand, bIdx) => (
+                    <button
+                      key={`brand-${batch}-${bIdx}`}
+                      type="button"
+                      aria-hidden={batch === 1}
+                      tabIndex={batch === 1 ? -1 : 0}
+                      onClick={() => navigateToPartsCatalog('todos', brand.code)}
+                      className="group shrink-0 mr-3 flex items-center gap-3 pl-3 pr-5 py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 hover:border-[#F07F00]/60 transition-colors duration-300 text-left cursor-pointer"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center font-black text-sm text-[#212955] overflow-hidden p-1.5">
+                        {brand.logoUrl ? (
+                          <img src={brand.logoUrl} alt={brand.name} className="w-full h-full object-contain" />
+                        ) : (
+                          brand.iconText
+                        )}
                       </div>
-                      <div className="text-[10px] text-white/60 flex items-center gap-1.5 mt-0.5">
-                        <span>{brand.tag}</span>
-                        <span className="w-1 h-1 rounded-full bg-white/30"></span>
-                        <span className="text-white/40">{brand.origin}</span>
+                      <div>
+                        <div className="text-sm font-bold text-white group-hover:text-[#F07F00] transition-colors">
+                          {brand.name}
+                        </div>
+                        <div className="text-[11px] text-white/55">
+                          {brand.tag} · {brand.origin}
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                ))}
-
-                {/* Batch 2 (Duplicate for continuous infinite loop without seams) */}
-                {brandsList.map((brand, bIdx) => (
-                  <button
-                    key={`brand-2-${bIdx}`}
-                    type="button"
-                    onClick={() => navigateToPartsCatalog('todos', brand.code)}
-                    className="group shrink-0 flex items-center gap-3.5 px-5 py-3 rounded-md bg-white/[0.05] hover:bg-white/[0.14] border border-white/10 hover:border-[#F07F00]/70 transition-all duration-300 text-left cursor-pointer shadow-md hover:shadow-[0_0_25px_rgba(240,127,0,0.3)] hover:scale-105"
-                  >
-                    <div className="w-10 h-10 rounded-sm bg-white/10 flex items-center justify-center font-headline font-black text-sm text-white/90 border border-white/15 group-hover:border-[#F07F00] group-hover:text-[#F07F00] group-hover:bg-[#F07F00]/15 transition-all overflow-hidden p-1">
-                      {brand.logoUrl ? (
-                        <img src={brand.logoUrl} alt={brand.name} className="w-full h-full object-contain" />
-                      ) : (
-                        brand.iconText
-                      )}
-                    </div>
-                    <div>
-                      <div className="text-xs font-black text-white uppercase tracking-wider group-hover:text-[#F07F00] transition-colors flex items-center gap-1">
-                        <span>{brand.name}</span>
-                        <span className="text-xs text-white/40 group-hover:text-[#F07F00] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all">
-                          ↗
-                        </span>
-                      </div>
-                      <div className="text-[10px] text-white/60 flex items-center gap-1.5 mt-0.5">
-                        <span>{brand.tag}</span>
-                        <span className="w-1 h-1 rounded-full bg-white/30"></span>
-                        <span className="text-white/40">{brand.origin}</span>
-                      </div>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -388,10 +287,6 @@ export const HomeView: React.FC = () => {
                     {heroTab === 'used_cars' && 'Seminuevos certificados con 150 puntos y garantía mecánica'}
                   </p>
                 </div>
-                <span className="text-[10px] bg-[#212955] text-white font-bold px-2.5 py-1 rounded-md border border-[#F07F00]/50 shrink-0 font-headline uppercase tracking-wider shadow-xs flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#F07F00] animate-pulse"></span>
-                  Compatibilidad &amp; Stock en Tiempo Real
-                </span>
               </div>
 
               {/* Input Fields */}
@@ -469,7 +364,7 @@ export const HomeView: React.FC = () => {
                       onChange={(e) => setFilterPlate(e.target.value.toUpperCase())}
                       placeholder="Ej: ABC-123 / 4T1B11..."
                       maxLength={17}
-                      className="w-full min-h-[44px] bg-surface-container-low border border-surface-container rounded-md px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider focus:outline-none focus:border-primary font-mono"
+                      className="w-full min-h-[44px] bg-surface-container-low border border-surface-container rounded-md px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider focus:outline-none focus:border-primary"
                     />
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-outline">
                       <AppleVerifiedSealIcon size={18} />
@@ -508,84 +403,88 @@ export const HomeView: React.FC = () => {
         </div>
       </section>
 
-      {/* 4. MAIN SPOTLIGHT: AUTOPARTES & REPUESTOS MÁS VENDIDOS (PRIORIDAD PRINCIPAL) */}
+      {/* 4. Repuestos más vendidos */}
       <section className="px-gutter">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 border-b border-white/15 pb-4">
-            <div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#F07F00]/20 text-[#F07F00] text-xs font-extrabold uppercase tracking-wider mb-1 border border-[#F07F00]/30">
-                <span className="material-symbols-outlined text-sm">local_fire_department</span>
-                Alta Demanda &amp; Stock Inmediato
-              </div>
-              <h2 className="font-extrabold text-xl sm:text-2xl lg:text-3xl text-white tracking-tight">
-                Autopartes &amp; Repuestos Originales
-              </h2>
-              <p className="text-xs sm:text-sm text-white/80 mt-0.5 font-medium">
-                Componentes OEM certificados con garantía oficial y servicio de instalación opcional en taller.
+        <div className="max-w-7xl mx-auto space-y-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-5">
+            <div className="space-y-3">
+              <span className="section-eyebrow">Más vendidos</span>
+              <h2 className="section-title">Autopartes y repuestos originales</h2>
+              <p className="section-subtitle">
+                Componentes OEM certificados con garantía oficial e instalación opcional en taller.
               </p>
             </div>
 
             <button
               onClick={() => navigateToPartsCatalog('todos')}
-              className="min-h-[44px] px-4 py-2.5 bg-[#F07F00] hover:bg-[#d97300] text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer shrink-0"
+              className="group min-h-[44px] px-5 bg-[#F07F00] hover:bg-[#d97300] text-white rounded-full text-sm font-semibold transition-colors shadow-md flex items-center gap-2 cursor-pointer shrink-0"
             >
-              <span>Explorar Todo el Catálogo de Repuestos</span>
-              <span className="material-symbols-outlined text-base">arrow_forward</span>
+              <span>Explorar todo el catálogo</span>
+              <span className="group-hover:translate-x-0.5 transition-transform">→</span>
             </button>
           </div>
 
-          {/* Interactive Category Filter Pills for Autoparts */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none" role="group" aria-label="Filtrar por categoría">
             {[
-              { id: 'todos', label: 'Todos los Repuestos' },
-              { id: 'frenos', label: 'Frenos & Discos' },
-              { id: 'lubricantes', label: 'Aceites & Filtros' },
-              { id: 'suspension', label: 'Suspensión & Lift' },
+              { id: 'todos', label: 'Todos' },
+              { id: 'frenos', label: 'Frenos y discos' },
+              { id: 'lubricantes', label: 'Aceites y filtros' },
+              { id: 'suspension', label: 'Suspensión y lift' },
               { id: 'accesorios4x4', label: 'Equipamiento 4x4' },
-              { id: 'llantas', label: 'Llantas & Aros' },
+              { id: 'llantas', label: 'Llantas y aros' },
               { id: 'baterias', label: 'Baterías AGM' },
-              { id: 'seguridad', label: 'Láminas de Seguridad' },
+              { id: 'seguridad', label: 'Láminas de seguridad' },
             ].map((cat) => (
               <button
                 key={cat.id}
+                type="button"
+                aria-pressed={partsShowcaseCategory === cat.id}
                 onClick={() => setPartsShowcaseCategory(cat.id)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer min-h-[38px] ${
-                  partsShowcaseCategory === cat.id
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'bg-surface-container-low text-on-surface hover:bg-surface-container border border-surface-container'
-                }`}
+                className="chip shrink-0"
               >
                 {cat.label}
               </button>
             ))}
           </div>
 
-          {/* Autoparts Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {displayedParts.map((part) => {
               const inWish = isInWishlist(part.sku);
+              const openPdp = () => {
+                setSelectedPartSku(part.sku);
+                setCurrentView('part-pdp');
+              };
+              const discount =
+                part.oldPriceSoles && part.oldPriceSoles > part.priceSoles
+                  ? Math.round((1 - part.priceSoles / part.oldPriceSoles) * 100)
+                  : 0;
               return (
-                <div
-                  key={part.sku}
-                  className="bg-surface-container-lowest rounded-md border border-surface-container hover:border-primary/40 hover:shadow-xl transition-all overflow-hidden flex flex-col justify-between group"
-                >
-                  {/* Image and Badges */}
-                  <div className="relative aspect-[4/3] bg-surface-container-low p-4 flex items-center justify-center overflow-hidden">
-                    <img
-                      src={part.image}
-                      alt={part.name}
-                      className="max-h-full max-w-full object-contain transition-transform duration-500 ease-out group-hover:scale-110"
-                    />
+                <article key={part.sku} className="product-card flex flex-col group">
+                  <div className="relative aspect-[4/3] bg-gradient-to-b from-[#f4f5f8] to-[#e8ebf0] p-6 flex items-center justify-center overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={openPdp}
+                      aria-label={`Ver ${part.name}`}
+                      className="absolute inset-0 w-full h-full flex items-center justify-center p-6 cursor-pointer"
+                    >
+                      <img
+                        src={part.image}
+                        alt={part.name}
+                        loading="lazy"
+                        className="max-h-full max-w-full object-contain mix-blend-multiply transition-transform duration-500 ease-out group-hover:scale-105"
+                      />
+                    </button>
 
-                    {/* Brand Badge */}
-                    <div className="absolute top-3 left-3">
-                      <span className="bg-primary/90 backdrop-blur-xs text-white text-[10px] font-extrabold px-2 py-0.5 rounded-xs uppercase tracking-wider shadow-sm">
-                        {part.brand}
-                      </span>
+                    <div className="absolute top-3 left-3 flex flex-col items-start gap-1.5 pointer-events-none">
+                      {discount > 0 && (
+                        <span className="bg-[#F07F00] text-white text-[11px] font-bold px-2 py-1 rounded-md shadow-sm">
+                          -{discount}%
+                        </span>
+                      )}
                     </div>
 
-                    {/* Wishlist Button */}
                     <button
+                      type="button"
                       onClick={() =>
                         toggleWishlist({
                           id: part.sku,
@@ -599,83 +498,70 @@ export const HomeView: React.FC = () => {
                           categoryBadge: part.category,
                         })
                       }
-                      className={`absolute top-3 right-3 w-8 h-8 rounded-md flex items-center justify-center transition-colors shadow-sm cursor-pointer ${
-                        inWish ? 'bg-secondary-container text-white' : 'bg-white/90 hover:bg-white text-on-surface'
+                      aria-pressed={inWish}
+                      className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-colors shadow-sm cursor-pointer ${
+                        inWish ? 'bg-[#F07F00] text-white' : 'bg-white text-[#212955] hover:text-[#F07F00]'
                       }`}
-                      aria-label="Favorito"
+                      aria-label={inWish ? 'Quitar de favoritos' : 'Agregar a favoritos'}
                     >
                       <AppleHeartIcon size={16} />
                     </button>
-
-                    {part.stockText && (
-                      <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-[10px] bg-white/95 backdrop-blur-xs px-2.5 py-1 rounded-xs text-emerald-800 font-bold border border-emerald-200 shadow-xs text-center">
-                        <span className="flex items-center justify-center gap-1 text-center">
-                          {part.stockText}
-                        </span>
-                        <span className="font-mono text-outline text-[9px] text-center">SKU: {part.sku}</span>
-                      </div>
-                    )}
                   </div>
 
-                  {/* Body Info */}
-                  <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
-                    <div>
-                      <div className="text-[10px] font-bold text-secondary uppercase tracking-wider">
-                        {part.category.toUpperCase()}
+                  <div className="p-5 flex-1 flex flex-col gap-4">
+                    <div className="space-y-1.5 flex-1">
+                      <div className="flex items-center justify-between gap-2 text-[11px] font-bold uppercase tracking-wider">
+                        <span className="text-[#212955]/60">{part.brand}</span>
+                        {part.stockText && <span className="text-emerald-700 normal-case tracking-normal">{part.stockText}</span>}
                       </div>
                       <h3
-                        onClick={() => {
-                          setSelectedPartSku(part.sku);
-                          setCurrentView('part-pdp');
-                        }}
-                        className="font-bold text-xs sm:text-sm text-on-surface group-hover:text-primary transition-colors cursor-pointer line-clamp-2 mt-0.5"
+                        onClick={openPdp}
+                        className="font-bold text-[15px] leading-snug text-[#212955] group-hover:text-[#F07F00] transition-colors cursor-pointer line-clamp-2"
                       >
                         {part.name}
                       </h3>
-                      <p className="text-[11px] text-outline line-clamp-1 mt-1">
+                      <p className="text-xs text-[#525866] line-clamp-1">
                         {part.compatibleVehicle || (part.features && part.features[0]) || 'Garantía oficial'}
                       </p>
                     </div>
 
-                    {/* Price and Add to Cart Action */}
-                    <div className="pt-2 border-t border-surface-container space-y-2.5">
-                      <div className="flex items-center justify-between gap-2 min-h-[46px]">
-                        <div className="flex flex-col justify-center shrink-0 whitespace-nowrap">
-                          {part.oldPriceSoles && (
-                            <span className="text-[11px] text-outline line-through block leading-none font-mono mb-1 whitespace-nowrap">
-                              S/ {part.oldPriceSoles.toLocaleString()}
-                            </span>
-                          )}
-                          <span className="font-black text-lg text-primary font-mono leading-none whitespace-nowrap">
-                            S/ {part.priceSoles.toLocaleString()}
+                    <div className="flex items-end justify-between gap-2">
+                      <div className="flex flex-col">
+                        {part.oldPriceSoles && (
+                          <span className="price text-xs text-[#9D9D9C] line-through leading-none mb-1">
+                            S/ {part.oldPriceSoles.toLocaleString()}
                           </span>
-                        </div>
-                        <span className="text-[10px] text-secondary font-bold bg-secondary-container/10 px-2 py-1 rounded-xs shrink-0 whitespace-nowrap text-center flex items-center justify-center">
-                          Instalación +S/ 45
+                        )}
+                        <span className="price font-extrabold text-xl text-[#212955] leading-none">
+                          S/ {part.priceSoles.toLocaleString()}
                         </span>
                       </div>
+                      <span className="text-[11px] text-[#525866] font-medium text-right leading-tight">
+                        Instalación
+                        <br />
+                        +S/ 45
+                      </span>
+                    </div>
 
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedPartSku(part.sku);
-                            setCurrentView('part-pdp');
-                          }}
-                          className="min-h-[38px] px-2.5 py-1.5 btn-ghost text-xs text-center"
-                        >
-                          Ficha Técnica
-                        </button>
-                        <button
-                          onClick={() => handleAddToCart(part, false)}
-                          className="min-h-[38px] px-2.5 py-1.5 btn-primary text-xs uppercase flex items-center justify-center gap-1.5"
-                        >
-                          <AppleCartIcon size={16} />
-                          <span>Comprar</span>
-                        </button>
-                      </div>
+                    <div className="grid grid-cols-[1fr_auto] gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleAddToCart(part, false)}
+                        className="min-h-[44px] px-4 btn-primary text-sm"
+                      >
+                        <AppleCartIcon size={16} />
+                        <span>Agregar</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={openPdp}
+                        className="min-h-[44px] px-4 btn-outline-primary text-sm"
+                      >
+                        Detalles
+                      </button>
                     </div>
                   </div>
-                </div>
+                </article>
               );
             })}
           </div>

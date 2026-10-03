@@ -25,6 +25,8 @@ import {
   AppleChevronRightIcon,
   AppleUserIcon,
   OfficialQuoteIcon,
+  MachineryIcon,
+  TrackOrderIcon,
 } from './AutoIcons';
 
 type NavDropdownType = 'none' | 'vehiculos' | 'repuestos' | 'finanzas' | 'taller' | 'maquinaria';
@@ -467,7 +469,7 @@ export const Header: React.FC = () => {
               aria-label={activeGarage ? `Mi Garaje Virtual: ${activeGarage.brand} ${activeGarage.model}` : "Mi Garaje Virtual"}
             >
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#F07F00]/10 text-[#F07F00] shrink-0 group-hover:bg-[#F07F00] group-hover:text-white transition-colors">
-                <span className="material-symbols-outlined text-[20px]">garage</span>
+                <GarageLiftIcon size={20} />
               </div>
 
               <div className="text-left leading-tight">
@@ -560,7 +562,7 @@ export const Header: React.FC = () => {
               ) : (
                 <>
                   <div className="w-10 h-10 rounded-full bg-surface-container-high text-[#212955] flex items-center justify-center font-bold text-base shrink-0 shadow-xs">
-                    <span className="material-symbols-outlined text-xl">person</span>
+                    <AppleUserIcon size={20} />
                   </div>
                   <div className="hidden lg:block">
                     <div className="text-[10px] text-[#9D9D9C] font-normal font-body">Bienvenido</div>
@@ -749,7 +751,7 @@ export const Header: React.FC = () => {
               }`}
               title="Alquiler de maquinaria pesada certificada para minería y construcción en Cajamarca"
             >
-              <span className="material-symbols-outlined text-[18px] text-[#F07F00] shrink-0">precision_manufacturing</span>
+              <MachineryIcon size={18} className="text-[#F07F00] shrink-0" />
               <span className="font-bold text-[11.5px] lg:text-[12px] xl:text-[12.5px] uppercase tracking-normal whitespace-nowrap text-[#212955]">
                 Alquiler de Maquinaria
               </span>
@@ -803,7 +805,7 @@ export const Header: React.FC = () => {
             }`}
             title="Seguimiento de envíos Shalom en tiempo real"
           >
-            <span className="material-symbols-outlined text-[18px] text-[#F07F00] shrink-0">local_shipping</span>
+            <TrackOrderIcon size={18} className="text-[#F07F00] shrink-0" />
             <span className="font-bold text-[11.5px] lg:text-[12px] xl:text-[12.5px] uppercase tracking-normal whitespace-nowrap">
               Rastrear Pedido
             </span>
@@ -1527,7 +1529,7 @@ export const Header: React.FC = () => {
               className="p-3 min-h-[46px] flex items-center gap-2 text-left bg-surface-container-low rounded-xl cursor-pointer hover:bg-surface-container transition-colors"
             >
               <AppleIconBadge variant="subtle-orange" size="sm">
-                <span className="material-symbols-outlined text-[16px] text-[#F07F00]">precision_manufacturing</span>
+                <MachineryIcon size={16} className="text-[#F07F00]" />
               </AppleIconBadge>
               <span>Maquinaria Pesada</span>
             </button>
@@ -1625,7 +1627,7 @@ export const Header: React.FC = () => {
               onClick={() => { navigateToTracking(); setIsMobileNavOpen(false); }}
               className="p-3 min-h-[44px] flex items-center justify-center gap-2 text-center bg-[#F07F00] hover:bg-[#d97300] text-white rounded-xl cursor-pointer shadow-xs"
             >
-              <span className="material-symbols-outlined text-base">local_shipping</span>
+              <TrackOrderIcon size={16} />
               <span>Rastrear Pedido</span>
             </button>
             <button
