@@ -399,7 +399,7 @@ export const CulqiPaymentModal: React.FC<CulqiPaymentModalProps> = ({
                       }`}
                     >
                       <span className="font-bold text-[#212955]">En Concesionario</span>
-                      <span className="text-[11px] text-gray-500 mt-1">Sede Cajamarca (Vía Evitamiento)</span>
+                      <span className="text-[11px] text-gray-500 mt-1">Sucursal Cajamarca (Cas. Huacariz)</span>
                     </label>
 
                     <label

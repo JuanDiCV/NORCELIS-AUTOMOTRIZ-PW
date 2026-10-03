@@ -1380,7 +1380,7 @@ export const CarsCatalogView: React.FC = () => {
                             {car.warranty}
                           </span>
                           <a
-                            href={`https://wa.me/51987654321?text=Hola,%20quisiera%20cotizar%20el%20vehiculo%20${encodeURIComponent(car.name)}`}
+                            href={`https://wa.me/51910446152?text=Hola,%20quisiera%20cotizar%20el%20vehiculo%20${encodeURIComponent(car.name)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-emerald-700 hover:text-emerald-600 font-bold flex items-center gap-1 shrink-0"

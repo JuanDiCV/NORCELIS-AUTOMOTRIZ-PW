@@ -302,7 +302,7 @@ export const PartPdpView: React.FC = () => {
 
                 <div className="text-xs text-outline">
                   <span className="text-emerald-700 font-bold block">✓ En Stock Almacén Central</span>
-                  <span className="break-words">Disponibilidad inmediata para retiro en Concesionario &amp; Taller: AV. VIA DE EVITAMIENTO SUR 6003 – CAJAMARCA o despacho a nivel nacional</span>
+                  <span className="break-words">Disponibilidad inmediata para retiro en Concesionario &amp; Taller: CAS. HUACARIZ MZ A LOTE S/N – CAJAMARCA o despacho a nivel nacional</span>
                 </div>
               </div>
 

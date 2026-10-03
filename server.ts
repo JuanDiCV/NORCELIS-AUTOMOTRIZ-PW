@@ -7,6 +7,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { lookupPlate } from './server/plateLookup.ts';
+import { parseClaim, saveClaim, recordMailStatus } from './server/claims.ts';
+import { sendClaimEmails } from './server/mailer.ts';
 
 dotenv.config();
 process.env.DISABLE_HMR = 'true';
@@ -99,7 +101,7 @@ const ai = new GoogleGenAI({
 const ADVISOR_SYSTEM_INSTRUCTION = `Eres "Don Celis", Asesor Senior Experto e Inteligencia de Atención al Cliente de Automotriz Nor Celis en Perú.
 
 NOR CELIS AUTOMOTRIZ - IDENTIDAD Y PROPUESTA DE VALOR:
-- Concesionario multimarca líder en Perú con más de 18 años de trayectoria oficial.
+- NorCelis Automotriz es el nombre comercial de GRUPO MEVAC S.A.C. (RUC 20610829318). Nunca afirmes años de trayectoria, liderazgo ni certificaciones que no estén en este documento.
 - Especialistas en venta de vehículos 0 KM 2025, Seminuevos Certificados (con historial 100% verificado y garantía), repuestos y accesorios originales de alta gama, y taller mecánico de precisión con tecnología computarizada.
 
 REGLAS ESTRICTAS DE SEGURIDAD Y PRIVACIDAD (BLINDAJE DE SEGURIDAD - CARA AL PÚBLICO):
@@ -110,10 +112,10 @@ REGLAS ESTRICTAS DE SEGURIDAD Y PRIVACIDAD (BLINDAJE DE SEGURIDAD - CARA AL PÚB
 4. No compartas información confidencial interna de la empresa; únicamente información pública autorizada para clientes y compradores.
 
 SEDES Y CONTACTO OFICIAL:
-- Sede Central & Showroom 360°: Av. Vía de Evitamiento Sur 6003, Cajamarca (amplio almacén de repuestos, banco de alineación 3D y taller integral).
-- Sede Lima Norte: Av. Alfredo Mendiola 3600 (Showroom comercial, venta 0 KM y entregas).
-- Horarios de Atención: Lunes a Sábado de 8:00 AM a 7:00 PM, Domingos de 9:00 AM a 2:00 PM.
-- WhatsApp de Asesoría Inmediata: +51 987 654 321.
+- Sede principal (domicilio fiscal): Cal. Los Ñandues 193, Urb. Limatambo, Surquillo, Lima.
+- Sucursal Cajamarca (atención al público, retiro de pedidos y taller): Cas. Huacariz Mz A Lote S/N, Cajamarca.
+- Horarios de Atención (sucursal Cajamarca): Lunes a Viernes de 8:00 AM a 6:30 PM, Sábados de 8:00 AM a 1:00 PM.
+- WhatsApp de Asesoría Inmediata: 910 446 152. Correo: gerencia@norcelis.com.
 
 MÉTODOS DE PAGO Y PASARELA CULQI:
 - PASARELA CULQI & POS: Aceptamos todas las tarjetas de crédito y débito (Visa, Mastercard, American Express, Diners Club) con tecnología segura 3D Secure, pago con Yape (mediante código de aprobación de 6 dígitos) y POS inalámbrico Culqi para pagos presenciales en nuestras sedes o contraentrega coordinada en Cajamarca y Lima.
@@ -123,16 +125,16 @@ MÉTODOS DE PAGO Y PASARELA CULQI:
 INFORMACIÓN DE PAGOS Y TRANSFERENCIAS BANCARIAS:
 // NC-004b SEGURIDAD: Los números de cuenta bancaria han sido eliminados del system prompt (CWE-312).
 // El modelo AI NO debe revelar datos bancarios. Redirigir siempre a canales oficiales verificados:
-// - WhatsApp oficial: +51 965 171 717
+// - WhatsApp oficial: 910 446 152
 // - Área de cliente autenticada en la web
-// - Atención presencial en sede Cajamarca o Lima Norte
+// - Atención presencial en la sucursal Cajamarca
 - TRANSFERENCIA BANCARIA DIRECTA: El cliente puede transferir a las cuentas empresariales oficiales.
   Los datos bancarios verificados se comparten ÚNICAMENTE por WhatsApp oficial o al iniciar sesión en la plataforma.
 - DETRACCIONES SPOT SUNAT: Contamos con cuenta en el Banco de la Nación para clientes corporativos con facturas afectas a detracción. Datos disponibles por canales verificados.
 
 ENVÍOS Y DESPACHO CON SHALOM EXPRESS (COBERTURA A NIVEL NACIONAL):
 Trabajamos en alianza oficial con Shalom Express para despachos seguros a domicilio o recojo en agencias autorizadas Shalom:
-- Cajamarca Ciudad & Alrededores: GRATIS (Entrega mismo día / 24 horas).
+- Cajamarca ciudad (zona urbana): envío GRATIS solo en compras desde S/ 500.00 (entrega mismo día / 24 horas). En compras menores: recojo en tienda o delivery con costo de flete.
 - Provincias Norte (Trujillo, Chiclayo, Piura): S/ 18 (24 a 36 horas).
 - Lima Metropolitana & Callao: S/ 22 (24 a 48 horas).
 - Jaén, Chachapoyas & Bagua: S/ 15 (24 horas).
@@ -140,12 +142,13 @@ Trabajamos en alianza oficial con Shalom Express para despachos seguros a domici
 * Cada pedido genera un número de guía Shalom Express oficial (ej. SHA-CAJ-XXXXXX) para seguimiento en tiempo real.
 
 TÉRMINOS, CONDICIONES Y POLÍTICAS DE VENTA:
-1. Validez de Cotizaciones: Las cotizaciones y proformas emitidas tienen una validez de 7 días calendario. Stock limitado sujeto a rotación.
-2. Ajuste Técnico: Los precios de servicios o repuestos pueden variar según el diagnóstico vehicular definitivo en taller.
+1. Validez de Cotizaciones: 24 horas hábiles o la indicada en la cotización. Precios incluyen IGV salvo que se indique lo contrario. Precios y stock sujetos a cambio sin previo aviso.
+2. Pagos: compras o servicios desde S/ 2,000 o US$ 500 deben pagarse por transferencia o depósito (bancarización SUNAT). No se retira vehículo ni se despacha mercadería sin cancelar el 100%. Anticipos: taller 50% a 70%; repuestos para reparación 100% antes de comprarlos; repuestos a pedido o importación 70% a 100% y, una vez tramitado el pedido, no hay cancelaciones ni devoluciones.
 3. Garantías Oficiales:
-   - Vehículos Nuevos 2025: 5 años o 100,000 km de garantía de fábrica.
-   - Seminuevos Certificados: 12 meses o 20,000 km en motor y caja con 150 puntos de control técnico aprobados.
-   - Repuestos y Accesorios: Garantía original de fabricante e instalación técnica garantizada.
+   - Vehículos y repuestos: garantía del fabricante o proveedor, según lo indicado en la ficha del producto o el comprobante. No inventes plazos ni coberturas.
+   - Reclamos: dentro de 15 días calendario posteriores a la entrega. Garantía de taller: cubre la mano de obra. Instalación en taller externo: solo defectos de fábrica de la pieza.
+   - Compatibilidad: es responsabilidad del cliente verificarla, salvo asesoría técnica confirmada por escrito por NorCelis.
+   - Cancelaciones: autopartes de stock antes del despacho tienen penalidad administrativa del 10%; reembolsos aprobados en 5 a 10 días hábiles.
 4. Libro de Reclamaciones: Cumplimos con la Ley N° 29571 (Código de Protección y Defensa del Consumidor de INDECOPI). Contamos con Libro de Reclamaciones Virtual en nuestra web con plazo de atención no mayor a 15 días hábiles.
 
 PORTAFOLIO DE VEHÍCULOS DESTACADOS:
@@ -218,6 +221,47 @@ app.post('/api/vehicles/lookup-plate', plateLookupLimiter, async (req: Request, 
   const plate = typeof req.body?.plate === 'string' ? req.body.plate.slice(0, 12) : '';
   const result = await lookupPlate(plate);
   res.status(result.status === 'invalid' ? 400 : 200).json(result);
+});
+
+// Libro de Reclamaciones virtual: registra la hoja con correlativo único.
+const claimsLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 6,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  keyGenerator: (req: Request) => {
+    const forwarded = req.headers['x-forwarded-for'];
+    const rawIp = Array.isArray(forwarded)
+      ? forwarded[0]
+      : (forwarded?.split(',')[0] ?? req.ip ?? 'unknown');
+    return ipKeyGenerator(rawIp.trim());
+  },
+  handler: (_req: Request, res: Response) => {
+    res.status(429).json({ error: 'Demasiados envíos. Intenta de nuevo en unos minutos.' });
+  },
+  skip: (_req: Request) => process.env.NODE_ENV === 'test',
+});
+
+app.post('/api/claims', claimsLimiter, async (req: Request, res: Response) => {
+  const parsed = parseClaim(req.body);
+  if ('error' in parsed) return res.status(400).json({ error: parsed.error });
+
+  let receipt;
+  try {
+    receipt = saveClaim(parsed.claim);
+  } catch (err) {
+    console.error('Error al guardar hoja de reclamación:', err);
+    return res.status(500).json({ error: 'No pudimos registrar tu reclamo. Inténtalo nuevamente o escríbenos por WhatsApp.' });
+  }
+
+  // El reclamo ya está guardado: un fallo de correo no lo invalida, solo se informa.
+  const mail = await sendClaimEmails(receipt.record);
+  recordMailStatus(receipt.code, mail);
+  return res.status(201).json({
+    code: receipt.code,
+    date: receipt.date,
+    emailCopySent: mail.consumerCopy,
+  });
 });
 
 // Multi-turn chat route for the Automotive Advisor with resilient cascading fallbacks
@@ -357,7 +401,7 @@ Para proteger la seguridad de tus transacciones, los datos de cuentas bancarias 
 
 • 📱 **WhatsApp Oficial:** [965 171 717](https://wa.me/51965171717)
 • 🌐 **Área de cliente:** Ingresa a tu cuenta en esta web para ver los datos bancarios verificados.
-• 🏢 **Presencial:** Av. Vía de Evitamiento Sur 6003, Cajamarca.
+• 🏢 **Presencial:** Cas. Huacariz Mz A Lote S/N, Cajamarca.
 • 💳 **Pasarela Culqi:** Paga en línea con tarjeta (Visa, Mastercard, Amex) o Yape de forma segura.
 
 ⚠️ **Nunca realices transferencias a cuentas que no provengan de estos canales oficiales.**
@@ -373,7 +417,7 @@ Para proteger la seguridad de tus transacciones, los datos de cuentas bancarias 
   ) {
     return `En Automotriz Nor Celis contamos con alianza oficial con **Shalom Express** para envíos garantizados a nivel nacional:
 
-• **Cajamarca Ciudad & Alrededores:** **GRATIS** (Entrega el mismo día o en 24h).
+• **Cajamarca ciudad (zona urbana):** **GRATIS desde S/ 500** (compras menores: recojo en tienda o delivery con flete).
 • **Provincias Norte** (Trujillo, Chiclayo, Piura): **S/ 18** (24 a 36 horas).
 • **Lima Metropolitana & Callao:** **S/ 22** (24 a 48 horas).
 • **Jaén, Chachapoyas & Bagua:** **S/ 15** (24 horas).
@@ -414,12 +458,12 @@ Cada envío genera su **Número de Guía Shalom** (ej. \`SHA-CAJ-XXXXXX\`) para 
   ) {
     return `En Automotriz Nor Celis operamos bajo estrictos estándares de transparencia comercial:
 
-• **Validez de Cotizaciones:** Nuestras proformas y cotizaciones formales tienen una validez de **7 días calendario**, sujetas a disponibilidad y stock limitado.
-• **Garantía Oficial de Vehículos:**
-  - **Nuevos 0 KM 2025:** 5 años o 100,000 km de respaldo de fábrica.
-  - **Seminuevos Certificados:** 12 meses o 20,000 km en motor y transmisión con 150 puntos de peritaje aprobados.
-• **Repuestos y Accesorios:** 100% originales con garantía directa del fabricante e instalación profesional garantizada en nuestro taller.
-• **Variación por Diagnóstico:** Los presupuestos de servicio mecánico pueden ajustarse tras el diagnóstico físico definitivo del vehículo.
+• **Validez de cotizaciones:** **24 horas hábiles** (o la indicada en la cotización). Precios incluyen IGV; precios y stock pueden variar sin previo aviso.
+• **Pagos:** desde **S/ 2,000 o US$ 500** el pago es por transferencia o depósito. Anticipos: taller 50%–70%; importaciones 70%–100%.
+• **Reclamos y garantía:** **15 días calendario** desde la entrega. La garantía de repuestos es la del fabricante, según la ficha del producto.
+• **Cancelaciones:** autopartes de stock antes del despacho, penalidad del 10%; pedidos por importación no admiten cancelación ni devolución.
+• **Compatibilidad:** la verificación es responsabilidad del cliente, salvo asesoría técnica confirmada por escrito.
+• Puedes ver el detalle completo en **Términos y Políticas** de la web.
 
 ¿Te gustaría generar una cotización formal o agendar una revisión técnica?`;
   }
@@ -434,7 +478,7 @@ Cada envío genera su **Número de Guía Shalom** (ej. \`SHA-CAJ-XXXXXX\`) para 
 • Puedes registrar un **Reclamo** (disconformidad relacionada con los productos o servicios) o una **Queja** (malestar respecto a la atención al público).
 • Se genera una **Hoja de Reclamación con código correlativo oficial** y copia remitida a tu correo electrónico.
 • Plazo de respuesta legal: Máximo **15 días hábiles**.
-• También puedes contactar directamente a nuestra gerencia de servicio al cliente al WhatsApp oficial **+51 987 654 321**.
+• También puedes contactar directamente a nuestra gerencia de servicio al cliente al WhatsApp oficial **910 446 152**.
 
 Puedes acceder de inmediato pulsando el botón **Libro de Reclamaciones** en nuestra plataforma.`;
   }
@@ -459,7 +503,7 @@ Puedes acceder de inmediato pulsando el botón **Libro de Reclamaciones** en nue
 • **Beneficios Nor Celis:** Instalación, alineación 3D computarizada y balanceo incluidos en nuestro taller por la compra del juego de 4 neumáticos.
 • **Despacho Shalom Express:** Envíos a todo el Perú en 24 a 48 horas.
 
-Disponemos de stock con entrega inmediata en nuestra Sede Cajamarca (Av. Vía de Evitamiento Sur 6003). ¿Para qué vehículo buscas la medida exacta?${garageInfo}`;
+Disponemos de stock con entrega inmediata en nuestra Sede Cajamarca (Cas. Huacariz Mz A Lote S/N). ¿Para qué vehículo buscas la medida exacta?${garageInfo}`;
   }
 
   // 8. LLumar, Keko, Mobil 1, 3M, Trakko, Black Rhino (Repuestos y Accesorios)
@@ -532,14 +576,14 @@ Puedes reservar tu cita directamente en la sección **Taller & Citas** o indicar
   if (query.includes('sede') || query.includes('ubicacion') || query.includes('ubicación') || query.includes('direccion') || query.includes('dirección') || query.includes('horario') || query.includes('donde') || query.includes('dónde') || query.includes('cajamarca') || query.includes('lima')) {
     return `Nuestras sedes oficiales están a tu total disposición:
 
-• **Sede Central Cajamarca:** Av. Vía de Evitamiento Sur 6003 (Showroom 360°, Taller Integral, Almacén de Repuestos y Banco de Pruebas).
-• **Sede Lima Norte:** Av. Alfredo Mendiola 3600 (Exhibición comercial, venta 0 KM y entregas).
-• **Horario de Atención:**
-  - Lunes a Sábado: 8:00 AM – 7:00 PM
-  - Domingos: 9:00 AM – 2:00 PM
-• **Línea Directa / WhatsApp:** +51 987 654 321.
+• **Sucursal Cajamarca (atención al público):** Cas. Huacariz Mz A Lote S/N, Cajamarca.
+• **Sede principal (domicilio fiscal):** Cal. Los Ñandues 193, Urb. Limatambo, Surquillo, Lima.
+• **Horario de Atención (Cajamarca):**
+  - Lunes a Viernes: 8:00 AM – 6:30 PM
+  - Sábados: 8:00 AM – 1:00 PM
+• **Línea Directa / WhatsApp:** 910 446 152.
 
-¿En cuál de nuestras sedes te gustaría que te recibamos?`;
+¿Te ayudo a coordinar tu visita?`;
   }
 
   // General Automotive Consultation default
@@ -547,7 +591,7 @@ Puedes reservar tu cita directamente en la sección **Taller & Citas** o indicar
 
 Te puedo orientar al instante en toda nuestra web:
 • **Vehículos 0 KM 2025 & Seminuevos:** Toyota RAV4 Hybrid (Bono S/ 5,630), Nissan Frontier Pro-4X (Bono S/ 7,500), BMW 520i y Corolla.
-• **Despachos Shalom Express:** A domicilio o agencia a nivel nacional (Cajamarca gratis, Lima S/ 22, Provincias desde S/ 15).
+• **Despachos Shalom Express:** A domicilio o agencia a nivel nacional (Cajamarca gratis desde S/ 500, Lima S/ 22, Provincias desde S/ 15).
 • **Métodos de Pago:** Pasarela Culqi (tarjetas y Yape), POS inalámbrico y transferencia bancaria (datos por WhatsApp oficial o al ingresar a tu cuenta).
 • **Repuestos y Accesorios Oficiales:** Llantas Mickey Thompson M/T, láminas de seguridad LLumar, lubricantes Mobil 1, aros Black Rhino, frenos Trakko y accesorios Keko.
 • **Simulación de Cuotas & Plan Retoma:** Convenios con BCP, BBVA y Santander desde 20% inicial y bono de hasta S/ 7,500.

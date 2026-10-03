@@ -401,7 +401,7 @@ export const FinancingView: React.FC = () => {
               </div>
 
               <a
-                href={`https://wa.me/51987654321?text=Hola%20Nor%20Celis,%20coticé%20un%20crédito%20con%20${selectedBank.name}%20por%20${currency}%20${vehiclePrice}%20(Cuota%20estimada:%20${currency}%20${currentCalc.totalMonthlyQuote}/mes).%20Deseo%20iniciar%20mi%20pre-aprobación.`}
+                href={`https://wa.me/51910446152?text=Hola%20Nor%20Celis,%20coticé%20un%20crédito%20con%20${selectedBank.name}%20por%20${currency}%20${vehiclePrice}%20(Cuota%20estimada:%20${currency}%20${currentCalc.totalMonthlyQuote}/mes).%20Deseo%20iniciar%20mi%20pre-aprobación.`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full min-h-[48px] bg-[#25D366] hover:bg-[#20ba59] text-white font-bold py-3.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition-transform hover:scale-[1.02] text-center leading-tight cursor-pointer"
@@ -761,7 +761,7 @@ export const FinancingView: React.FC = () => {
 
               <div className="space-y-2">
                 <a
-                  href={`https://wa.me/51987654321?text=Hola%20Nor%20Celis,%20tengo%20el%20codigo%20de%20pre-aprobacion%20${preApprovalCode}%20con%20${selectedBank.name}%20por%20${currency}%20${vehiclePrice}.%20Deseo%20cerrar%20el%20credito.`}
+                  href={`https://wa.me/51910446152?text=Hola%20Nor%20Celis,%20tengo%20el%20codigo%20de%20pre-aprobacion%20${preApprovalCode}%20con%20${selectedBank.name}%20por%20${currency}%20${vehiclePrice}.%20Deseo%20cerrar%20el%20credito.`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full bg-[#25D366] hover:bg-[#20ba59] text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2"

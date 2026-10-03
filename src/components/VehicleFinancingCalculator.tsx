@@ -506,7 +506,7 @@ export const VehicleFinancingCalculator: React.FC<VehicleFinancingCalculatorProp
                 </button>
 
                 <a
-                  href={`https://wa.me/51987654321?text=${whatsappMessage}`}
+                  href={`https://wa.me/51910446152?text=${whatsappMessage}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-2xl font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
@@ -770,7 +770,7 @@ export const VehicleFinancingCalculator: React.FC<VehicleFinancingCalculatorProp
 
                 <div className="space-y-2 pt-2">
                   <a
-                    href={`https://wa.me/51987654321?text=${encodeURIComponent(
+                    href={`https://wa.me/51910446152?text=${encodeURIComponent(
                       `Hola Carlos Mendoza, tengo mi código de crédito pre-aprobado para el ${vehicle.name} (${currencySymbol} ${totalMonthlyPayment}/mes). Deseo coordinar la firma y entrega del vehículo.`
                     )}`}
                     target="_blank"

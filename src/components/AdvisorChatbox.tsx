@@ -61,7 +61,7 @@ Estoy listo para orientarte en toda nuestra plataforma web:
 • **Plan Retoma:** Tasación en 30 minutos y **Bono Exclusivo de hasta S/ 7,500**.
 • **Repuestos Originales:** Mickey Thompson (M/T), LLumar, Mobil 1, Keko, Black Rhino, 3M y Trakko.
 • **Taller Mecánico & Citas:** Mantenimiento preventivo, scanner computarizado y alineación 3D.
-• **Garantías & Libro de Reclamaciones:** Cobertura de 5 años en nuevos y atención según INDECOPI.
+• **Garantías & Libro de Reclamaciones:** Garantía del fabricante según cada producto; reclamos dentro de 15 días calendario y Libro de Reclamaciones virtual.
 
 ¿En qué puedo orientarte hoy? Puedes elegir una sugerencia rápida o escribir tu consulta.`,
     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -223,7 +223,7 @@ Para proteger la seguridad de tus transacciones, los datos de cuentas bancarias 
 
 • 📱 **WhatsApp Oficial:** [965 171 717](https://wa.me/51965171717) — Te enviamos los datos directamente.
 • 🌐 **Área de cliente:** Ingresa a tu cuenta en esta web para ver los métodos de pago habilitados.
-• 🏢 **Presencial:** Av. Vía de Evitamiento Sur 6003, Cajamarca.
+• 🏢 **Presencial:** Cas. Huacariz Mz A Lote S/N, Cajamarca.
 
 ⚠️ **Nunca realices transferencias a cuentas que no provengan de estos canales oficiales.** Ante cualquier duda, verifica con nuestro equipo antes de transferir.`;
     }
@@ -233,7 +233,7 @@ Para proteger la seguridad de tus transacciones, los datos de cuentas bancarias 
 • **Cobertura:** 100% de agencias Shalom a nivel nacional.
 • **Tiempos de entrega:** 24 a 48 horas en capitales de departamento.
 • **Seguimiento:** Código de guía oficial generado automáticamente al confirmar tu compra.
-• **Costo:** Gratuito en compras mayores a S/ 450 en autopartes seleccionadas.`;
+• **Costo:** Delivery gratis en la ciudad de Cajamarca desde S/ 500; a provincias, la responsabilidad culmina al entregar en la agencia elegida.`;
     }
 
     if (q.includes('retoma') || q.includes('tasacion') || q.includes('mi auto') || q.includes('usado')) {
@@ -255,9 +255,9 @@ Contamos con stock en tiempo real de marcas líderes:
 
     if (q.includes('taller') || q.includes('mantenimiento') || q.includes('cita') || q.includes('aceite')) {
       return `### Taller Especializado Multimarca Nor Celis
-• **Sede Principal:** Av. Vía de Evitamiento Sur 6003, Cajamarca.
+• **Sucursal Cajamarca:** Cas. Huacariz Mz A Lote S/N, Cajamarca.
 • **Servicios:** Mantenimientos preventivos 10K / 20K / 40K, alineación 3D láser, escaneo electrónico con escáner oficial y cabina de pintura al horno.
-• **Garantía:** 6 meses o 10,000 km en mano de obra y repuestos instalados.`;
+• **Garantía:** cubre la mano de obra realizada; reclamos dentro de 15 días calendario desde la entrega.`;
     }
 
     return `¡Con gusto te ayudo! En **NORCELIS AUTOMOTRIZ** somos concesionario oficial y taller multimarcas líder en el norte del Perú. 

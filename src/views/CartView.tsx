@@ -3,7 +3,7 @@ import { summarizeFit } from '../utils/compatibilityEngine';
 import type { AutoPart } from '../types';
 import { useApp } from '../context/AppContext';
 import { SafeImage } from '../components/SafeImage';
-import { SHALOM_DESTINATIONS } from '../data/bankAccountsData';
+import { SHALOM_DESTINATIONS, CAJAMARCA_FREE_DELIVERY_MIN_SOLES } from '../data/bankAccountsData';
 import { CulqiPaymentModal } from '../components/checkout/CulqiPaymentModal';
 import { BankAccountsList } from '../components/checkout/BankAccountsList';
 
@@ -49,6 +49,11 @@ export const CartView: React.FC = () => {
   // Dynamic Shalom Shipping Cost calculation
   const selectedDestObj = SHALOM_DESTINATIONS.find((d) => d.id === selectedShalomDestination) || SHALOM_DESTINATIONS[0];
   const shippingCost = deliveryMethod === 'shipping' ? selectedDestObj.cost : 0;
+  // Política: en Cajamarca ciudad el delivery es gratis solo desde S/ 500; por debajo, el flete se coordina.
+  const fleteToCoordinate =
+    deliveryMethod === 'shipping' &&
+    selectedDestObj.id === 'cajamarca-local' &&
+    cartSubtotalSoles < CAJAMARCA_FREE_DELIVERY_MIN_SOLES;
 
   // Discount calculation
   const discountAmount = couponApplied ? Math.round(cartSubtotalSoles * 0.05) : 0;
@@ -77,7 +82,7 @@ export const CartView: React.FC = () => {
         status: 'confirmado',
         statusText: 'Pedido Confirmado & Facturado',
         statusDescription: 'El pedido fue recibido en nuestro sistema y los repuestos están siendo verificados por código OEM.',
-        destination: deliveryMethod === 'shipping' ? `${selectedDestObj.label} (${customerAddress || 'Dirección registrada'})` : 'Concesionario Nor Celis (AV. VIA DE EVITAMIENTO SUR 6003)',
+        destination: deliveryMethod === 'shipping' ? `${selectedDestObj.label} (${customerAddress || 'Dirección registrada'})` : 'Sucursal Nor Celis (CAS. HUACARIZ MZ A LOTE S/N)',
         deliveryType: deliveryMethod === 'shipping' ? `Despacho Shalom Express (${shalomDeliveryType === 'domicilio' ? 'A Domicilio' : 'Agencia Shalom'})` : 'Retiro en Concesionario Cajamarca',
         recipientName: user.isLoggedIn && user.name ? user.name : (customerDniRuc ? `Cliente DNI/RUC ${customerDniRuc}` : 'Cliente Nor Celis'),
         recipientPhone: user.isLoggedIn && user.phone ? user.phone : '987 654 321',
@@ -493,7 +498,7 @@ export const CartView: React.FC = () => {
                       >
                         {SHALOM_DESTINATIONS.map((dest) => (
                           <option key={dest.id} value={dest.id}>
-                            {dest.label} — {dest.cost === 0 ? 'Gratis' : `S/ ${dest.cost}`} ({dest.estimatedTime})
+                            {dest.label} — {dest.id === 'cajamarca-local' ? `Gratis desde S/ ${CAJAMARCA_FREE_DELIVERY_MIN_SOLES}` : `S/ ${dest.cost}`} ({dest.estimatedTime})
                           </option>
                         ))}
                       </select>
@@ -560,7 +565,7 @@ export const CartView: React.FC = () => {
                     <span className="material-symbols-outlined text-primary text-xl">store</span>
                     <div>
                       <div className="text-xs font-bold text-on-surface">Retiro en Concesionario Cajamarca</div>
-                      <div className="text-[11px] text-outline font-medium">AV. VIA DE EVITAMIENTO SUR 6003</div>
+                      <div className="text-[11px] text-outline font-medium">CAS. HUACARIZ MZ A LOTE S/N</div>
                     </div>
                   </div>
                   <span className="text-xs font-bold text-emerald-700">GRATIS</span>
@@ -615,7 +620,7 @@ export const CartView: React.FC = () => {
                 <div className="flex justify-between text-outline">
                   <span>Envío Shalom Express ({deliveryMethod === 'shipping' ? selectedDestObj.label : 'Retiro en Sede'}):</span>
                   <span className={`font-mono font-bold ${shippingCost === 0 ? 'text-emerald-700' : 'text-on-surface'}`}>
-                    {shippingCost === 0 ? 'Gratis' : `S/ ${shippingCost}`}
+                    {fleteToCoordinate ? 'Flete por coordinar' : shippingCost === 0 ? 'Gratis' : `S/ ${shippingCost}`}
                   </span>
                 </div>
 
@@ -693,7 +698,7 @@ export const CartView: React.FC = () => {
                     <span>Yape Directo Concesionario</span>
                   </div>
                   <p className="text-[11px] text-gray-700">
-                    Número Oficial: <strong>987 654 321</strong> (NOR CELIS AUTOMOTRIZ S.A.C.)
+                    Número Oficial: <strong>910 446 152</strong> (GRUPO MEVAC S.A.C.)
                   </p>
                   <span className="text-[10px] text-gray-500 block">
                     Al confirmar el pedido se registrará tu solicitud y podrás adjuntar tu captura de Yape por WhatsApp.
@@ -849,7 +854,7 @@ export const CartView: React.FC = () => {
                 </button>
 
                 <a
-                  href={`https://wa.me/51987654321?text=Hola%20Nor%20Celis,%20adjunto%20mi%20pedido%20${completedOrder.orderNumber}%20con%20guía%20Shalom%20${completedOrder.shalomGuide || 'retiro'}`}
+                  href={`https://wa.me/51910446152?text=Hola%20Nor%20Celis,%20adjunto%20mi%20pedido%20${completedOrder.orderNumber}%20con%20guía%20Shalom%20${completedOrder.shalomGuide || 'retiro'}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full py-3 bg-[#25D366] hover:bg-[#20ba59] text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"

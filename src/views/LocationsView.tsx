@@ -1,21 +1,22 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
+import { SITE_CONFIG } from '../config/siteConfig';
 
 export const LocationsView: React.FC = () => {
   const { setCurrentView } = useApp();
 
   const sede = {
-    name: 'Concesionario Oficial & Taller Central Nor Celis',
-    category: 'Concesionario y Taller Integral',
+    name: `${SITE_CONFIG.company.tradeName} – ${SITE_CONFIG.company.branch.name}`,
+    category: 'Sucursal de atención al público',
     city: 'Cajamarca',
-    address: 'AV. VIA DE EVITAMIENTO SUR 6003 – CAJAMARCA',
-    reference: 'Frente al eje vial sur / Zona comercial automotriz de Cajamarca',
-    phone: '(076) 364-520',
-    mobile: '+51 987 654 321',
-    whatsapp: '51987654321',
-    email: 'contacto@norcelis.pe',
-    googleMapsUrl: 'https://maps.google.com/?q=Av.+Via+de+Evitamiento+Sur+6003,+Cajamarca',
-    wazeUrl: 'https://waze.com/ul?q=Av.+Via+de+Evitamiento+Sur+6003,+Cajamarca',
+    address: `${SITE_CONFIG.company.branch.address} – ${SITE_CONFIG.company.branch.city}`,
+    reference: 'Caserío Huacariz',
+    phone: SITE_CONFIG.company.primaryPhone,
+    mobile: SITE_CONFIG.company.whatsappFormatted,
+    whatsapp: SITE_CONFIG.company.whatsappPhone,
+    email: SITE_CONFIG.company.salesEmail,
+    googleMapsUrl: SITE_CONFIG.company.googleMapsEmbedUrl,
+    wazeUrl: 'https://waze.com/ul?q=Cas.+Huacariz,+Cajamarca',
     image: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80',
     hours: {
       sales: 'Lunes a Sábado: 8:00 AM – 7:00 PM | Domingos: 9:00 AM – 2:00 PM',
@@ -73,7 +74,7 @@ export const LocationsView: React.FC = () => {
             Inicio
           </button>
           <span>/</span>
-          <span className="text-white font-semibold">Sede &amp; Ubicación Oficial</span>
+          <span className="text-white font-semibold">Sucursal &amp; Ubicación</span>
         </nav>
 
         {/* Hero Banner */}
@@ -81,17 +82,17 @@ export const LocationsView: React.FC = () => {
           <div className="max-w-3xl space-y-4 relative z-10">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container text-white text-xs font-bold tracking-wide uppercase shadow-sm">
               <span className="material-symbols-outlined text-sm">location_on</span>
-              Concesionario &amp; Taller • Cajamarca
+              Sucursal Cajamarca
             </div>
             <h1 className="text-3xl md:text-5xl font-headline font-extrabold tracking-tight leading-tight">
-              Concesionario Oficial &amp; Taller Central
+              Sucursal Cajamarca
             </h1>
             <p className="text-surface-container-highest/85 text-sm md:text-base leading-relaxed">
               Nuestras instalaciones integradas concentran el Showroom de vehículos 0km y Seminuevos, el Taller Mecánico Multimarca con tecnología láser 3D y el Almacén Central de Repuestos OEM para toda la región.
             </p>
             <div className="flex items-center gap-2 font-mono text-xs text-amber-300 bg-black/30 w-fit px-3 py-1.5 rounded-lg border border-amber-300/30">
               <span className="material-symbols-outlined text-sm">pin_drop</span>
-              <span className="font-bold tracking-wider">AV. VIA DE EVITAMIENTO SUR 6003 – CAJAMARCA</span>
+              <span className="font-bold tracking-wider">CAS. HUACARIZ MZ A LOTE S/N – CAJAMARCA</span>
             </div>
           </div>
         </div>
@@ -252,7 +253,7 @@ export const LocationsView: React.FC = () => {
                   <div className="flex items-center gap-2.5">
                     <span className="material-symbols-outlined text-primary text-base">call</span>
                     <div>
-                      <span className="text-outline text-[10px] block">Central Telefónica Cajamarca</span>
+                      <span className="text-outline text-[10px] block">Llamadas</span>
                       <strong className="text-on-surface font-mono">{sede.phone}</strong>
                     </div>
                   </div>
@@ -268,7 +269,7 @@ export const LocationsView: React.FC = () => {
                   <div className="flex items-center gap-2.5">
                     <span className="material-symbols-outlined text-emerald-600 text-base">smartphone</span>
                     <div>
-                      <span className="text-outline text-[10px] block">Móvil &amp; Asesoría WhatsApp</span>
+                      <span className="text-outline text-[10px] block">Asesoría por WhatsApp</span>
                       <strong className="text-on-surface font-mono">{sede.mobile}</strong>
                     </div>
                   </div>

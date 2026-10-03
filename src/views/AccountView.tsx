@@ -78,7 +78,7 @@ export const AccountView: React.FC = () => {
     mileage: 25000,
     serviceType: 'Mantenimiento Preventivo Oficial',
     technician: 'Ing. Renzo Valdivia (Master Toyota)',
-    workshop: 'Taller Central Nor Celis (AV. VIA DE EVITAMIENTO SUR 6003 – CAJAMARCA)',
+    workshop: 'Taller Nor Celis (CAS. HUACARIZ MZ A LOTE S/N – CAJAMARCA)',
     costSoles: 550,
     invoiceNumber: `B001-000${Math.floor(10000 + Math.random() * 90000)}`,
     workSummary: 'Cambio de Aceite Sintético de Motor y Filtro OEM\nRotación de neumáticos y calibración láser\nEscaneo computarizado de 25 puntos de seguridad',
@@ -91,7 +91,7 @@ export const AccountView: React.FC = () => {
       id: 'CITA-2025-098',
       vehicle: 'Toyota RAV4 Hybrid (ABC-123)',
       serviceName: 'Mantenimiento Preventivo 25,000 km + Escaneo Híbrido Techstream',
-      branch: 'Taller Nor Celis (AV. VIA DE EVITAMIENTO SUR 6003 – CAJAMARCA)',
+      branch: 'Taller Nor Celis (CAS. HUACARIZ MZ A LOTE S/N – CAJAMARCA)',
       date: '28 de Septiembre, 2026',
       time: '10:00 AM',
       advisor: 'Ing. Renzo Valdivia (Especialista Master Toyota)',
@@ -104,7 +104,7 @@ export const AccountView: React.FC = () => {
       id: 'CITA-2025-045',
       vehicle: 'Toyota Hilux Revo (HLX-789)',
       serviceName: 'Alineación Láser 3D de 4 Ruedas + Balanceo Dinámico de Neumáticos',
-      branch: 'Taller Nor Celis (AV. VIA DE EVITAMIENTO SUR 6003 – CAJAMARCA)',
+      branch: 'Taller Nor Celis (CAS. HUACARIZ MZ A LOTE S/N – CAJAMARCA)',
       date: '12 de Julio, 2026',
       time: '03:30 PM',
       advisor: 'Téc. Marco Quispe',
@@ -140,7 +140,7 @@ export const AccountView: React.FC = () => {
         { name: 'Instalación y Configuración BMS en Taller', qty: 1, price: 0 },
       ],
       total: 780,
-      deliveryType: 'Instalación en Taller (AV. VIA DE EVITAMIENTO SUR 6003 – CAJAMARCA)',
+      deliveryType: 'Instalación en Taller (CAS. HUACARIZ MZ A LOTE S/N – CAJAMARCA)',
       status: 'Instalado con Éxito',
       statusBadge: 'bg-emerald-100 text-emerald-800 border-emerald-200',
       trackingCode: 'TALLER-CAJAMARCA-OK',
@@ -153,7 +153,7 @@ export const AccountView: React.FC = () => {
     email: user.email || 'carlos.mendoza@norcelis.pe',
     phone: '987 654 321',
     dni: '45892104',
-    address: 'AV. VIA DE EVITAMIENTO SUR 6003 – CAJAMARCA',
+    address: 'CAS. HUACARIZ MZ A LOTE S/N – CAJAMARCA',
     rucInvoice: '20601849201',
     businessName: 'Mendoza Logistics & Consulting S.A.C.',
   });
@@ -1189,7 +1189,7 @@ export const AccountView: React.FC = () => {
               <div className="p-4 border-t border-surface-container bg-surface-container-lowest rounded-b-3xl flex justify-between items-center">
                 <span className="text-[11px] text-outline font-medium flex items-center gap-1">
                   <span className="material-symbols-outlined text-sm text-emerald-600">verified_user</span>
-                  Registro auditado según estándar oficial Nor Celis Automotriz S.A.C.
+                  Registro auditado según estándar oficial de GRUPO MEVAC S.A.C.
                 </span>
                 <button
                   onClick={() => setSelectedVehicleForHistory(null)}

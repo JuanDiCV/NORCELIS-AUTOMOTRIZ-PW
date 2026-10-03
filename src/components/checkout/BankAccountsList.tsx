@@ -39,7 +39,7 @@ export const BankAccountsList: React.FC<BankAccountsListProps> = ({ onCopySucces
               Cuentas Bancarias Oficiales
             </h4>
             <span className="text-[10px] text-gray-500 block truncate">
-              NOR CELIS AUTOMOTRIZ S.A.C. • RUC 20608754129
+              GRUPO MEVAC S.A.C. • RUC 20610829318
             </span>
           </div>
         </div>
@@ -294,7 +294,7 @@ export const BankAccountsList: React.FC<BankAccountsListProps> = ({ onCopySucces
             ))}
           </ul>
           <div className="pt-2 border-t border-gray-200 text-[11px] text-gray-500">
-            <span>Envía tu constancia a nuestro WhatsApp oficial: <strong>+51 987 654 321</strong></span>
+            <span>Envía tu constancia a nuestro WhatsApp oficial: <strong>910 446 152</strong></span>
           </div>
         </div>
       )}

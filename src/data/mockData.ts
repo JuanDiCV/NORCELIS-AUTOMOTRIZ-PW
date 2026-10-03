@@ -591,7 +591,7 @@ const RAW_LEGACY_PARTS: AutoPart[] = [
     discount: '-18% PROMO',
     badge: 'Libre Mantenimiento',
     compatibleVehicle: 'Garantizado compatible con RAV4 Híbrido y Gasolina',
-    stockText: 'Instalación en Taller Cajamarca (Av. Vía de Evitamiento Sur 6003)',
+    stockText: 'Instalación en Taller Cajamarca (Cas. Huacariz Mz A Lote S/N)',
     features: ['CCA: 760 Amperes', 'Instalación Incluida', 'Tecnología AGM alemana'],
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCKz1SYjrs-3GKo-V8XkeonlDibb17wgATNHQlbxiJ6FRb1FZwT_M5fUVexlwm8_Lmi8fairJQ19u8ERMhn98tfwECJsKKg-YCAphr9Fm2yK8FPFK8YAU13fbQ-4RgmO5LH191mYSI28Aliv2GVJ8uA3qGphqHZNIvuY0EbwlSC0MyN-HsNU4EcXN8o94Vb_rYG2UMjDDXWdPZxQD4XewGwDzYC6VVW2uamPANl8K0z4VqfASWjM4NF',
   },
@@ -661,7 +661,7 @@ const RAW_LEGACY_PARTS: AutoPart[] = [
     reviewCount: 82,
     badge: 'High Flow +5HP',
     compatibleVehicle: 'Garantizado compatible con RAV4 2022 - 2025',
-    stockText: 'Entrega en Sede Cajamarca (Av. Vía de Evitamiento Sur 6003)',
+    stockText: 'Entrega en Sede Cajamarca (Cas. Huacariz Mz A Lote S/N)',
     features: ['Flujo +50% Aire', 'Lavable y Reutilizable', 'Vida Útil 1 Millón Km'],
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA4HI7ekG-NfNZKJp4SYKriyS2u8D0gAOJU_nVbmAZNCTAdWrqD1-reMgOX9lAKrXzSO7Z-DlAgwcTPyUFXOPL5B02nYIjA2n7LwMc_HtZxpwJ4gwqQmBGGF2_zK-hdc66IVcjmnu5Cw-4eS-GUkB9V_j7f4bjtrn7nOIXJmiPanmhiDIg7ll7OUZdMj90uEeCcHmgQXFp9fYah3q564LczeEsbNvZbRGJ8z9_z2v3N4HHHjgHhtiq2',
   },
@@ -678,7 +678,7 @@ const RAW_LEGACY_PARTS: AutoPart[] = [
     reviewCount: 76,
     badge: 'Suspensión Reforzada',
     compatibleVehicle: 'Compatible con Hilux Revo / Frontier / RAV4',
-    stockText: 'Stock Central Cajamarca - AV. VIA DE EVITAMIENTO SUR 6003 (5 pares disponibles)',
+    stockText: 'Stock Central Cajamarca - CAS. HUACARIZ MZ A LOTE S/N (5 pares disponibles)',
     features: ['Gas Nitrógeno Presurizado', 'Resorte Helicoidal templado en frío', 'Altura y dureza regulable'],
     image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=800&q=80',
   },
@@ -3195,7 +3195,7 @@ export const INITIAL_CART_ITEMS = [
     image: 'https://images.unsplash.com/photo-1607860108855-64acf2078ed9?auto=format&fit=crop&w=800&q=80',
     specsSubtitle: 'Cita: Jueves, 24 de Octubre - 09:30 AM (Sede Cajamarca) • Duración: 6-8 horas',
     scheduledDate: '2026-10-24T09:30:00',
-    scheduledLocation: 'Sede Cajamarca (Av. Vía de Evitamiento Sur 6003)',
+    scheduledLocation: 'Sede Cajamarca (Cas. Huacariz Mz A Lote S/N)',
   }
 ];
 

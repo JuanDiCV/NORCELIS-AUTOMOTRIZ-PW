@@ -7,6 +7,7 @@ import { TestDriveModal } from './components/TestDriveModal';
 import { PdfPreviewModal } from './components/PdfPreviewModal';
 import { QuickQuoteModal } from './components/QuickQuoteModal';
 import { FloatingHub } from './components/FloatingHub';
+import { CookieNotice } from './components/CookieNotice';
 import { AdvisorChatbox } from './components/AdvisorChatbox';
 import { HomeView } from './views/HomeView';
 import { CarsCatalogView } from './views/CarsCatalogView';
@@ -190,6 +191,7 @@ const MainContent: React.FC = () => {
 
       {/* Floating Speed Dial Hub (Cotización Principal Naranja, Asesor Virtual, WhatsApp) */}
       <FloatingHub />
+      <CookieNotice />
 
       {/* Floating Automotive Advisor Chatbox & WhatsApp */}
       <AdvisorChatbox />

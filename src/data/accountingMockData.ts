@@ -14,7 +14,7 @@ export interface SaleRecord {
   taxIgv: number;
   totalAmount: number;
   paymentMethod: 'Transferencia BCP' | 'Tarjeta de Crédito / Débito' | 'Financiamiento Santander' | 'Efectivo en Caja' | 'PagoEfectivo';
-  branch: 'Sede Cajamarca Central' | 'Sede Vía Evitamiento Sur' | 'Sede Jaén' | 'Sede Trujillo';
+  branch: 'Sede Cajamarca Central' | 'Sucursal Cajamarca' | 'Sede Jaén' | 'Sede Trujillo';
   salesAdvisor: string;
   sunatStatus: 'Aceptado SUNAT' | 'En Proceso' | 'Anulado';
 }
@@ -35,7 +35,7 @@ export interface WorkshopOrderRecord {
   igvSoles: number;
   totalSoles: number;
   technician: string;
-  branch: 'Sede Cajamarca Central' | 'Sede Vía Evitamiento Sur' | 'Sede Jaén' | 'Sede Trujillo';
+  branch: 'Sede Cajamarca Central' | 'Sucursal Cajamarca' | 'Sede Jaén' | 'Sede Trujillo';
   status: 'Completada y Facturada' | 'En Proceso en Taller' | 'Esperando Repuesto';
 }
 
@@ -53,7 +53,7 @@ export interface QuotationLeadRecord {
   quotedPriceUsd: number;
   initialPaymentProjectedUsd?: number;
   salesAdvisor: string;
-  branch: 'Sede Cajamarca Central' | 'Sede Vía Evitamiento Sur' | 'Sede Jaén' | 'Sede Trujillo';
+  branch: 'Sede Cajamarca Central' | 'Sucursal Cajamarca' | 'Sede Jaén' | 'Sede Trujillo';
   status: 'Venta Cerrada' | 'Seguimiento Activo' | 'Test Drive Realizado' | 'En Evaluación Crediticia' | 'Descartado';
 }
 
@@ -114,7 +114,7 @@ export const INITIAL_SALES_RECORDS: SaleRecord[] = [
     taxIgv: 6557.80,
     totalAmount: 42990.00,
     paymentMethod: 'Financiamiento Santander',
-    branch: 'Sede Vía Evitamiento Sur',
+    branch: 'Sucursal Cajamarca',
     salesAdvisor: 'Rodrigo Celis',
     sunatStatus: 'Aceptado SUNAT',
   },
@@ -254,7 +254,7 @@ export const INITIAL_SALES_RECORDS: SaleRecord[] = [
     taxIgv: 3888.31,
     totalAmount: 25490.00,
     paymentMethod: 'Financiamiento Santander',
-    branch: 'Sede Vía Evitamiento Sur',
+    branch: 'Sucursal Cajamarca',
     salesAdvisor: 'Carlos Mendoza',
     sunatStatus: 'Aceptado SUNAT',
   },
@@ -315,7 +315,7 @@ export const INITIAL_WORKSHOP_ORDERS: WorkshopOrderRecord[] = [
     igvSoles: 105.25,
     totalSoles: 690,
     technician: 'Ing. Marco Alvites',
-    branch: 'Sede Vía Evitamiento Sur',
+    branch: 'Sucursal Cajamarca',
     status: 'En Proceso en Taller',
   },
   {
@@ -403,7 +403,7 @@ export const INITIAL_QUOTATIONS_LEADS: QuotationLeadRecord[] = [
     quotedPriceSoles: 98000,
     quotedPriceUsd: 25800,
     salesAdvisor: 'Carlos Mendoza',
-    branch: 'Sede Vía Evitamiento Sur',
+    branch: 'Sucursal Cajamarca',
     status: 'Venta Cerrada',
   },
 ];

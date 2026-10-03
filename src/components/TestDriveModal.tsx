@@ -71,7 +71,7 @@ export const TestDriveModal: React.FC = () => {
               onChange={(e) => setSede(e.target.value)}
               className="w-full bg-surface-container-low border border-surface-container rounded-xl p-2.5 text-xs font-semibold text-on-surface focus:outline-none focus:border-primary"
             >
-              <option value="cajamarca">Concesionario Oficial: AV. VIA DE EVITAMIENTO SUR 6003 – CAJAMARCA</option>
+              <option value="cajamarca">Sucursal Cajamarca: CAS. HUACARIZ MZ A LOTE S/N – CAJAMARCA</option>
               <option value="domicilio">Test Drive VIP a Domicilio en Cajamarca</option>
             </select>
           </div>

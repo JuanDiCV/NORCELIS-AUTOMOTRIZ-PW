@@ -616,7 +616,7 @@ export const AccountingExportCenter: React.FC = () => {
             >
               <option value="todas">Todas las Sedes (Consolidado)</option>
               <option value="Sede Cajamarca Central">Sede Cajamarca Central</option>
-              <option value="Sede Vía Evitamiento Sur">Sede Vía Evitamiento Sur</option>
+              <option value="Sucursal Cajamarca">Sucursal Cajamarca</option>
               <option value="Sede Jaén">Sede Jaén</option>
               <option value="Sede Trujillo">Sede Trujillo</option>
             </select>

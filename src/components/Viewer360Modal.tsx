@@ -756,7 +756,7 @@ export const Viewer360Modal: React.FC = () => {
                   <span>Probar en Test Drive</span>
                 </button>
                 <a
-                  href={`https://wa.me/51987654321?text=Hola,%20quisiera%20detalles%20sobre%20${encodeURIComponent(
+                  href={`https://wa.me/51910446152?text=Hola,%20quisiera%20detalles%20sobre%20${encodeURIComponent(
                     currentHotspotData.title
                   )}%20del%20${currentVehicle.name}`}
                   target="_blank"
@@ -872,7 +872,7 @@ export const Viewer360Modal: React.FC = () => {
           {/* ACCIONES COMERCIALES */}
           <div className="flex items-center gap-2 shrink-0">
             <a
-              href={`https://wa.me/51987654321?text=${whatsappConfigMessage}`}
+              href={`https://wa.me/51910446152?text=${whatsappConfigMessage}`}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition-all shadow-md flex items-center gap-1.5"

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { SITE_CONFIG } from '../config/siteConfig';
 
 export const ClaimsBookView: React.FC = () => {
   const { setCurrentView, showToast } = useApp();
@@ -21,6 +22,8 @@ export const ClaimsBookView: React.FC = () => {
   const [claimDetail, setClaimDetail] = useState('');
   const [concreteRequest, setConcreteRequest] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const { company } = SITE_CONFIG;
 
   // Submitted Sheet Modal
   const [registeredSheet, setRegisteredSheet] = useState<{
@@ -31,36 +34,69 @@ export const ClaimsBookView: React.FC = () => {
     type: string;
     detail: string;
     request: string;
+    emailCopySent: boolean;
   } | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!acceptedTerms) {
       showToast('Debes aceptar la declaración de veracidad de datos conforme a ley');
       return;
     }
+    if (submitting) return;
+    setSubmitting(true);
 
-    const prefix = claimType === 'Reclamo' ? 'NOR-REC' : 'NOR-QUE';
-    const code = `${prefix}-2025-${Math.floor(10000 + Math.random() * 90000)}`;
+    try {
+      const res = await fetch('/api/claims', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          claimType,
+          goodType,
+          consumerName,
+          docType,
+          docNumber,
+          phone,
+          email,
+          address,
+          department,
+          claimedAmount,
+          goodDescription,
+          invoiceNumber,
+          claimDetail,
+          concreteRequest,
+          acceptedTerms,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
 
-    const sheet = {
-      code,
-      date: new Date().toLocaleDateString('es-PE', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-      consumerName,
-      docNumber,
-      type: claimType,
-      detail: claimDetail,
-      request: concreteRequest,
-    };
+      if (!res.ok || !data.code) {
+        showToast(data.error || 'No pudimos registrar tu reclamo. Inténtalo nuevamente.');
+        return;
+      }
 
-    setRegisteredSheet(sheet);
-    showToast(`Libro de Reclamaciones: Registro N° ${code} emitido con éxito`);
+      setRegisteredSheet({
+        code: data.code,
+        date: new Date(data.date).toLocaleDateString('es-PE', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        consumerName,
+        docNumber,
+        type: claimType,
+        detail: claimDetail,
+        request: concreteRequest,
+        emailCopySent: data.emailCopySent === true,
+      });
+      showToast(`Libro de Reclamaciones: registro N° ${data.code} emitido`);
+    } catch {
+      showToast('No pudimos conectar con el servidor. Inténtalo nuevamente.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -88,9 +124,10 @@ export const ClaimsBookView: React.FC = () => {
               </h1>
             </div>
             <div className="text-left sm:text-right text-xs text-outline font-mono space-y-0.5">
-              <div>Razón Social: <strong className="text-on-surface">NOR CELIS AUTOMOTRIZ S.A.C.</strong></div>
-              <div>RUC: <strong className="text-primary font-bold">20541982311</strong></div>
-              <div>Dirección: AV. VIA DE EVITAMIENTO SUR 6003 – CAJAMARCA</div>
+              <div>Razón Social: <strong className="text-on-surface">{company.legalName}</strong></div>
+              <div>RUC: <strong className="text-primary font-bold">{company.ruc}</strong></div>
+              <div>Domicilio fiscal: {company.headquarters.address}, {company.headquarters.district} - Lima</div>
+              <div>{company.branch.name}: {company.branch.address} - {company.branch.city}</div>
             </div>
           </div>
 
@@ -129,7 +166,9 @@ export const ClaimsBookView: React.FC = () => {
                   Constancia de Hoja de Reclamación Emitida
                 </h3>
                 <p className="text-xs text-outline">
-                  Conforme a la normativa del INDECOPI, se ha generado el registro oficial y se ha enviado una copia íntegra a tu correo electrónico.
+                  {registeredSheet.emailCopySent
+                    ? `Tu hoja de reclamación quedó registrada y enviamos una copia a ${email}. Revisa también tu carpeta de spam.`
+                    : `Tu hoja de reclamación quedó registrada, pero no pudimos enviar la copia a tu correo. Conserva esta constancia (imprímela o guárdala como PDF) y, si la necesitas, escríbenos a ${company.supportEmail}.`}
                 </p>
               </div>
 
@@ -445,10 +484,11 @@ export const ClaimsBookView: React.FC = () => {
 
               <button
                 type="submit"
-                className="w-full sm:w-auto bg-primary hover:bg-primary-container text-white font-bold py-3.5 px-8 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition-transform hover:scale-[1.02]"
+                disabled={submitting}
+                className="w-full sm:w-auto bg-primary hover:bg-primary-container text-white font-bold py-3.5 px-8 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg disabled:opacity-60 disabled:cursor-not-allowed transition-transform hover:scale-[1.02]"
               >
                 <span className="material-symbols-outlined text-sm">send</span>
-                Enviar Reclamación &amp; Generar Constancia
+                {submitting ? 'Registrando...' : 'Enviar Reclamación & Generar Constancia'}
               </button>
             </div>
           </div>

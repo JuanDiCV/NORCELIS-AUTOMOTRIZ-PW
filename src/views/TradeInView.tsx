@@ -32,13 +32,13 @@ export const TradeInView: React.FC = () => {
     motor: false,
   });
   const [inspectionType, setInspectionType] = useState<'concesionario' | 'domicilio'>('concesionario');
-  const [selectedBranch, setSelectedBranch] = useState('AV. VIA DE EVITAMIENTO SUR 6003 – CAJAMARCA');
+  const [selectedBranch, setSelectedBranch] = useState('CAS. HUACARIZ MZ A LOTE S/N – CAJAMARCA');
   const [inspectionDate, setInspectionDate] = useState('2025-10-15');
   const [inspectionTime, setInspectionTime] = useState('10:30 AM');
   const [clientName, setClientName] = useState('Carlos Mendoza');
   const [clientPhone, setClientPhone] = useState('987654321');
   const [clientDni, setClientDni] = useState('45892104');
-  const [address, setAddress] = useState('Av. Vía de Evitamiento Sur 6003, Cajamarca');
+  const [address, setAddress] = useState('Cas. Huacariz Mz A Lote S/N, Cajamarca');
 
   // Completed code modal / state
   const [retomaCode, setRetomaCode] = useState<string | null>(null);
@@ -220,7 +220,7 @@ export const TradeInView: React.FC = () => {
 
               <div className="flex flex-col gap-2.5">
                 <a
-                  href={`https://wa.me/51987654321?text=Hola%20Nor%20Celis,%20tengo%20el%20codigo%20de%20retoma%20${retomaCode}%20para%20tasar%20mi%20${brand}%20${model}%20${year}%20por%20S/%20${valuation.totalTradeInOffer}`}
+                  href={`https://wa.me/51910446152?text=Hola%20Nor%20Celis,%20tengo%20el%20codigo%20de%20retoma%20${retomaCode}%20para%20tasar%20mi%20${brand}%20${model}%20${year}%20por%20S/%20${valuation.totalTradeInOffer}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full bg-[#25D366] hover:bg-[#20ba59] text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-transform hover:scale-[1.02]"
@@ -694,7 +694,7 @@ export const TradeInView: React.FC = () => {
                       En Concesionario &amp; Taller Nor Celis
                     </div>
                     <p className="text-[11px] text-outline">
-                      Acércate con tu auto a nuestro complejo en AV. VIA DE EVITAMIENTO SUR 6003 – CAJAMARCA con café de cortesía y peritaje en elevador hidráulico.
+                      Acércate con tu auto a nuestro complejo en CAS. HUACARIZ MZ A LOTE S/N – CAJAMARCA con café de cortesía y peritaje en elevador hidráulico.
                     </p>
                   </div>
 
@@ -726,8 +726,8 @@ export const TradeInView: React.FC = () => {
                     onChange={(e) => setSelectedBranch(e.target.value)}
                     className="w-full bg-surface-container-low border border-surface-container rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-primary focus:outline-none"
                   >
-                    <option value="AV. VIA DE EVITAMIENTO SUR 6003 – CAJAMARCA">
-                      Concesionario &amp; Taller: AV. VIA DE EVITAMIENTO SUR 6003 – CAJAMARCA
+                    <option value="CAS. HUACARIZ MZ A LOTE S/N – CAJAMARCA">
+                      Concesionario &amp; Taller: CAS. HUACARIZ MZ A LOTE S/N – CAJAMARCA
                     </option>
                   </select>
                 </div>

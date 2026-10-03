@@ -1,6 +1,6 @@
 /**
  * Nor Celis Automotriz - Generador Oficial de Cotizaciones y Documentos PDF
- * GRUPO MEVAC S.A.C. (Nombre Comercial: NORCELIS AUTOMOTRIZ) - RUC 20610829318
+ * GRUPO MEVAC S.A.C. (Nombre Comercial: NORCELIS AUTOMOTRIZ)
  * 
  * Estructura estricta comercial, cálculos exactos con IGV, descuentos,
  * cuentas bancarias autorizadas, detracciones Banco de la Nación y políticas oficiales.
@@ -8,6 +8,7 @@
 
 import { jsPDF } from 'jspdf';
 import { Vehicle, WishlistItem, ActiveGarageVehicle, MaintenanceRecord } from '../types';
+import { SITE_CONFIG } from '../config/siteConfig';
 
 export interface QuotationItem {
   itemNumber: number;
@@ -65,23 +66,23 @@ export interface FinancingPdfParams {
 
 // Datos Fijos Oficiales de la Empresa
 export const COMPANY_DATA = {
-  razonSocial: 'GRUPO MEVAC S.A.C.',
-  nombreComercial: 'NORCELIS AUTOMOTRIZ',
-  ruc: '20610829318',
+  razonSocial: SITE_CONFIG.company.legalName,
+  nombreComercial: SITE_CONFIG.company.tradeName.toUpperCase(),
+  ruc: SITE_CONFIG.company.ruc,
   sucursales: [
     {
-      sede: 'Sede Cajamarca',
-      direccion: 'Av. Vía de Evitamiento Sur 6003, Cajamarca - Perú',
-      telefonos: '965171717 - 963134961',
+      sede: 'Sede Principal Lima',
+      direccion: `${SITE_CONFIG.company.headquarters.address}, ${SITE_CONFIG.company.headquarters.district} - Lima - Perú`,
+      telefonos: SITE_CONFIG.company.primaryPhone,
     },
     {
-      sede: 'Sede Lima',
-      direccion: 'Av. Elmer Faucett 1450, Callao / Lima - Perú',
-      telefonos: '965171717 - 963134961',
+      sede: SITE_CONFIG.company.branch.name,
+      direccion: `${SITE_CONFIG.company.branch.address}, Cajamarca - Perú`,
+      telefonos: SITE_CONFIG.company.primaryPhone,
     },
   ],
-  telefonos: '965171717 - 963134961',
-  correos: 'ventas1@norcelis.com / ventas2@norcelis.com',
+  telefonos: SITE_CONFIG.company.primaryPhone,
+  correos: SITE_CONFIG.company.salesEmail,
   web: 'www.norcelis.com',
   colors: {
     azulEmpresarial: [33, 41, 85] as [number, number, number], // #212955
@@ -109,8 +110,8 @@ export const COMPANY_DATA = {
     },
   },
   politicas: [
-    'La presente cotización tiene validez por 7 días, los productos tienen un stock limitado.',
-    'Los precios pueden variar según diagnóstico final del vehículo o disponibilidad de repuestos al momento de la confirmación del vehículo.',
+    'Cotización válida por 24 horas hábiles. Precios incluyen IGV; precios y stock sujetos a cambio sin previo aviso.',
+    'Desde S/ 2,000 o US$ 500: pago por transferencia o depósito. Precio final sujeto a diagnóstico y disponibilidad de repuestos.',
   ],
   mensajeCierre:
     'Gracias por confiar en NORCELIS AUTOMOTRIZ especialistas en autopartes, accesorios y servicios automotrices. NORCELIS AUTOMOTRIZ CALIDAD, CONFIANZA Y TECNOLOGÍA PARA TU VEHICULO.',
@@ -620,7 +621,7 @@ export function generateVehicleQuotePdf(vehicle: Vehicle, selectedColorName = 'B
       nombreOrazonSocial: 'Cliente Comercial Norcelis',
       direccion: 'Cajamarca / Lima - Perú',
       telefono: COMPANY_DATA.telefonos,
-      correo: 'ventas1@norcelis.com',
+      correo: 'gerencia@norcelis.com',
       placaVehiculo: vehicle.condition === 'nuevo' ? '0 KM POR ASIGNAR' : 'CERTIFICADA',
     },
     fechaEmision,
@@ -684,7 +685,7 @@ export function generateWishlistQuotePdf(
       nombreOrazonSocial: customerName,
       direccion: 'Cajamarca / Lima - Perú',
       telefono: '965171717',
-      correo: 'ventas1@norcelis.com',
+      correo: 'gerencia@norcelis.com',
       placaVehiculo: customerPlate,
     },
     fechaEmision,

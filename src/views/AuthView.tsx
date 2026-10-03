@@ -18,6 +18,7 @@ export const AuthView: React.FC = () => {
     showToast,
     findAccountForRecovery,
     updateAccountPassword,
+    navigateToTerms,
   } = useApp();
 
   const [authMode, setAuthMode] = useState<'login' | 'register' | 'recovery'>('login');
@@ -1157,7 +1158,19 @@ export const AuthView: React.FC = () => {
                         className="mt-0.5 rounded text-[#F07F00] focus:ring-[#F07F00] cursor-pointer"
                       />
                       <span className="text-[11px] text-outline leading-tight">
-                        Acepto los Términos y Condiciones del Servicio de Nor Celis Automotriz y la Política de Protección de Datos Personales (Ley N° 29733).
+                        Acepto los{' '}
+                        <button type="button" onClick={() => navigateToTerms('terms')} className="font-bold text-[#F07F00] hover:underline cursor-pointer">
+                          Términos y Condiciones
+                        </button>
+                        , las{' '}
+                        <button type="button" onClick={() => navigateToTerms('sales')} className="font-bold text-[#F07F00] hover:underline cursor-pointer">
+                          Políticas de Venta
+                        </button>{' '}
+                        y la{' '}
+                        <button type="button" onClick={() => navigateToTerms('privacy')} className="font-bold text-[#F07F00] hover:underline cursor-pointer">
+                          Política de Privacidad
+                        </button>{' '}
+                        de GRUPO MEVAC S.A.C. (Ley N° 29733), y autorizo el tratamiento de mis datos personales para gestionar mi cuenta y mis compras.
                       </span>
                     </label>
                     {regErrors.terms && (

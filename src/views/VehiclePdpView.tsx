@@ -576,7 +576,7 @@ export const VehiclePdpView: React.FC = () => {
               </p>
             </div>
             <a
-              href="https://wa.me/51987654321?text=Hola%20Ing.%20Carlos%20Mendoza,%20tengo%20consultas%20sobre%20el%20Toyota%20RAV4%202025"
+              href="https://wa.me/51910446152?text=Hola%20Ing.%20Carlos%20Mendoza,%20tengo%20consultas%20sobre%20el%20Toyota%20RAV4%202025"
               target="_blank"
               rel="noopener noreferrer"
               className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-500 transition-colors shadow-sm cursor-pointer"
@@ -759,7 +759,7 @@ export const VehiclePdpView: React.FC = () => {
                   Mantenimientos en Taller Nor Celis
                 </h4>
                 <p className="text-on-surface-variant">
-                  Atención preferencial en nuestro Concesionario y Taller en AV. VIA DE EVITAMIENTO SUR 6003 – CAJAMARCA con técnicos Master certificados por Toyota Motor Corporation. Citas express de 45 minutos para mantenimiento preventivo.
+                  Atención preferencial en nuestro Concesionario y Taller en CAS. HUACARIZ MZ A LOTE S/N – CAJAMARCA con técnicos Master certificados por Toyota Motor Corporation. Citas express de 45 minutos para mantenimiento preventivo.
                 </p>
               </div>
             </div>

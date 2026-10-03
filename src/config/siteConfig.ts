@@ -11,6 +11,12 @@ export interface SiteConfiguration {
     legalName: string;
     tradeName: string;
     ruc: string;
+    /** Actividad principal inscrita en SUNAT */
+    mainActivity: string;
+    /** Sede principal (domicilio fiscal) */
+    headquarters: { address: string; district: string; city: string; department: string };
+    /** Sucursal de atención al público (retiro de pedidos y taller) */
+    branch: { name: string; address: string; district: string; city: string; department: string };
     address: string;
     city: string;
     department: string;
@@ -61,22 +67,37 @@ import { API_BASE_URL, INTRANET_URL, IS_REMOTE_API_ENABLED, DEFAULT_API_TIMEOUT 
 
 export const SITE_CONFIG: SiteConfiguration = {
   company: {
-    legalName: 'NOR CELIS AUTOMOTRIZ S.A.C.',
-    tradeName: 'Nor Celis Automotriz',
-    ruc: '20601234567',
-    address: 'AV. VIA DE EVITAMIENTO SUR 6003',
+    legalName: 'GRUPO MEVAC S.A.C.',
+    tradeName: 'NorCelis Automotriz',
+    ruc: '20610829318',
+    mainActivity: 'Venta de partes, piezas y accesorios para vehículos automotores',
+    headquarters: {
+      address: 'CAL. LOS ÑANDUES 193, URB. LIMATAMBO',
+      district: 'Surquillo',
+      city: 'Lima',
+      department: 'Lima',
+    },
+    branch: {
+      name: 'Sucursal Cajamarca',
+      address: 'CAS. HUACARIZ MZ A LOTE S/N',
+      district: 'Cajamarca',
+      city: 'Cajamarca',
+      department: 'Cajamarca',
+    },
+    // Dirección de atención al cliente = sucursal Cajamarca
+    address: 'CAS. HUACARIZ MZ A LOTE S/N',
     city: 'Cajamarca',
     department: 'Cajamarca',
     country: 'Perú',
-    primaryPhone: '(076) 362489',
-    secondaryPhone: '+51 987 654 321',
-    whatsappPhone: '51987654321',
-    whatsappFormatted: '+51 987 654 321',
-    supportEmail: 'taller@norcelis.pe',
-    salesEmail: 'ventas@norcelis.pe',
+    primaryPhone: '910 446 152',
+    secondaryPhone: '',
+    whatsappPhone: '51910446152',
+    whatsappFormatted: '910 446 152',
+    supportEmail: 'gerencia@norcelis.com',
+    salesEmail: 'gerencia@norcelis.com',
     businessHours: 'Lunes a Viernes: 8:00 AM - 6:30 PM',
     saturdayHours: 'Sábados: 8:00 AM - 1:00 PM',
-    googleMapsEmbedUrl: 'https://maps.google.com/?q=Av.+Via+de+Evitamiento+Sur+6003,+Cajamarca,+Peru',
+    googleMapsEmbedUrl: 'https://maps.google.com/?q=Cas.+Huacariz+Mz+A+Lote+S/N,+Cajamarca,+Peru',
   },
   hostinger: {
     // Configuración de la Intranet corporativa en Hostinger

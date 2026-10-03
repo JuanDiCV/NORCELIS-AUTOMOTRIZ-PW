@@ -122,17 +122,17 @@ export const Footer: React.FC = () => {
   const helpLinks: FooterLink[] = [
     { label: 'Sedes y horarios', onClick: () => setCurrentView('locations') },
     { label: 'Sobre Nor Celis', onClick: () => setCurrentView('about') },
-    { label: 'Políticas de envío', onClick: () => navigateToTerms('shipping') },
+    { label: 'Envíos y entregas', onClick: () => navigateToTerms('shipping') },
     { label: 'Cambios y devoluciones', onClick: () => navigateToTerms('warranty') },
-    { label: 'Libro de Reclamaciones', onClick: () => setCurrentView('claims'), highlight: true },
   ];
 
   const legalLinks: FooterLink[] = [
     { label: 'Términos y condiciones', onClick: () => navigateToTerms('terms') },
-    { label: 'Política de privacidad', onClick: () => navigateToTerms('privacy') },
-    { label: 'Protección de datos personales (Ley N° 29733)', onClick: () => navigateToTerms('privacy') },
-    { label: 'Derechos ARCO', onClick: () => navigateToTerms('privacy') },
-    { label: 'Garantías', onClick: () => navigateToTerms('warranty') },
+    { label: 'Políticas generales de venta', onClick: () => navigateToTerms('sales') },
+    { label: 'Garantías, reclamos y devoluciones', onClick: () => navigateToTerms('warranty') },
+    { label: 'Política de privacidad y datos (Ley N° 29733)', onClick: () => navigateToTerms('privacy') },
+    { label: 'Política de cookies', onClick: () => navigateToTerms('cookies') },
+    { label: 'Libro de Reclamaciones', onClick: () => setCurrentView('claims'), highlight: true },
   ];
 
   return (
@@ -162,15 +162,19 @@ export const Footer: React.FC = () => {
               <NorCelisLogo variant="full" theme="dark" size="custom" className="h-12 w-auto" />
             </button>
             <p className="text-sm text-white/70 leading-relaxed max-w-sm">
-              Concesionario, taller y repuestos en Cajamarca. Atendemos a todo el Perú con productos originales y
-              respaldo técnico.
+              Repuestos, accesorios y servicios para tu vehículo. Atendemos desde Cajamarca a todo el Perú con
+              asesoría técnica y despacho a nivel nacional.
             </p>
 
             <ul className="space-y-3 text-sm text-white/75">
               <li className="flex items-start gap-3">
                 <MapPin size={18} className="text-[#F07F00] shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
-                  {company.address}, {company.city}
+                  <strong className="text-white/90">{company.branch.name}:</strong> {company.address}, {company.city}
+                  <br />
+                  <span className="text-white/55">
+                    Sede principal: {company.headquarters.address}, {company.headquarters.district}, {company.headquarters.city}
+                  </span>
                 </span>
               </li>
               <li className="flex items-start gap-3">
@@ -314,10 +318,11 @@ export const Footer: React.FC = () => {
                 RUC {company.ruc}
               </div>
               <div>
-                Domicilio fiscal: {company.address}, {company.city}, {company.country}
+                Nombre comercial: {company.tradeName}. Domicilio fiscal: {company.headquarters.address},{' '}
+                {company.headquarters.district}, {company.headquarters.city}, {company.country}
               </div>
               <div>
-                © {year} {company.tradeName}. Todos los derechos reservados.
+                © {year} {company.legalName}. Todos los derechos reservados.
               </div>
             </div>
 

@@ -442,7 +442,7 @@ export function generateConsolidatedAccountingSummaryCsv(
   const rows: string[] = [];
 
   // Title section
-  rows.push(['NOR CELIS AUTOMOTRIZ S.A.C. - REPORTE CONTABLE Y FINANCIERO EJECUTIVO'].map(c => escapeCsvCell(c, delim)).join(delim));
+  rows.push(['GRUPO MEVAC S.A.C. - REPORTE CONTABLE Y FINANCIERO EJECUTIVO'].map(c => escapeCsvCell(c, delim)).join(delim));
   rows.push([`Generado el: ${new Date().toLocaleString('es-PE')} | Moneda Base: Soles (PEN) y Dólares (USD)`].map(c => escapeCsvCell(c, delim)).join(delim));
   rows.push('');
 

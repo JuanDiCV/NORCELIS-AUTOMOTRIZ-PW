@@ -183,7 +183,7 @@ export const QuickQuoteModal: React.FC<QuickQuoteModalProps> = ({
           rucOdni: clientDoc.trim() || 'N/A',
           direccion:
             selectedBranch === 'cajamarca'
-              ? 'Sede Cajamarca: Av. Vía de Evitamiento Sur 6003'
+              ? 'Sede Cajamarca: Cas. Huacariz Mz A Lote S/N'
               : selectedBranch === 'lima'
               ? 'Sede Lima: Av. Elmer Faucett 1450'
               : 'Despacho Nacional Express (Shalom Express)',
@@ -228,7 +228,7 @@ export const QuickQuoteModal: React.FC<QuickQuoteModalProps> = ({
   const handleSendWhatsApp = () => {
     const branchLabel =
       selectedBranch === 'cajamarca'
-        ? 'Sede Cajamarca (Evitamiento Sur 6003)'
+        ? 'Sede Cajamarca (Cas. Huacariz Mz A Lote S/N)'
         : selectedBranch === 'lima'
         ? 'Sede Lima (Av. Faucett 1450)'
         : 'Despacho Nacional Shalom Express';
@@ -558,7 +558,7 @@ export const QuickQuoteModal: React.FC<QuickQuoteModalProps> = ({
                   type="text"
                   value={clientDoc}
                   onChange={(e) => setClientDoc(e.target.value)}
-                  placeholder="Ej. 72819201 o 20601234567"
+                  placeholder="Ej. 72819201 o 20123456789"
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#212955]"
                 />
               </div>
@@ -570,7 +570,7 @@ export const QuickQuoteModal: React.FC<QuickQuoteModalProps> = ({
                   onChange={(e) => setSelectedBranch(e.target.value as any)}
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#212955]"
                 >
-                  <option value="cajamarca">Sede Cajamarca (Vía Evitamiento Sur 6003)</option>
+                  <option value="cajamarca">Sede Cajamarca (Vía Cas. Huacariz Mz A Lote S/N)</option>
                   <option value="lima">Sede Lima / Callao (Av. Faucett 1450)</option>
                   <option value="shalom">Despacho Nacional Shalom Express (Todo el Perú)</option>
                 </select>

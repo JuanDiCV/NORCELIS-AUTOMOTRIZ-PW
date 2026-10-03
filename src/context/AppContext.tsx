@@ -174,10 +174,10 @@ interface AppContextType {
 
   trackingOrderCode: string;
   setTrackingOrderCode: (code: string) => void;
-  termsActiveTab: 'terms' | 'privacy' | 'warranty' | 'shipping';
-  setTermsActiveTab: (tab: 'terms' | 'privacy' | 'warranty' | 'shipping') => void;
+  termsActiveTab: 'terms' | 'sales' | 'privacy' | 'warranty' | 'shipping' | 'cookies';
+  setTermsActiveTab: (tab: 'terms' | 'sales' | 'privacy' | 'warranty' | 'shipping' | 'cookies') => void;
   navigateToTracking: (orderCode?: string) => void;
-  navigateToTerms: (tab?: 'terms' | 'privacy' | 'warranty' | 'shipping') => void;
+  navigateToTerms: (tab?: 'terms' | 'sales' | 'privacy' | 'warranty' | 'shipping' | 'cookies') => void;
 
   homeCategories: CinematicCategory[];
   updateHomeCategory: (code: string, updated: Partial<CinematicCategory>) => void;
@@ -656,14 +656,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const [trackingOrderCode, setTrackingOrderCode] = useState<string>(() => initialRoute.trackingCode || '');
-  const [termsActiveTab, setTermsActiveTab] = useState<'terms' | 'privacy' | 'warranty' | 'shipping'>(() => initialRoute.termsTab || 'terms');
+  const [termsActiveTab, setTermsActiveTab] = useState<'terms' | 'sales' | 'privacy' | 'warranty' | 'shipping' | 'cookies'>(() => initialRoute.termsTab || 'terms');
 
   const navigateToTracking = (orderCode?: string) => {
     if (orderCode) setTrackingOrderCode(orderCode);
     setCurrentView('order-tracking');
   };
 
-  const navigateToTerms = (tab?: 'terms' | 'privacy' | 'warranty' | 'shipping') => {
+  const navigateToTerms = (tab?: 'terms' | 'sales' | 'privacy' | 'warranty' | 'shipping' | 'cookies') => {
     if (tab) setTermsActiveTab(tab);
     setCurrentView('terms-policies');
   };

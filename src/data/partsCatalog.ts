@@ -738,7 +738,7 @@ export const PARTS_CATALOG_DATA: AutoPart[] = [
     discount: '-18% PROMO',
     badge: 'Libre Mantenimiento',
     compatibleVehicle: 'Garantizado compatible con RAV4 Híbrido y Gasolina, Hilux, Frontier',
-    stockText: 'Instalación en Taller Cajamarca (Av. Vía de Evitamiento Sur 6003)',
+    stockText: 'Instalación en Taller Cajamarca (Cas. Huacariz Mz A Lote S/N)',
     features: ['CCA: 760 Amperes', 'Instalación Incluida', 'Tecnología alemana de placa plateada'],
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCKz1SYjrs-3GKo-V8XkeonlDibb17wgATNHQlbxiJ6FRb1FZwT_M5fUVexlwm8_Lmi8fairJQ19u8ERMhn98tfwECJsKKg-YCAphr9Fm2yK8FPFK8YAU13fbQ-4RgmO5LH191mYSI28Aliv2GVJ8uA3qGphqHZNIvuY0EbwlSC0MyN-HsNU4EcXN8o94Vb_rYG2UMjDDXWdPZxQD4XewGwDzYC6VVW2uamPANl8K0z4VqfASWjM4NF',
     brandType: 'oficial',

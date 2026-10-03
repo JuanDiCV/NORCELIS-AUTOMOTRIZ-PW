@@ -6,3 +6,5 @@ coverage/
 *.log
 .env*
 !.env.example
+# Registros del Libro de Reclamaciones (datos personales)
+data/

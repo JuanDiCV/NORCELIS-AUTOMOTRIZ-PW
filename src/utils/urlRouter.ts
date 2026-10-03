@@ -8,7 +8,7 @@ export interface RouteState {
   brand?: string;
   search?: string;
   trackingCode?: string;
-  termsTab?: 'terms' | 'privacy' | 'warranty' | 'shipping';
+  termsTab?: 'terms' | 'sales' | 'privacy' | 'warranty' | 'shipping' | 'cookies';
   modal?: 'garage' | 'quote' | 'test-drive' | 'viewer-360' | 'pdf' | null;
 }
 
@@ -127,8 +127,8 @@ export function parseCurrentUrl(): RouteState {
 
   if (pathname === '/terminos-politicas' || pathname === '/terminos' || pathname === '/politicas') {
     const rawTab = searchParams.get('tab');
-    const validTabs: Array<'terms' | 'privacy' | 'warranty' | 'shipping'> = ['terms', 'privacy', 'warranty', 'shipping'];
-    const termsTab = validTabs.includes(rawTab as any) ? (rawTab as 'terms' | 'privacy' | 'warranty' | 'shipping') : 'terms';
+    const validTabs: Array<'terms' | 'sales' | 'privacy' | 'warranty' | 'shipping' | 'cookies'> = ['terms', 'sales', 'privacy', 'warranty', 'shipping', 'cookies'];
+    const termsTab = validTabs.includes(rawTab as any) ? (rawTab as 'terms' | 'sales' | 'privacy' | 'warranty' | 'shipping' | 'cookies') : 'terms';
     return {
       view: 'terms-policies',
       termsTab,

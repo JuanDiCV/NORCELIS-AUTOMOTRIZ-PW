@@ -1419,7 +1419,7 @@ export const Header: React.FC = () => {
                     Cita de Taller Online
                   </h4>
                   <p className="text-xs text-outline mt-1">
-                    Reserva tu turno sin colas en nuestro concesionario de Av. Vía de Evitamiento Sur 6003.
+                    Reserva tu turno sin colas en nuestro concesionario de Cas. Huacariz Mz A Lote S/N.
                   </p>
                 </div>
                 <button

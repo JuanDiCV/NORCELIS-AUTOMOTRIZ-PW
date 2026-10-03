@@ -30,7 +30,7 @@ export const ServicesView: React.FC = () => {
       skuOrCode: serviceObj.id.toUpperCase(),
       priceSoles: serviceObj.priceStartingSoles,
       image: serviceObj.image,
-      specsSubtitle: `Cita: ${appointmentDate} ${appointmentTime} • Taller: AV. VIA DE EVITAMIENTO SUR 6003 – CAJAMARCA • Placa: ${clientPlate}`,
+      specsSubtitle: `Cita: ${appointmentDate} ${appointmentTime} • Taller: CAS. HUACARIZ MZ A LOTE S/N – CAJAMARCA • Placa: ${clientPlate}`,
     });
     showToast(`¡Cita agendada para ${serviceObj.name}! Se agregó al carrito para confirmar reserva.`);
   };
@@ -107,7 +107,7 @@ export const ServicesView: React.FC = () => {
                     onChange={(e) => setSelectedSede(e.target.value)}
                     className="w-full bg-surface-container-low border border-surface-container rounded-xl p-2.5 font-semibold focus:outline-none focus:border-primary text-xs"
                   >
-                    <option value="cajamarca">AV. VIA DE EVITAMIENTO SUR 6003 – CAJAMARCA</option>
+                    <option value="cajamarca">CAS. HUACARIZ MZ A LOTE S/N – CAJAMARCA</option>
                   </select>
                 </div>
                 <div>
@@ -284,7 +284,7 @@ export const ServicesView: React.FC = () => {
                         skuOrCode: srv.id.toUpperCase(),
                         priceSoles: srv.priceStartingSoles,
                         image: srv.image,
-                        specsSubtitle: `Servicio en Taller Nor Celis (AV. VIA DE EVITAMIENTO SUR 6003 – CAJAMARCA) • Duración: ${srv.estimatedDuration}`,
+                        specsSubtitle: `Servicio en Taller Nor Celis (CAS. HUACARIZ MZ A LOTE S/N – CAJAMARCA) • Duración: ${srv.estimatedDuration}`,
                       });
                     }}
                     className="w-full bg-primary hover:bg-primary-container text-white py-2.5 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
@@ -294,7 +294,7 @@ export const ServicesView: React.FC = () => {
                   </button>
 
                   <a
-                    href={`https://wa.me/51987654321?text=Hola,%20quisiera%20cotizar%20el%20servicio%20${encodeURIComponent(srv.name)}%20para%20mi%20auto`}
+                    href={`https://wa.me/51910446152?text=Hola,%20quisiera%20cotizar%20el%20servicio%20${encodeURIComponent(srv.name)}%20para%20mi%20auto`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full bg-surface-container hover:bg-surface-container-high text-primary py-2 rounded-xl font-bold text-[11px] transition-colors flex items-center justify-center gap-1"
@@ -335,7 +335,7 @@ export const ServicesView: React.FC = () => {
                   onChange={(e) => setSelectedSede(e.target.value)}
                   className="w-full bg-surface-container-low border border-surface-container rounded-xl p-3 text-xs font-semibold focus:outline-none focus:border-primary"
                 >
-                  <option value="cajamarca">AV. VIA DE EVITAMIENTO SUR 6003 – CAJAMARCA</option>
+                  <option value="cajamarca">CAS. HUACARIZ MZ A LOTE S/N – CAJAMARCA</option>
                 </select>
               </div>
 

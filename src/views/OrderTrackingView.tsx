@@ -43,7 +43,7 @@ const SAMPLE_ORDERS: TrackingOrder[] = [
     status: 'en_ruta',
     statusText: 'En Ruta de Reparto Local',
     statusDescription: 'El envío llegó al centro logístico de destino y se encuentra en unidad móvil para entrega.',
-    destination: 'Cajamarca - Agencia Central Av. Vía de Evitamiento Sur',
+    destination: 'Cajamarca - Agencia Central',
     deliveryType: 'Despacho a Domicilio con Guía Shalom',
     recipientName: 'Carlos Mendoza',
     recipientPhone: '987 654 321',
@@ -69,7 +69,7 @@ const SAMPLE_ORDERS: TrackingOrder[] = [
         title: 'Pedido Confirmado y Pago Verificado',
         date: '27 Sep 2026',
         time: '09:15 AM',
-        location: 'Sede Central Nor Celis (Cajamarca)',
+        location: 'Sucursal Nor Celis (Cajamarca)',
         completed: true,
       },
       {
@@ -181,7 +181,7 @@ const SAMPLE_ORDERS: TrackingOrder[] = [
     status: 'entregado',
     statusText: 'Entregado & Conforme',
     statusDescription: 'El pedido fue retirado e instalado en nuestras bahías de servicio con firma de conformidad.',
-    destination: 'Concesionario Nor Celis (AV. VIA DE EVITAMIENTO SUR 6003)',
+    destination: 'Sucursal Nor Celis (CAS. HUACARIZ MZ A LOTE S/N)',
     deliveryType: 'Retiro e Instalación en Taller Central',
     recipientName: 'Carlos Mendoza',
     recipientPhone: '987 654 321',
@@ -660,7 +660,7 @@ export const OrderTrackingView: React.FC = () => {
               </div>
 
               <p className="text-xs text-gray-200 leading-relaxed">
-                Comunícate con nuestra central de envíos de Av. Vía de Evitamiento Sur 6003, Cajamarca o solicita soporte directo vía WhatsApp oficial.
+                Comunícate con nuestra central de envíos de Cas. Huacariz Mz A Lote S/N, Cajamarca o solicita soporte directo vía WhatsApp oficial.
               </p>
 
               <div className="space-y-2 pt-1">

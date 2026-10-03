@@ -1,3 +1,7 @@
+// ⚠️ IMPORTANTE (legal/seguridad): las cuentas bancarias de este archivo son DATOS DE EJEMPLO.
+// Antes de publicar, reemplázalas por las cuentas reales de GRUPO MEVAC S.A.C. (RUC 20610829318).
+// Mostrar cuentas que no son de la empresa puede hacer que los clientes transfieran a un tercero.
+
 export interface BankAccount {
   bankName: string;
   currency: 'PEN' | 'USD';
@@ -79,8 +83,11 @@ export const OFFICIAL_TERMS_AND_CONDITIONS = [
   'Gracias por confiar en NORCELIS AUTOMOTRIZ especialistas en autopartes, accesorios y servicios automotrices.',
 ];
 
+/** Política de venta: delivery gratis en la zona urbana de Cajamarca desde este monto (S/). */
+export const CAJAMARCA_FREE_DELIVERY_MIN_SOLES = 500;
+
 export const SHALOM_DESTINATIONS = [
-  { id: 'cajamarca-local', label: 'Cajamarca Ciudad & Alrededores', cost: 0, estimatedTime: 'Mismo día / 24 horas', agencyOption: true },
+  { id: 'cajamarca-local', label: 'Cajamarca Ciudad (zona urbana)', cost: 0, estimatedTime: 'Mismo día / 24 horas', agencyOption: true },
   { id: 'provincias-norte', label: 'Provincias Norte (Trujillo, Chiclayo, Piura)', cost: 18, estimatedTime: '24 a 36 horas', agencyOption: true },
   { id: 'lima-metropolitana', label: 'Lima Metropolitana & Callao', cost: 22, estimatedTime: '24 a 48 horas', agencyOption: true },
   { id: 'jaen-amazonas', label: 'Jaén, Chachapoyas & Bagua', cost: 15, estimatedTime: '24 horas', agencyOption: true },

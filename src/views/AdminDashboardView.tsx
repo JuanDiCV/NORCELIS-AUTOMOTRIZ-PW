@@ -857,7 +857,7 @@ export const AdminDashboardView: React.FC = () => {
     const dataToExport = {
       version: '1.0',
       exportedAt: new Date().toISOString(),
-      dealership: 'Nor Celis Automotriz S.A.C.',
+      dealership: 'NorCelis Automotriz',
       vehicles,
       autoParts,
       promoSlides,

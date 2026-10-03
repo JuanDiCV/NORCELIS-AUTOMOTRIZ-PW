@@ -55,7 +55,7 @@ export const WishlistView: React.FC = () => {
             <span>Compartir</span>
           </button>
           <a
-            href={`https://wa.me/51987654321?text=Hola,%20deseo%20asesoria%20sobre%20mi%20lista%20de%20deseos%20con%20${wishlistItems.length}%20items`}
+            href={`https://wa.me/51910446152?text=Hola,%20deseo%20asesoria%20sobre%20mi%20lista%20de%20deseos%20con%20${wishlistItems.length}%20items`}
             target="_blank"
             rel="noopener noreferrer"
             className="p-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
@@ -365,7 +365,7 @@ export const WishlistView: React.FC = () => {
         </div>
 
         <a
-          href="https://wa.me/51987654321?text=Hola%20Ing.%20Carlos,%20deseo%20validar%20mi%20lista%20de%20deseos%20con%20mi%20chasis%20VIN"
+          href="https://wa.me/51910446152?text=Hola%20Ing.%20Carlos,%20deseo%20validar%20mi%20lista%20de%20deseos%20con%20mi%20chasis%20VIN"
           target="_blank"
           rel="noopener noreferrer"
           className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-colors flex items-center gap-1.5 shrink-0"
